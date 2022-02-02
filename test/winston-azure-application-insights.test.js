@@ -224,7 +224,7 @@ describe('winston-azure-application-insights', () => {
                 expectedCall.once().withArgs({
                     exception: error,
                     properties: {
-                        message: 'Log handling message',
+                        message: 'Log handling message ' + error.message,
                     },
                 });
                 logger.error('Log handling message', error);
@@ -304,7 +304,10 @@ describe('winston-azure-application-insights', () => {
                 clientMock.expects('trackTrace').once().withArgs({
                     message: error.message,
                     severity: 3,
-                    properties: Object.assign(TEST_EXTRA_INFO, { message: error.message }),
+                    properties: Object.assign(TEST_EXTRA_INFO, {
+                        stack: error.stack,
+                        message: error.message,
+                    }),
                 });
                 logger.error('Test message', error);
             });
@@ -352,7 +355,7 @@ describe('winston-azure-application-insights', () => {
 
             const traceArg = expectTrace.args[0][0];
 
-            assert.equal(traceArg.message, logMessage);
+            assert.equal(traceArg.message, logMessage + ' ' + logMeta.message);
             assert.equal(traceArg.severity, 3);
             assert.deepEqual(traceArg.properties, logMeta);
         });
@@ -380,9 +383,10 @@ describe('winston-azure-application-insights', () => {
             const error = new ExtendedError('Detailed error', 'problem', 'here');
 
             expectTrace.once().withArgs({
-                message: logMessage,
+                message: logMessage + ' ' + error.message,
                 severity: 3,
                 properties: {
+                    stack: error.stack,
                     message: error.message,
                     name: error.name,
                     arg1: error.arg1,
