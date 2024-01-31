@@ -4,7 +4,7 @@
   "description": "Azure Application Insights transport for Winston",
   "main": "./lib/winston-azure-application-insights.js",
   "engines": {
-    "node": ">=14.0.0"
+    "node": ">=18.0.0"
   },
   "directories": {
     "test": "test"
@@ -38,7 +38,7 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "applicationinsights": "^2.9.1",
+    "applicationinsights": "^2.9.2",
     "chai": "^4.3.10",
     "eslint": "^8.55.0",
     "eslint-config-airbnb-base": "^15.0.0",

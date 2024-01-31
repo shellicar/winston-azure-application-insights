@@ -1,11 +1,11 @@
-'use strict';
-
-
 const { assert } = require('chai');
 const sinon = require('sinon');
 const { createLogger, format, config } = require('winston');
 const appInsights = require('applicationinsights');
 const transport = require('../lib/winston-azure-application-insights');
+
+const fakeKey = '00000000-0000-0000-0000-000000000000';
+const fakeConnString = 'InstrumentationKey=' + fakeKey;
 
 afterEach('teardown appInsights', () => {
     appInsights.dispose();
@@ -15,7 +15,7 @@ describe('winston-azure-application-insights', () => {
     describe('class', () => {
         describe('constructor', () => {
             beforeEach(() => {
-                delete process.env.APPINSIGHTS_INSTRUMENTATIONKEY;
+                delete process.env.APPLICATIONINSIGHTS_CONNECTION_STRING;
             });
 
             it('should fail if no instrumentation insights instance, client or key specified', () => {
@@ -28,7 +28,7 @@ describe('winston-azure-application-insights', () => {
                 let aiLogger;
 
                 assert.doesNotThrow(() => {
-                    appInsights.setup('FAKEKEY');
+                    appInsights.setup(fakeConnString);
 
                     aiLogger = new transport.AzureApplicationInsightsLogger({
                         insights: appInsights,
@@ -43,7 +43,7 @@ describe('winston-azure-application-insights', () => {
 
                 assert.doesNotThrow(() => {
                     aiLogger = new transport.AzureApplicationInsightsLogger({
-                        client: new appInsights.TelemetryClient('FAKEKEY'),
+                        client: new appInsights.TelemetryClient(fakeConnString),
                     });
                 });
 
@@ -55,17 +55,18 @@ describe('winston-azure-application-insights', () => {
 
                 assert.doesNotThrow(() => {
                     aiLogger = new transport.AzureApplicationInsightsLogger({
-                        key: 'FAKEKEY',
+                        key: fakeConnString,
                     });
                 });
 
                 assert.ok(aiLogger.client);
             });
 
-            it('should use the APPINSIGHTS_INSTRUMENTATIONKEY environment variable if defined', () => {
+            it.only('should use the APPLICATIONINSIGHTS_CONNECTION_STRING environment variable if defined', () => {
                 let aiLogger;
 
-                process.env.APPINSIGHTS_INSTRUMENTATIONKEY = 'FAKEKEY';
+                process.env.APPINSIGHTS_INSTRUMENTATION_KEY = fakeKey;
+                process.env.APPLICATIONINSIGHTS_CONNECTION_STRING = fakeConnString;
 
                 assert.doesNotThrow(() => {
                     aiLogger = new transport.AzureApplicationInsightsLogger();
@@ -76,7 +77,7 @@ describe('winston-azure-application-insights', () => {
 
             it('should set default logging level to info', () => {
                 const aiLogger = new transport.AzureApplicationInsightsLogger({
-                    key: 'FAKEKEY',
+                    key: fakeConnString,
                 });
 
                 assert.equal(aiLogger.level, 'info');
@@ -84,7 +85,7 @@ describe('winston-azure-application-insights', () => {
 
             it('should set logging level', () => {
                 const aiLogger = new transport.AzureApplicationInsightsLogger({
-                    key: 'FAKEKEY',
+                    key: fakeConnString,
                     level: 'warn',
                 });
 
@@ -93,7 +94,7 @@ describe('winston-azure-application-insights', () => {
 
             it('should declare a Winston logger', () => {
                 const theTransport = new transport.AzureApplicationInsightsLogger({
-                    key: 'FAKEKEY',
+                    key: fakeConnString,
                 });
 
                 assert.ok(theTransport);
@@ -106,7 +107,7 @@ describe('winston-azure-application-insights', () => {
             let clientMock;
 
             beforeEach(() => {
-                aiTransport = new transport.AzureApplicationInsightsLogger({ key: 'FAKEKEY' });
+                aiTransport = new transport.AzureApplicationInsightsLogger({ key: fakeConnString });
                 logger = createLogger({
                     transports: [aiTransport],
                 });
@@ -168,7 +169,7 @@ describe('winston-azure-application-insights', () => {
 
             beforeEach(() => {
                 aiTransport = new transport.AzureApplicationInsightsLogger({
-                    key: 'FAKEKEY',
+                    key: fakeConnString,
                     sendErrorsAsExceptions: true,
                 });
                 logger = createLogger({
@@ -268,7 +269,7 @@ describe('winston-azure-application-insights', () => {
 
             beforeEach(() => {
                 aiTransport = new transport.AzureApplicationInsightsLogger({
-                    key: 'FAKEKEY',
+                    key: fakeConnString,
                 });
                 logger = createLogger({
                     transports: [aiTransport],
@@ -329,7 +330,7 @@ describe('winston-azure-application-insights', () => {
         let expectTrace;
 
         beforeEach(() => {
-            const freshClient = new appInsights.TelemetryClient('FAKEKEY');
+            const freshClient = new appInsights.TelemetryClient(fakeConnString);
             winstonLogger = createLogger({
                 transports: [new transport.AzureApplicationInsightsLogger({ client: freshClient })],
             });
