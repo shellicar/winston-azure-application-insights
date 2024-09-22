@@ -16,5 +16,5 @@
   "include": [
     "**/*.ts",
     "test/**/*.spec.ts"
-  ]
+, "eslint.config.js"  ]
 }
