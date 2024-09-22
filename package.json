@@ -1,6 +1,6 @@
 {
   "name": "@shellicar/winston-azure-application-insights",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "private": false,
   "description": "Azure Application Insights transport for Winston",
   "files": [
@@ -33,7 +33,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/willmorgan/winston-azure-application-insights.git"
+    "url": "git+https://github.com/shellicar/winston-azure-application-insights.git"
   },
   "keywords": [
     "winston",
