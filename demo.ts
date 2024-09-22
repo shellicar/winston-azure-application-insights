@@ -35,3 +35,17 @@ class ErrorWithMeta extends Error {
 }
 
 winston.error('Log extended errors with properties', new ErrorWithMeta('some error', 'answer', 42));
+
+class MyError extends Error {
+  public extensions: any;
+  constructor(message: string, public readonly options: any) {
+    super(message);
+    this.extensions = options.extensions;
+  }
+}
+
+const err = new MyError('test', {
+  extensions: Object.create(null),
+});
+winston.info('hello world', err);
+winston.info(err);

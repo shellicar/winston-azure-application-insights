@@ -1,6 +1,7 @@
 {
   "name": "@shellicar/winston-azure-application-insights",
   "version": "5.0.0",
+  "private": false,
   "description": "Azure Application Insights transport for Winston",
   "files": [
     "dist"
@@ -27,12 +28,12 @@
     "lint": "eslint .",
     "lint-fix": "eslint . --fix",
     "test": "mocha",
-    "prepublishOnly": "build",
+    "prepublishOnly": "run-p lint build",
     "postpublish": "pnpm version --no-git-tag-version patch"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/willmorgan/winston-azure-application-insights.git"
+    "url": "git+https://github.com/willmorgan/winston-azure-application-insights.git"
   },
   "keywords": [
     "winston",

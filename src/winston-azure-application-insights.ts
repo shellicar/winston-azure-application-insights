@@ -1,6 +1,7 @@
 import { TelemetryClient, KnownSeverityLevel } from 'applicationinsights';
 import TransportStream from 'winston-transport';
 
+type PlainObject = Record<string, any>;
 
 enum SeverityLevel {
   Verbose = 0,
@@ -41,20 +42,40 @@ const isErrorLike = (obj: unknown): obj is Error => {
   return obj instanceof Error;
 };
 
-const extractPropsFromInfo = (info: Record<string, any>): Record<string, any> => {
-  const exclude = ['level', 'message'];
-  return Object.keys(info)
-    .filter((key) => !exclude.includes(key))
-    .reduce((props, key) => ({ ...props, [key]: info[key] }), {});
+
+const isPlainObject = (obj: unknown): obj is PlainObject => {
+  return obj !== null && typeof obj === 'object' && Object.getPrototypeOf(obj) === Object.prototype;
 };
 
-const extractErrorPropsForTrace = (errorLike: Error): Record<string, any> => {
-  const properties: Record<string, any> = {
+const convertToPlainObject = (obj: any): PlainObject => {
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+  if (isPlainObject(obj)) {
+    return obj;
+  }
+  return Object.assign({}, obj);
+};
+
+const extractPropsFromInfo = (info: PlainObject): PlainObject => {
+  const exclude = ['level', 'message'];
+
+  return Object.keys(info)
+    .filter((key) => !exclude.includes(key))
+    .reduce<PlainObject>((props, key) => {
+      const value = info[key];
+      props[key] = convertToPlainObject(value);
+      return props;
+    }, {});
+};
+
+const extractErrorPropsForTrace = (errorLike: Error): PlainObject => {
+  const properties: PlainObject = {
     message: errorLike.message,
   };
   for (const [key, value] of Object.entries(errorLike)) {
-    if (key !== 'stack') {
-      properties[key] = value;
+    if (key !== 'stack' && Object.prototype.hasOwnProperty.call(errorLike, key)) {
+      properties[key] = convertToPlainObject(value);
     }
   }
   return properties;
@@ -79,7 +100,7 @@ export class AzureApplicationInsightsLogger extends TransportStream {
     this.sendErrorsAsExceptions = options.sendErrorsAsExceptions ?? true;
   }
 
-  private handleTrace(severity: SeverityLevel, info: Record<string, any>, message: string | undefined, logMeta: Record<string, any>): void {
+  private handleTrace(severity: SeverityLevel, info: PlainObject, message: string | undefined, logMeta: PlainObject): void {
     const traceProps = extractPropsFromInfo(info);
     let errorArg: Error | undefined;
 
@@ -106,8 +127,8 @@ export class AzureApplicationInsightsLogger extends TransportStream {
     });
   }
 
-  private handleException(info: Record<string, any>, message: string | undefined, logMeta: Record<string, any>): void {
-    const exceptionProps: Record<string, any> = {};
+  private handleException(info: PlainObject, message: string | undefined, logMeta: PlainObject): void {
+    const exceptionProps: PlainObject = {};
     let exception: Error | undefined;
 
     if (isErrorLike(info)) {
@@ -131,7 +152,7 @@ export class AzureApplicationInsightsLogger extends TransportStream {
     this.client.trackException({ exception, properties: exceptionProps });
   }
 
-  override log(info: Record<string, any>, callback: () => void): void {
+  override log(info: PlainObject, callback: () => void): void {
     const { level, message } = info;
     const severity = getMessageLevel(level);
     const splat = Reflect.get(info, Symbol.for('splat')) ?? [];
