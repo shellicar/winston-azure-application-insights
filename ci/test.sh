@@ -4,8 +4,8 @@
 
 set -e
 
-echo "Testing with NodeJS $(node --version) / $(npm --version)"
+echo "Testing with NodeJS $(node --version) / $(pnpm --version)"
 
-npm install
-npm run lint
-npm test
+pnpm install
+pnpm run lint
+pnpm test

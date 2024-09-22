@@ -1,3 +1,11 @@
+# 5.0.0
+
+## Breaking Changes
+
+* Update to applicationinsights `3.x`.
+* Update to winston `3.x`.
+* Use typescript.
+
 # 4.0.0
 
 ## Breaking Changes

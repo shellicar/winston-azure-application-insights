@@ -30,3 +30,5 @@ node_modules
 # JetBrains editors
 .idea
 *.iml
+
+dist/

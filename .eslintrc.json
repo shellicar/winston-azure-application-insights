@@ -1,22 +1,64 @@
 {
+  "parser": "@typescript-eslint/parser",
+  "ignorePatterns": [
+    "node_modules",
+    "dist"
+  ],
   "parserOptions": {
     "ecmaVersion": 2022,
-    "sourceType": "module"
+    "sourceType": "module",
+    "project": "./tsconfig.json"
   },
   "env": {
     "es6": true,
     "mocha": true,
     "node": true
   },
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "extends": [
+    "plugin:@typescript-eslint/recommended"
+  ],
   "rules": {
-    "camelcase": ["off"],
-    "max-classes-per-file": ["off"],
-    "comma-dangle": ["error", "always-multiline"],
-    "indent": ["error", 4],
-    "no-mixed-operators": ["off"],
-    "no-multiple-empty-lines": ["error"],
-    "no-plusplus": ["off"],
-    "quote-props": ["error", "consistent-as-needed"]
+    "camelcase": "off",
+    "max-classes-per-file": "off",
+    "comma-dangle": [
+      "error",
+      "always-multiline"
+    ],
+    "indent": [
+      "error",
+      2
+    ],
+    "no-mixed-operators": "off",
+    "no-multiple-empty-lines": "error",
+    "no-plusplus": "off",
+    "quote-props": [
+      "error",
+      "consistent-as-needed"
+    ],
+    "semi": [
+      "error"
+    ],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-inferrable-types": "off"
   },
-  "extends": ["airbnb-base/legacy"]
+  "overrides": [
+    {
+      "files": [
+        "*.ts"
+      ],
+      "rules": {
+        "no-undef": "off"
+      }
+    }
+  ]
 }

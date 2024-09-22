@@ -1,22 +1,34 @@
 {
-  "name": "winston-azure-application-insights",
-  "version": "4.0.1",
+  "name": "@shellicar/winston-azure-application-insights",
+  "version": "5.0.0",
   "description": "Azure Application Insights transport for Winston",
-  "main": "./lib/winston-azure-application-insights.js",
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "directories": {
-    "test": "test"
-  },
   "files": [
-    "lib/*",
-    "*.js"
+    "dist"
   ],
+  "packageManager": "pnpm@9.11.0",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "require": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
+    },
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.mjs"
+    }
+  },
   "scripts": {
-    "lint": "eslint -c .eslintrc.json --ignore-path .eslintignore ./",
-    "lint-fix": "eslint -c .eslintrc.json --ignore-path .eslintignore ./ --fix",
-    "test": "mocha --exit"
+    "demo": "tsx demo.ts",
+    "build": "run-s build:source build:types",
+    "build:source": "tsup",
+    "build:types": "tsup --dts-only --format cjs",
+    "lint": "eslint .",
+    "lint-fix": "eslint . --fix",
+    "test": "mocha",
+    "prepublishOnly": "build",
+    "postpublish": "pnpm version --no-git-tag-version patch"
   },
   "repository": {
     "type": "git",
@@ -34,25 +46,36 @@
       "name": "Will Morgan",
       "email": "jobs+npm@willmorgan.co.uk",
       "url": "http://willmorgan.co.uk"
+    },
+    {
+      "name": "Stephen Hellicar",
+      "email": "shellicar@gmail.com"
     }
   ],
   "license": "MIT",
   "devDependencies": {
-    "applicationinsights": "^2.9.2",
-    "chai": "^4.3.10",
-    "eslint": "^8.55.0",
+    "@types/mocha": "^10.0.8",
+    "@types/node": "^22.5.5",
+    "@typescript-eslint/eslint-plugin": "^8.6.0",
+    "@typescript-eslint/parser": "^8.6.0",
+    "eslint": "^8.57.1",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.29.0",
-    "mocha": "^10.2.0",
-    "sinon": "^17.0.1",
-    "winston": "^3.11.0"
+    "mocha": "^10.7.3",
+    "npm-run-all2": "^6.2.3",
+    "terser": "^5.33.0",
+    "testdouble": "^3.20.2",
+    "tsup": "^8.3.0",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2",
+    "winston": "^3.14.2"
   },
   "bugs": {
-    "url": "https://github.com/willmorgan/winston-azure-application-insights/issues"
+    "url": "https://github.com/shellicar/winston-azure-application-insights/issues"
   },
-  "homepage": "https://github.com/willmorgan/winston-azure-application-insights#readme",
-  "peerDependencies": {
-    "applicationinsights": "^2.x",
-    "winston": "^3.x"
+  "homepage": "https://github.com/shellicar/winston-azure-application-insights#readme",
+  "dependencies": {
+    "applicationinsights": "^3.3.0",
+    "winston-transport": "^4.7.1"
   }
 }
