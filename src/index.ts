@@ -1,2 +1,5 @@
-export * from './winston-azure-application-insights';
-export * from './helpers';
+import { createWinstonLogger } from './helpers';
+import { AzureApplicationInsightsLogger } from './winston-azure-application-insights';
+import type { AzureApplicationInsightsLoggerOptions } from './winston-azure-application-insights';
+
+export { AzureApplicationInsightsLogger, type AzureApplicationInsightsLoggerOptions, createWinstonLogger };

@@ -3,9 +3,7 @@
   "version": "5.0.1",
   "private": false,
   "description": "Azure Application Insights transport for Winston",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "packageManager": "pnpm@9.11.0",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -36,12 +34,7 @@
     "type": "git",
     "url": "git+https://github.com/shellicar/winston-azure-application-insights.git"
   },
-  "keywords": [
-    "winston",
-    "azure",
-    "insights",
-    "logging"
-  ],
+  "keywords": ["winston", "azure", "insights", "logging"],
   "author": "Marco Braga (Bragma)",
   "contributors": [
     {
@@ -61,7 +54,6 @@
     "@types/node": "^22.5.5",
     "@typescript-eslint/eslint-plugin": "^8.6.0",
     "@typescript-eslint/parser": "^8.6.0",
-    "eslint": "^9.11.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.29.0",
     "globals": "^15.9.0",
@@ -75,13 +67,19 @@
     "typescript": "^5.6.2",
     "winston": "^3.14.2"
   },
+  "optionalDependencies": {
+    "applicationinsightsv2": "npm:applicationinsights@^2",
+    "applicationinsightsv3": "npm:applicationinsights@^3"
+  },
   "bugs": {
     "url": "https://github.com/shellicar/winston-azure-application-insights/issues"
   },
   "homepage": "https://github.com/shellicar/winston-azure-application-insights#readme",
+  "peerDependencies": {
+    "winston": "^3.0.0",
+    "winston-transport": "^4.0.0"
+  },
   "dependencies": {
-    "applicationinsightsv2": "npm:applicationinsights@^2",
-    "applicationinsightsv3": "npm:applicationinsights@^3",
     "winston-transport": "^4.7.1"
   }
 }

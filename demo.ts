@@ -1,19 +1,21 @@
+import { defaultClient, setup } from 'applicationinsights';
 import winston from 'winston';
-import { setup, defaultClient } from 'applicationinsights';
 import { AzureApplicationInsightsLogger } from './src/winston-azure-application-insights';
 
 const shouldPushToAppInsights = 'APPLICATIONINSIGHTS_CONNECTION_STRING' in process.env;
 
 if (shouldPushToAppInsights) {
   setup().start();
-  winston.add(new AzureApplicationInsightsLogger({
-    client: defaultClient,
-  }));
+  winston.add(
+    new AzureApplicationInsightsLogger({
+      client: defaultClient,
+    }),
+  );
 } else {
   winston.add(new winston.transports.Console());
 }
 
-winston.info('Let\'s log something new...');
+winston.info("Let's log something new...");
 winston.error('This is an error log!');
 winston.warn('And this is a warning message.');
 winston.log('info', 'Log with some metadata', {
@@ -38,7 +40,10 @@ winston.error('Log extended errors with properties', new ErrorWithMeta('some err
 
 class MyError extends Error {
   public extensions: any;
-  constructor(message: string, public readonly options: any) {
+  constructor(
+    message: string,
+    public readonly options: any,
+  ) {
     super(message);
     this.extensions = options.extensions;
   }

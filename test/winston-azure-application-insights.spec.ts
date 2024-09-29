@@ -1,10 +1,10 @@
-import td from 'testdouble';
-import { createLogger, format, config, type Logger } from 'winston';
-import { TelemetryClient, setup, defaultClient, KnownSeverityLevel } from 'applicationinsightsv3';
-import { AzureApplicationInsightsLogger } from '../src/winston-azure-application-insights';
 import { doesNotThrow, equal, ok } from 'node:assert/strict';
+import { KnownSeverityLevel, TelemetryClient, defaultClient, setup } from 'applicationinsightsv3';
+import td from 'testdouble';
+import { type Logger, config, createLogger, format } from 'winston';
+import { AzureApplicationInsightsLogger } from '../src/winston-azure-application-insights';
 
-type WinstonLogLevels = 'error' | 'warn' | 'info' | 'verbose' | 'debug' | 'silly'
+type WinstonLogLevels = 'error' | 'warn' | 'info' | 'verbose' | 'debug' | 'silly';
 
 const fakeKey = '00000000-0000-0000-0000-000000000000';
 const fakeConnString = `InstrumentationKey=${fakeKey}`;
@@ -13,7 +13,7 @@ describe('winston-azure-application-insights', () => {
   describe('class', () => {
     describe('constructor', () => {
       beforeEach(() => {
-        delete process.env.APPLICATIONINSIGHTS_CONNECTION_STRING;
+        process.env.APPLICATIONINSIGHTS_CONNECTION_STRING = undefined;
       });
 
       it('should accept an App Insights client with the client option', () => {
@@ -62,7 +62,7 @@ describe('winston-azure-application-insights', () => {
       beforeEach(() => {
         setup(fakeConnString);
         clientMock = td.object(defaultClient);
-        aiTransport = new AzureApplicationInsightsLogger({ 
+        aiTransport = new AzureApplicationInsightsLogger({
           client: clientMock,
         });
         logger = createLogger({
@@ -94,10 +94,10 @@ describe('winston-azure-application-insights', () => {
       });
 
       it('should handle null/undefined messages', () => {
-        [null, undefined].forEach((message) => {
+        for (const message of [null, undefined]) {
           logger.log('info', message);
           td.verify(clientMock.trackTrace(td.matchers.contains({ message: String(message), severity: KnownSeverityLevel.Information })));
-        });
+        }
       });
 
       it('should pass object params if an object', () => {
@@ -112,10 +112,10 @@ describe('winston-azure-application-insights', () => {
         const customObj = new CustomObject('value');
         const date = new Date(2021, 1, 1);
 
-        [customObj, date].forEach((message) => {
+        for (const message of [customObj, date]) {
           logger.log('info', message);
           td.verify(clientMock.trackTrace(td.matchers.contains({ properties: td.matchers.contains({ value: 'value' }) })));
-        });
+        }
       });
     });
 
@@ -135,7 +135,6 @@ describe('winston-azure-application-insights', () => {
           levels: config.syslog.levels,
           transports: [aiTransport],
         });
-        
       });
 
       afterEach(() => {
@@ -181,7 +180,6 @@ describe('winston-azure-application-insights', () => {
           transports: [aiTransport],
           format: format.combine(addTestAppVersions(), format.json()),
         });
-        
       });
 
       afterEach(() => {

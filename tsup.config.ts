@@ -1,4 +1,4 @@
-import { defineConfig, type Format } from 'tsup';
+import { type Format, defineConfig } from 'tsup';
 
 const extensions: Partial<Record<Format, string>> = {
   esm: '.mjs',

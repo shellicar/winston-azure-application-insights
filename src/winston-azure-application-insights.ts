@@ -50,7 +50,6 @@ const isErrorLike = (obj: unknown): obj is Error => {
   return obj instanceof Error;
 };
 
-
 const isPlainObject = (obj: unknown): obj is PlainObject => {
   return obj !== null && typeof obj === 'object' && Object.getPrototypeOf(obj) === Object.prototype;
 };
@@ -132,13 +131,13 @@ export class AzureApplicationInsightsLogger extends TransportStream {
       this.client.trackTrace({
         message: String(message),
         severity: severityLevelsV3[severity],
-        properties: traceProps,  
+        properties: traceProps,
       });
     } else {
       this.client.trackTrace({
         message: String(message),
         severity: severityLevelsV2[severity],
-        properties: traceProps,  
+        properties: traceProps,
       });
     }
   }
@@ -154,7 +153,7 @@ export class AzureApplicationInsightsLogger extends TransportStream {
     } else if (isErrorLike(logMeta)) {
       exception = logMeta;
     } else {
-      console.log('RETURNING', { message});
+      console.log('RETURNING', { message });
       return;
     }
 
