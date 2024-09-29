@@ -1,5 +1,7 @@
-import { TelemetryClient, KnownSeverityLevel } from 'applicationinsights';
+import { SeverityLevel as KnownSeverityLevelV2 } from 'applicationinsightsv2/out/Declarations/Contracts';
+import { KnownSeverityLevel as KnownSeverityLevelV3, TelemetryClient as TelemetryClientV3 } from 'applicationinsightsv3';
 import TransportStream from 'winston-transport';
+import type { NodeClient } from './types';
 
 type PlainObject = Record<string, any>;
 
@@ -11,14 +13,20 @@ enum SeverityLevel {
   Critical = 4,
 }
 
-const knownSeverityLevels: Record<SeverityLevel, KnownSeverityLevel> = {
-  [SeverityLevel.Verbose]: KnownSeverityLevel.Verbose,
-  [SeverityLevel.Information]: KnownSeverityLevel.Information,
-  [SeverityLevel.Warning]: KnownSeverityLevel.Warning,
-  [SeverityLevel.Error]: KnownSeverityLevel.Error,
-  [SeverityLevel.Critical]: KnownSeverityLevel.Critical,
+const severityLevelsV3: Record<SeverityLevel, KnownSeverityLevelV3> = {
+  [SeverityLevel.Verbose]: KnownSeverityLevelV3.Verbose,
+  [SeverityLevel.Information]: KnownSeverityLevelV3.Information,
+  [SeverityLevel.Warning]: KnownSeverityLevelV3.Warning,
+  [SeverityLevel.Error]: KnownSeverityLevelV3.Error,
+  [SeverityLevel.Critical]: KnownSeverityLevelV3.Critical,
 };
-
+const severityLevelsV2: Record<SeverityLevel, KnownSeverityLevelV2> = {
+  [SeverityLevel.Verbose]: KnownSeverityLevelV2.Verbose,
+  [SeverityLevel.Information]: KnownSeverityLevelV2.Information,
+  [SeverityLevel.Warning]: KnownSeverityLevelV2.Warning,
+  [SeverityLevel.Error]: KnownSeverityLevelV2.Error,
+  [SeverityLevel.Critical]: KnownSeverityLevelV2.Critical,
+};
 
 const getMessageLevel = (winstonLevel: string): SeverityLevel => {
   const levels: Record<string, SeverityLevel> = {
@@ -82,14 +90,14 @@ const extractErrorPropsForTrace = (errorLike: Error): PlainObject => {
 };
 
 export interface AzureApplicationInsightsLoggerOptions {
-  client: TelemetryClient;
+  client: NodeClient;
   level?: string;
   silent?: boolean;
   sendErrorsAsExceptions?: boolean;
 }
 
 export class AzureApplicationInsightsLogger extends TransportStream {
-  public readonly client: TelemetryClient;
+  public readonly client: NodeClient;
   public sendErrorsAsExceptions: boolean;
   readonly name: string;
 
@@ -120,11 +128,19 @@ export class AzureApplicationInsightsLogger extends TransportStream {
       Object.assign(traceProps, logMeta);
     }
 
-    this.client.trackTrace({
-      message: String(message),
-      severity: knownSeverityLevels[severity],
-      properties: traceProps,
-    });
+    if (this.client instanceof TelemetryClientV3) {
+      this.client.trackTrace({
+        message: String(message),
+        severity: severityLevelsV3[severity],
+        properties: traceProps,  
+      });
+    } else {
+      this.client.trackTrace({
+        message: String(message),
+        severity: severityLevelsV2[severity],
+        properties: traceProps,  
+      });
+    }
   }
 
   private handleException(info: PlainObject, message: string | undefined, logMeta: PlainObject): void {
@@ -138,6 +154,7 @@ export class AzureApplicationInsightsLogger extends TransportStream {
     } else if (isErrorLike(logMeta)) {
       exception = logMeta;
     } else {
+      console.log('RETURNING', { message});
       return;
     }
 
