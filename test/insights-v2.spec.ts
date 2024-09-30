@@ -6,7 +6,10 @@ import { createWinstonLogger } from '../src';
 describe('appinsights-v2', () => {
   const client = new TelemetryClient('InstrumentationKey=00000000-0000-0000-0000-000000000000');
   const mock: testdouble.DoubledObject<TelemetryClient> = td.object(client);
-  const logger = createWinstonLogger(mock);
+  const logger = createWinstonLogger({
+    version: 2,
+    client: mock,
+  });
 
   it('trace works', () => {
     logger.info('hello world');

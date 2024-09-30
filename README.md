@@ -50,6 +50,7 @@ import { AzureApplicationInsightsLogger } from '@shellicar/winston-azure-applica
 setup().start();
 
 const insightsLogger = new AzureApplicationInsightsLogger({
+  version: 3, // or 2 if using applicationinsights^3
   client: defaultClient,
 });
 ```
@@ -60,6 +61,7 @@ const { AzureApplicationInsightsLogger } = require('@shellicar/winston-azure-app
 setup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING).start();
 
 const insightsLogger = new AzureApplicationInsightsLogger({
+  version: 3,
   client: defaultClient,
 });
 ```

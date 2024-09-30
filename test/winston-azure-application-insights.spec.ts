@@ -21,6 +21,7 @@ describe('winston-azure-application-insights', () => {
 
         doesNotThrow(() => {
           aiLogger = new AzureApplicationInsightsLogger({
+            version: 3,
             client: new TelemetryClient(fakeConnString),
           });
         });
@@ -30,6 +31,7 @@ describe('winston-azure-application-insights', () => {
 
       it('should set default logging level to info', () => {
         const aiLogger = new AzureApplicationInsightsLogger({
+          version: 3,
           client: null!,
         });
 
@@ -38,6 +40,7 @@ describe('winston-azure-application-insights', () => {
 
       it('should set logging level', () => {
         const aiLogger = new AzureApplicationInsightsLogger({
+          version: 3,
           client: null!,
           level: 'warn',
         });
@@ -47,6 +50,7 @@ describe('winston-azure-application-insights', () => {
 
       it('should declare a Winston logger', () => {
         const theTransport = new AzureApplicationInsightsLogger({
+          version: 3,
           client: null!,
         });
 
@@ -63,6 +67,7 @@ describe('winston-azure-application-insights', () => {
         setup(fakeConnString);
         clientMock = td.object(defaultClient);
         aiTransport = new AzureApplicationInsightsLogger({
+          version: 3,
           client: clientMock,
         });
         logger = createLogger({
@@ -128,6 +133,7 @@ describe('winston-azure-application-insights', () => {
         setup(fakeConnString);
         clientMock = td.object(defaultClient);
         aiTransport = new AzureApplicationInsightsLogger({
+          version: 3,
           client: clientMock,
           sendErrorsAsExceptions: true,
         });
@@ -174,6 +180,7 @@ describe('winston-azure-application-insights', () => {
         setup(fakeConnString);
         clientMock = td.object(defaultClient);
         aiTransport = new AzureApplicationInsightsLogger({
+          version: 3,
           client: clientMock,
         });
         logger = createLogger({

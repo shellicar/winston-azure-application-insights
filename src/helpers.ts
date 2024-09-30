@@ -11,9 +11,7 @@ export const isRunningLocally = () => {
 };
 
 export const createWinstonLogger = (options: AzureApplicationInsightsLoggerOptions, ...fmt: Format[]) => {
-  const _transports: TransportStream[] = [
-    new AzureApplicationInsightsLogger(options),
-  ];
+  const _transports: TransportStream[] = [new AzureApplicationInsightsLogger(options)];
 
   if (process.env.WEBSITE_INSTANCE_ID === undefined) {
     _transports.push(
