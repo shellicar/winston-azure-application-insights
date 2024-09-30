@@ -10,16 +10,24 @@ export const isRunningLocally = () => {
   return !isRunningInAzure();
 };
 
+type JsonValue = string | number | JsonObject | JsonValue[] | null;
+type JsonObject = {
+  [key: string]: JsonValue;
+};
+
 export type CreateWinstonLoggerOptions = {
   insights: AzureApplicationInsightsLoggerOptions;
-  console: boolean;
-  format?: Format[];
+  winston: {
+    defaultMeta?: JsonObject;
+    console: boolean;
+    format?: Format[];
+  };
 };
 
 export const createWinstonLogger = (options: CreateWinstonLoggerOptions) => {
   const _transports: TransportStream[] = [new AzureApplicationInsightsLogger(options.insights)];
 
-  if (options.console) {
+  if (options.winston.console) {
     _transports.push(
       new transports.Console({
         format: format.json(),
@@ -29,10 +37,11 @@ export const createWinstonLogger = (options: CreateWinstonLoggerOptions) => {
     );
   }
 
-  const _format = format.combine(...(options.format ?? []), format.json());
+  const _format = format.combine(...(options.winston.format ?? []), format.json());
 
   return createLogger({
     format: _format,
     transports: _transports,
+    defaultMeta: options.winston.defaultMeta,
   });
 };

@@ -1,10 +1,16 @@
 # Changelog
 
+## [5.0.4]
+
+### Changes
+
+* Expose `defaultMeta` for helper function.
+
 ## [5.0.3]
 
 ### Changes
 
-* Add more options for `createWinstonLogger` helper class.
+* Add more options for `createWinstonLogger` helper function.
 
 ## [5.0.2]
 
@@ -59,6 +65,8 @@
 * Replace `treatErrorsAsExceptions` with `sendErrorsAsExceptions` following feedback from AI core team w/r best practice error tracking
 * Package install size drastically reduced
 
+[5.0.4]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.4
+[5.0.3]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.3
 [5.0.2]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.2
 [5.0.1]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.1
 [5.0.0]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.0

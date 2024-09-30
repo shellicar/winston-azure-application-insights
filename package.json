@@ -1,6 +1,6 @@
 {
   "name": "@shellicar/winston-azure-application-insights",
-  "version": "5.0.3",
+  "version": "5.0.4",
   "private": false,
   "description": "Azure Application Insights transport for Winston",
   "files": ["dist"],
@@ -21,6 +21,7 @@
   "scripts": {
     "demo": "tsx demo.ts",
     "build": "tsup-node",
+    "watch": "tsup-node --watch",
     "lint": "biome lint",
     "format": "biome format",
     "check": "biome check",

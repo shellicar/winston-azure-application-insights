@@ -7,7 +7,9 @@ describe('appinsights-v2', () => {
   const client = new TelemetryClient('InstrumentationKey=00000000-0000-0000-0000-000000000000');
   const mock: testdouble.DoubledObject<TelemetryClient> = td.object(client);
   const logger = createWinstonLogger({
-    console: true,
+    winston: {
+      console: true,
+    },
     insights: {
       version: 2,
       client: mock,
