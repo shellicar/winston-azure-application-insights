@@ -1,8 +1,7 @@
 import type { Format } from 'logform';
 import { createLogger, format, transports } from 'winston';
 import type TransportStream from 'winston-transport';
-import type { NodeClient } from './types';
-import { AzureApplicationInsightsLogger } from './winston-azure-application-insights';
+import { AzureApplicationInsightsLogger, type AzureApplicationInsightsLoggerOptions } from './winston-azure-application-insights';
 
 export const isRunningInAzure = () => {
   return process.env.WEBSITE_INSTANCE_ID !== undefined;
@@ -11,11 +10,9 @@ export const isRunningLocally = () => {
   return !isRunningInAzure();
 };
 
-export const createWinstonLogger = (client: NodeClient, ...fmt: Format[]) => {
+export const createWinstonLogger = (options: AzureApplicationInsightsLoggerOptions, ...fmt: Format[]) => {
   const _transports: TransportStream[] = [
-    new AzureApplicationInsightsLogger({
-      client,
-    }),
+    new AzureApplicationInsightsLogger(options),
   ];
 
   if (process.env.WEBSITE_INSTANCE_ID === undefined) {

@@ -1,28 +1,26 @@
 {
   "name": "@shellicar/winston-azure-application-insights",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "private": false,
   "description": "Azure Application Insights transport for Winston",
   "files": ["dist"],
   "packageManager": "pnpm@9.11.0",
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     "require": {
       "types": "./dist/index.d.ts",
-      "default": "./dist/index.cjs"
+      "default": "./dist/index.js"
     },
     "import": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
     }
   },
   "scripts": {
     "demo": "tsx demo.ts",
-    "build": "run-s build:source build:types",
-    "build:source": "tsup",
-    "build:types": "tsup --dts-only --format cjs",
+    "build": "tsup-node",
     "lint": "biome lint",
     "format": "biome format",
     "check": "biome check",

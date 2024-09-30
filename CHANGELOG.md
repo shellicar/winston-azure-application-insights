@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.0.2]
+
+### Changes
+
+* Add `ITelemetryFilter` to allow filtering traces and exceptions.
+* Simplify `tsup` config.
+* Fix applicationinsights dependencies.
+
 ## [5.0.1]
 
 ### Changes
@@ -45,5 +53,6 @@
 * Replace `treatErrorsAsExceptions` with `sendErrorsAsExceptions` following feedback from AI core team w/r best practice error tracking
 * Package install size drastically reduced
 
+[5.0.2]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.2
 [5.0.1]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.1
 [5.0.0]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.0

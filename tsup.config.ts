@@ -1,16 +1,11 @@
-import { type Format, defineConfig } from 'tsup';
-
-const extensions: Partial<Record<Format, string>> = {
-  esm: '.mjs',
-  cjs: '.cjs',
-};
+import { defineConfig } from 'tsup';
 
 export default defineConfig({
   format: ['esm', 'cjs'],
   bundle: true,
   clean: true,
   minify: 'terser',
-  dts: false,
+  dts: true,
   entry: ['src/index.ts'],
   keepNames: true,
   outDir: 'dist',
@@ -20,7 +15,4 @@ export default defineConfig({
   sourcemap: true,
   splitting: true,
   tsconfig: './tsconfig.json',
-  outExtension: (ctx) => ({
-    js: extensions[ctx.format],
-  }),
 });
