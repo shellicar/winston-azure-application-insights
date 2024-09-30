@@ -2,6 +2,12 @@ import { createWinstonLogger } from '@shellicar/winston-azure-application-insigh
 import { defaultClient, setup } from 'applicationinsights';
 
 setup().start();
-const logger = createWinstonLogger(defaultClient);
+const logger = createWinstonLogger({
+  console: true,
+  insights: {
+    version: 3,
+    client: defaultClient,
+  },
+});
 
 logger.info('Hello World');

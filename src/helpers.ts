@@ -10,15 +10,18 @@ export const isRunningLocally = () => {
   return !isRunningInAzure();
 };
 
-export const createWinstonLogger = (options: AzureApplicationInsightsLoggerOptions, ...fmt: Format[]) => {
-  const _transports: TransportStream[] = [new AzureApplicationInsightsLogger(options)];
+export type CreateWinstonLoggerOptions = {
+  insights: AzureApplicationInsightsLoggerOptions;
+  console: boolean;
+  format?: Format[];
+};
 
-  if (process.env.WEBSITE_INSTANCE_ID === undefined) {
+export const createWinstonLogger = (options: CreateWinstonLoggerOptions) => {
+  const _transports: TransportStream[] = [new AzureApplicationInsightsLogger(options.insights)];
+
+  if (options.console) {
     _transports.push(
       new transports.Console({
-        // format: format.combine(
-        //   format.errors({ stack: true }),
-        //   format.json()),
         format: format.json(),
         stderrLevels: ['error', 'crit', 'alert', 'emerg'],
         consoleWarnLevels: ['warn', 'warning'],
@@ -26,10 +29,10 @@ export const createWinstonLogger = (options: AzureApplicationInsightsLoggerOptio
     );
   }
 
-  const _format = format.combine(...fmt, format.json());
+  const _format = format.combine(...(options.format ?? []), format.json());
 
   return createLogger({
-    // format: _format,
+    format: _format,
     transports: _transports,
   });
 };

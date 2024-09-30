@@ -6,9 +6,10 @@ import { createLogger, format, transports } from 'winston';
 setup().start();
 
 const logger = createLogger({
-  format: format.combine(format.errors(), format.json()),
+  format: format.combine(format.json()),
   transports: [
     new AzureApplicationInsightsLogger({
+      version: 3,
       client: defaultClient,
     }),
     new transports.Console(),

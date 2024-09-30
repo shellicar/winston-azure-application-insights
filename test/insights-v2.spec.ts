@@ -7,8 +7,11 @@ describe('appinsights-v2', () => {
   const client = new TelemetryClient('InstrumentationKey=00000000-0000-0000-0000-000000000000');
   const mock: testdouble.DoubledObject<TelemetryClient> = td.object(client);
   const logger = createWinstonLogger({
-    version: 2,
-    client: mock,
+    console: true,
+    insights: {
+      version: 2,
+      client: mock,
+    },
   });
 
   it('trace works', () => {

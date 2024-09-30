@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.0.3]
+
+### Changes
+
+* Add more options for `createWinstonLogger` helper class.
+
 ## [5.0.2]
 
 ### Changes
