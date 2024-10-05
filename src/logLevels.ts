@@ -1,6 +1,6 @@
-import { LogLevel, type LogLevels } from './types';
+import { type AzureLogLevels, LogLevel } from './types';
 
-export const defaultLogLevels: LogLevels = {
+export const defaultLogLevels: AzureLogLevels = {
   error: LogLevel.Error,
   warn: LogLevel.Warning,
   http: LogLevel.Information,

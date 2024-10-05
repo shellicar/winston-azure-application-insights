@@ -11,7 +11,7 @@ export type JsonObject = {
   [key: string]: JsonValue;
 };
 
-export type LogLevels = {
+export type AzureLogLevels = {
   [key: string]: LogLevel;
 };
 
@@ -47,8 +47,8 @@ export type AzureApplicationInsightsLoggerOptionsBase = AzureInsightsClientOptio
 };
 
 export type AzureApplicationInsightsLoggerOptions = AzureApplicationInsightsLoggerOptionsBase & {
-  defaultLevel: string;
-  levels?: LogLevels;
+  defaultLevel?: string;
+  levels?: AzureLogLevels;
 };
 
 export abstract class ITelemetryFilterV3 {

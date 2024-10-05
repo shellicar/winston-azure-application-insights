@@ -3,7 +3,7 @@ import type { ExceptionTelemetry as ExceptionTelemetryV2, SeverityLevel as Known
 import type { ExceptionTelemetry as ExceptionTelemetryV3, KnownSeverityLevel as KnownSeverityLevelV3, TelemetryClient as TelemetryClientV3, TraceTelemetry as TraceTelemetryV3 } from 'applicationinsightsv3';
 import TransportStream from 'winston-transport';
 import { defaultLogLevels } from './logLevels';
-import { type AzureApplicationInsightsLoggerOptions, type ITelemetryFilterV2, type ITelemetryFilterV3, LogLevel, type LogLevels, type PlainObject } from './types';
+import { type AzureApplicationInsightsLoggerOptions, type AzureLogLevels, type ITelemetryFilterV2, type ITelemetryFilterV3, LogLevel, type PlainObject } from './types';
 
 const severityLevels = {
   v2: {
@@ -20,10 +20,6 @@ const severityLevels = {
     [LogLevel.Error]: 'Error' as KnownSeverityLevelV3,
     [LogLevel.Critical]: 'Critical' as KnownSeverityLevelV3,
   } satisfies Record<LogLevel, KnownSeverityLevelV3>,
-};
-
-const getMessageLevel = (levels: LogLevels, level: string): LogLevel => {
-  return levels[level];
 };
 
 const isErrorLike = (obj: unknown): obj is Error => {
@@ -186,6 +182,6 @@ export class AzureApplicationInsightsLogger extends TransportStream {
   }
 
   private getSeverity(level: string) {
-    return (this.options.levels ?? defaultLogLevels)[level] ?? this.options.defaultLevel;
+    return (this.options.levels ?? defaultLogLevels)[level] ?? this.options.defaultLevel ?? 'info';
   }
 }

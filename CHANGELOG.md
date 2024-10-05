@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.0.7]
+
+### Fixes
+
+* Fix incorrect App Insights severity.
+
 ## [5.0.6]
 
 ### Changes
@@ -77,6 +83,7 @@
 * Replace `treatErrorsAsExceptions` with `sendErrorsAsExceptions` following feedback from AI core team w/r best practice error tracking
 * Package install size drastically reduced
 
+[5.0.7]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.7
 [5.0.6]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.6
 [5.0.5]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.5
 [5.0.4]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.4

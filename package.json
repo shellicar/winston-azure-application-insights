@@ -1,6 +1,6 @@
 {
   "name": "@shellicar/winston-azure-application-insights",
-  "version": "5.0.6",
+  "version": "5.0.7",
   "private": false,
   "description": "Azure Application Insights transport for Winston",
   "files": ["dist"],
