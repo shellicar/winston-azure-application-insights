@@ -1,18 +1,24 @@
 import { KnownSeverityLevel, TelemetryClient } from 'applicationinsightsv3';
 import td from 'testdouble';
-import { createWinstonLogger } from '../src';
+import { type Logger, createLogger } from 'winston';
+import { AzureApplicationInsightsLogger } from '../src';
 
 describe('appinsights-v3', () => {
-  const client = new TelemetryClient('InstrumentationKey=00000000-0000-0000-0000-000000000000');
-  const mock: testdouble.DoubledObject<TelemetryClient> = td.object(client);
-  const logger = createWinstonLogger({
-    winston: {
-      console: true,
-    },
-    insights: {
+  let logger: Logger;
+  let aiTransport: AzureApplicationInsightsLogger;
+  let mock: testdouble.DoubledObject<TelemetryClient>;
+  let client: TelemetryClient | undefined;
+
+  beforeEach(() => {
+    client = new TelemetryClient('InstrumentationKey=00000000-0000-0000-0000-000000000000');
+    mock = td.object(client);
+    aiTransport = new AzureApplicationInsightsLogger({
       version: 3,
       client: mock,
-    },
+    });
+    logger = createLogger({
+      transports: [aiTransport],
+    });
   });
 
   it('trace works', () => {
@@ -29,6 +35,30 @@ describe('appinsights-v3', () => {
   it('exception works', () => {
     const err = new Error('hi');
     logger.error(err);
+    td.verify(
+      mock.trackException(
+        td.matchers.contains({
+          exception: err,
+        }),
+      ),
+    );
+  });
+
+  it('exception works 2', () => {
+    const err = new Error('hi');
+    logger.error('error', err);
+    td.verify(
+      mock.trackException(
+        td.matchers.contains({
+          exception: err,
+        }),
+      ),
+    );
+  });
+
+  it('exception works 3', () => {
+    const err = new Error('hi');
+    logger.error('error', err);
     td.verify(
       mock.trackException(
         td.matchers.contains({

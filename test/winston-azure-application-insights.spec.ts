@@ -42,7 +42,7 @@ describe('winston-azure-application-insights', () => {
         const aiLogger = new AzureApplicationInsightsLogger({
           version: 3,
           client: null!,
-          level: 'warn',
+          defaultLevel: 'warn',
         });
 
         equal(aiLogger.level, 'warn');

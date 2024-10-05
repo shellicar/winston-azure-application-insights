@@ -1,49 +1,29 @@
 import type { TelemetryClient as TelemetryClientV2 } from 'applicationinsightsv2';
-import type { SeverityLevel as KnownSeverityLevelV2, TraceTelemetry as TraceTelemetryV2 } from 'applicationinsightsv2/out/Declarations/Contracts';
-import type { ExceptionTelemetry, KnownSeverityLevel as KnownSeverityLevelV3, TelemetryClient as TelemetryClientV3, TraceTelemetry as TraceTelemetryV3 } from 'applicationinsightsv3';
+import type { ExceptionTelemetry as ExceptionTelemetryV2, SeverityLevel as KnownSeverityLevelV2, TraceTelemetry as TraceTelemetryV2 } from 'applicationinsightsv2/out/Declarations/Contracts';
+import type { ExceptionTelemetry as ExceptionTelemetryV3, KnownSeverityLevel as KnownSeverityLevelV3, TelemetryClient as TelemetryClientV3, TraceTelemetry as TraceTelemetryV3 } from 'applicationinsightsv3';
 import TransportStream from 'winston-transport';
+import { defaultLogLevels } from './logLevels';
+import { type AzureApplicationInsightsLoggerOptions, type ITelemetryFilterV2, type ITelemetryFilterV3, LogLevel, type LogLevels, type PlainObject } from './types';
 
-type PlainObject = Record<string, any>;
-
-enum SeverityLevel {
-  Verbose = 0,
-  Information = 1,
-  Warning = 2,
-  Error = 3,
-  Critical = 4,
-}
-
-const severityLevelsV3: Record<SeverityLevel, KnownSeverityLevelV3> = {
-  [SeverityLevel.Verbose]: 'Verbose' as KnownSeverityLevelV3,
-  [SeverityLevel.Information]: 'Information' as KnownSeverityLevelV3,
-  [SeverityLevel.Warning]: 'Warning' as KnownSeverityLevelV3,
-  [SeverityLevel.Error]: 'Error' as KnownSeverityLevelV3,
-  [SeverityLevel.Critical]: 'Critical' as KnownSeverityLevelV3,
-};
-const severityLevelsV2: Record<SeverityLevel, KnownSeverityLevelV2> = {
-  [SeverityLevel.Verbose]: 0,
-  [SeverityLevel.Information]: 1,
-  [SeverityLevel.Warning]: 2,
-  [SeverityLevel.Error]: 3,
-  [SeverityLevel.Critical]: 4,
+const severityLevels = {
+  v2: {
+    [LogLevel.Verbose]: 0,
+    [LogLevel.Information]: 1,
+    [LogLevel.Warning]: 2,
+    [LogLevel.Error]: 3,
+    [LogLevel.Critical]: 4,
+  } satisfies Record<LogLevel, KnownSeverityLevelV2>,
+  v3: {
+    [LogLevel.Verbose]: 'Verbose' as KnownSeverityLevelV3,
+    [LogLevel.Information]: 'Information' as KnownSeverityLevelV3,
+    [LogLevel.Warning]: 'Warning' as KnownSeverityLevelV3,
+    [LogLevel.Error]: 'Error' as KnownSeverityLevelV3,
+    [LogLevel.Critical]: 'Critical' as KnownSeverityLevelV3,
+  } satisfies Record<LogLevel, KnownSeverityLevelV3>,
 };
 
-const getMessageLevel = (winstonLevel: string): SeverityLevel => {
-  const levels: Record<string, SeverityLevel> = {
-    emerg: SeverityLevel.Critical,
-    alert: SeverityLevel.Critical,
-    crit: SeverityLevel.Critical,
-    error: SeverityLevel.Error,
-    warning: SeverityLevel.Warning,
-    warn: SeverityLevel.Warning,
-    notice: SeverityLevel.Information,
-    info: SeverityLevel.Information,
-    verbose: SeverityLevel.Verbose,
-    debug: SeverityLevel.Verbose,
-    silly: SeverityLevel.Verbose,
-  } as const;
-
-  return levels[winstonLevel] ?? SeverityLevel.Information;
+const getMessageLevel = (levels: LogLevels, level: string): LogLevel => {
+  return levels[level];
 };
 
 const isErrorLike = (obj: unknown): obj is Error => {
@@ -58,10 +38,7 @@ const convertToPlainObject = (obj: any): PlainObject => {
   if (typeof obj !== 'object') {
     return obj;
   }
-  if (isPlainObject(obj)) {
-    return obj;
-  }
-  return Object.assign({}, obj);
+  return isPlainObject(obj) ? obj : { ...obj };
 };
 
 const extractPropsFromInfo = (info: PlainObject): PlainObject => {
@@ -70,8 +47,7 @@ const extractPropsFromInfo = (info: PlainObject): PlainObject => {
   return Object.keys(info)
     .filter((key) => !exclude.includes(key))
     .reduce<PlainObject>((props, key) => {
-      const value = info[key];
-      props[key] = convertToPlainObject(value);
+      props[key] = convertToPlainObject(info[key]);
       return props;
     }, {});
 };
@@ -88,47 +64,6 @@ const extractErrorPropsForTrace = (errorLike: Error): PlainObject => {
   return properties;
 };
 
-type AzureInsightsClientOptions =
-  | {
-      version: 2;
-      client: TelemetryClientV2;
-      filters?: ITelemetryFilterV2[];
-    }
-  | {
-      version: 3;
-      client: TelemetryClientV3;
-      filters?: ITelemetryFilterV3[];
-    };
-
-export type FilterTraceArgs = {
-  message: string;
-  severity: SeverityLevel;
-  properties: PlainObject;
-};
-
-export abstract class ITelemetryFilterV3 {
-  public filterTrace(trace: TraceTelemetryV3, client: TelemetryClientV3): boolean {
-    return true;
-  }
-  public filterException(trace: ExceptionTelemetry, client: TelemetryClientV3): boolean {
-    return true;
-  }
-}
-export abstract class ITelemetryFilterV2 {
-  public filterTrace(trace: TraceTelemetryV2, client: TelemetryClientV2): boolean {
-    return true;
-  }
-  public filterException(trace: ExceptionTelemetry, client: TelemetryClientV2): boolean {
-    return true;
-  }
-}
-
-export type AzureApplicationInsightsLoggerOptions = AzureInsightsClientOptions & {
-  level?: string;
-  silent?: boolean;
-  sendErrorsAsExceptions?: boolean;
-};
-
 export class AzureApplicationInsightsLogger extends TransportStream {
   public sendErrorsAsExceptions: boolean;
   readonly name: string;
@@ -138,60 +73,38 @@ export class AzureApplicationInsightsLogger extends TransportStream {
   }
 
   constructor(private readonly options: AzureApplicationInsightsLoggerOptions) {
-    super({ level: options.level ?? 'info', silent: options.silent ?? false });
+    super({ level: options.defaultLevel ?? 'info', silent: options.silent ?? false });
     this.name = 'applicationinsightslogger';
     this.sendErrorsAsExceptions = options.sendErrorsAsExceptions ?? true;
   }
 
-  private handleTrace(severity: SeverityLevel, info: PlainObject, message: string | undefined, logMeta: PlainObject): void {
+  private handleTrace(severity: LogLevel, info: PlainObject, message: string | undefined, logMeta: PlainObject): void {
     const traceProps = extractPropsFromInfo(info);
-    let errorArg: Error | undefined;
 
     if (isErrorLike(info)) {
-      errorArg = info;
-    } else if (isErrorLike(message)) {
-      errorArg = message as unknown as Error;
-    } else if (isErrorLike(logMeta)) {
-      errorArg = logMeta;
+      Object.assign(traceProps, extractErrorPropsForTrace(info));
     }
 
-    if (errorArg) {
-      Object.assign(traceProps, extractErrorPropsForTrace(errorArg));
-    }
-
-    if (logMeta !== errorArg) {
-      Object.assign(traceProps, logMeta);
-    }
+    Object.assign(traceProps, logMeta);
 
     if (this.options.version === 3) {
       const telemetry: TraceTelemetryV3 = {
         message: String(message),
-        severity: severityLevelsV3[severity],
+        severity: severityLevels.v3[severity],
         properties: traceProps,
       };
-      for (const f of this.options.filters ?? []) {
-        if (!f.filterTrace(telemetry, this.options.client)) {
-          return;
-        }
-      }
-      this.options.client.trackTrace(telemetry);
+      this.trackTraceV3(telemetry);
     } else {
       const telemetry: TraceTelemetryV2 = {
         message: String(message),
-        severity: severityLevelsV2[severity],
+        severity: severityLevels.v2[severity],
         properties: traceProps,
       };
-      for (const f of this.options.filters ?? []) {
-        if (!f.filterTrace(telemetry, this.options.client)) {
-          return;
-        }
-      }
-      this.options.client.trackTrace(telemetry);
+      this.trackTraceV2(telemetry);
     }
   }
 
   private handleException(info: PlainObject, message: string | undefined, logMeta: PlainObject): void {
-    const exceptionProps: PlainObject = {};
     let exception: Error | undefined;
 
     if (isErrorLike(info)) {
@@ -201,9 +114,10 @@ export class AzureApplicationInsightsLogger extends TransportStream {
     } else if (isErrorLike(logMeta)) {
       exception = logMeta;
     } else {
-      console.log('RETURNING', { message });
       return;
     }
+
+    const exceptionProps: PlainObject = {};
 
     if (typeof message === 'string' && exception.message !== message) {
       exceptionProps.message = message;
@@ -213,35 +127,65 @@ export class AzureApplicationInsightsLogger extends TransportStream {
       Object.assign(exceptionProps, logMeta);
     }
 
-    const telemetry: ExceptionTelemetry = { exception, properties: exceptionProps };
-    if (this.options.version === 2) {
-      for (const f of this.options.filters ?? []) {
-        if (!f.filterException(telemetry, this.options.client)) {
-          return;
-        }
-      }
+    if (this.options.version === 3) {
+      this.trackExceptionV3({ exception, properties: exceptionProps });
     } else {
-      for (const f of this.options.filters ?? []) {
-        if (!f.filterException(telemetry, this.options.client)) {
-          return;
-        }
+      this.trackExceptionV2({ exception, properties: exceptionProps });
+    }
+  }
+
+  private trackTraceV2(telemetry: TraceTelemetryV2): void {
+    for (const f of (this.options.filters ?? []) as ITelemetryFilterV2[]) {
+      if (!f.filterTrace(telemetry, this.options.client as TelemetryClientV2)) {
+        return;
       }
     }
-    this.options.client.trackException({ exception, properties: exceptionProps });
+    (this.options.client as TelemetryClientV2).trackTrace(telemetry);
+  }
+
+  private trackTraceV3(telemetry: TraceTelemetryV3): void {
+    for (const f of (this.options.filters ?? []) as ITelemetryFilterV3[]) {
+      if (!f.filterTrace(telemetry, this.options.client as TelemetryClientV3)) {
+        return;
+      }
+    }
+    (this.options.client as TelemetryClientV3).trackTrace(telemetry);
+  }
+
+  private trackExceptionV2(telemetry: ExceptionTelemetryV2): void {
+    for (const f of (this.options.filters ?? []) as ITelemetryFilterV2[]) {
+      if (!f.filterException(telemetry, this.options.client as TelemetryClientV2)) {
+        return;
+      }
+    }
+    (this.options.client as TelemetryClientV2).trackException(telemetry);
+  }
+
+  private trackExceptionV3(telemetry: ExceptionTelemetryV3): void {
+    for (const f of (this.options.filters ?? []) as ITelemetryFilterV3[]) {
+      if (!f.filterException(telemetry, this.options.client as TelemetryClientV3)) {
+        return;
+      }
+    }
+    (this.options.client as TelemetryClientV3).trackException(telemetry);
   }
 
   override log(info: PlainObject, callback: () => void): void {
     const { level, message } = info;
-    const severity = getMessageLevel(level);
+    const severity = this.getSeverity(level);
     const splat = Reflect.get(info, Symbol.for('splat')) ?? [];
     const logMeta = splat.length ? splat[0] : {};
 
     this.handleTrace(severity, info, message, logMeta);
 
-    if (this.sendErrorsAsExceptions && severity >= SeverityLevel.Error) {
+    if (this.sendErrorsAsExceptions && severity >= LogLevel.Error) {
       this.handleException(info, message, logMeta);
     }
 
     callback();
+  }
+
+  private getSeverity(level: string) {
+    return (this.options.levels ?? defaultLogLevels)[level] ?? this.options.defaultLevel;
   }
 }
