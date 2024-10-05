@@ -1,4 +1,7 @@
-import { type CreateWinstonLoggerOptions, createWinstonLogger, type isRunningInAzure, type isRunningLocally } from './helpers';
+import type { CreateWinstonLoggerOptions } from './CreateWinstonLoggerOptions';
+import { createWinstonLogger } from './createWinstonLogger';
+import type { isRunningInAzure } from './isRunningInAzure';
+import type { isRunningLocally } from './isRunningLocally';
 import { AzureApplicationInsightsLogger } from './winston-azure-application-insights';
 import { type AzureApplicationInsightsLoggerOptions, ITelemetryFilterV2, ITelemetryFilterV3 } from './winston-azure-application-insights';
 

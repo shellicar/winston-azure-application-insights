@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.0.5]
+
+### Changes
+
+* Expose `level` for creating logger.
+
 ## [5.0.4]
 
 ### Changes
@@ -65,6 +71,7 @@
 * Replace `treatErrorsAsExceptions` with `sendErrorsAsExceptions` following feedback from AI core team w/r best practice error tracking
 * Package install size drastically reduced
 
+[5.0.5]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.5
 [5.0.4]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.4
 [5.0.3]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.3
 [5.0.2]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.2
