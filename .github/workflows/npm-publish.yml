@@ -25,7 +25,7 @@ jobs:
       - run: pnpm run --if-present test
       - run: pnpm run ci
       - run: |
-          cd "packages/$(cat .packagename)"
+          # cd "packages/$(cat .packagename)"
           pnpm publish --ignore-scripts --no-git-checks
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
