@@ -23,18 +23,50 @@ const severityLevels = {
 };
 
 const isErrorLike = (obj: unknown): obj is Error => {
-  return obj instanceof Error;
+  if (obj instanceof Error) {
+    return true;
+  }
+
+  if (obj != null && typeof obj === 'object') {
+    const errorObj = obj as Record<string, unknown>;
+    return typeof errorObj.message === 'string' && typeof errorObj.stack === 'string' && typeof errorObj.name === 'string';
+  }
+
+  return false;
 };
 
 const isPlainObject = (obj: unknown): obj is PlainObject => {
   return obj !== null && typeof obj === 'object' && Object.getPrototypeOf(obj) === Object.prototype;
 };
 
-const convertToPlainObject = (obj: any): PlainObject => {
-  if (typeof obj !== 'object') {
+export const makeSerializable = (obj: unknown): unknown => {
+  // Handle primitives and null/undefined
+  if (typeof obj !== 'object' || obj == null) {
     return obj;
   }
-  return isPlainObject(obj) ? obj : { ...obj };
+
+  // Handle Error objects specially
+  if (isErrorLike(obj)) {
+    return {
+      message: obj.message,
+      name: obj.name,
+      stack: obj.stack,
+      ...Object.fromEntries(Object.entries(obj).filter(([key]) => key !== 'stack')),
+    };
+  }
+
+  // Handle Date objects
+  if (obj instanceof Date) {
+    return new Date(obj.getTime());
+  }
+
+  // For plain objects, return as-is
+  if (isPlainObject(obj)) {
+    return obj;
+  }
+
+  // For other objects (classes, arrays, etc), spread to plain object
+  return { ...obj };
 };
 
 const extractPropsFromInfo = (info: PlainObject): PlainObject => {
@@ -43,7 +75,7 @@ const extractPropsFromInfo = (info: PlainObject): PlainObject => {
   return Object.keys(info)
     .filter((key) => !exclude.includes(key))
     .reduce<PlainObject>((props, key) => {
-      props[key] = convertToPlainObject(info[key]);
+      props[key] = makeSerializable(info[key]);
       return props;
     }, {});
 };
@@ -54,7 +86,7 @@ const extractErrorPropsForTrace = (errorLike: Error): PlainObject => {
   };
   for (const [key, value] of Object.entries(errorLike)) {
     if (key !== 'stack' && Object.prototype.hasOwnProperty.call(errorLike, key)) {
-      properties[key] = convertToPlainObject(value);
+      properties[key] = makeSerializable(value);
     }
   }
   return properties;
@@ -100,33 +132,47 @@ export class AzureApplicationInsightsLogger extends TransportStream {
     }
   }
 
-  private handleException(info: PlainObject, message: string | undefined, logMeta: PlainObject): void {
-    let exception: Error | undefined;
+  private handleException(info: PlainObject, message: string | undefined, splat: unknown[]): void {
+    const exceptions: Error[] = [];
 
     if (isErrorLike(info)) {
-      exception = info;
+      exceptions.push(info);
     } else if (isErrorLike(message)) {
-      exception = message as unknown as Error;
-    } else if (isErrorLike(logMeta)) {
-      exception = logMeta;
-    } else {
+      exceptions.push(message);
+    }
+
+    for (const splatItem of splat) {
+      if (isErrorLike(splatItem)) {
+        exceptions.push(splatItem);
+      }
+    }
+
+    if (exceptions.length === 0) {
       return;
     }
 
-    const exceptionProps: PlainObject = {};
+    for (const exception of exceptions) {
+      const exceptionProps: PlainObject = {};
 
-    if (typeof message === 'string' && exception.message !== message) {
-      exceptionProps.message = message;
-    }
+      if (typeof message === 'string' && exception.message !== message) {
+        exceptionProps.message = message;
+      }
 
-    if (exception !== logMeta) {
-      Object.assign(exceptionProps, logMeta);
-    }
+      for (const splatItem of splat) {
+        if (!isErrorLike(splatItem)) {
+          if (typeof splatItem === 'string') {
+            exceptionProps.additionalInfo = exceptionProps.additionalInfo != null ? `${exceptionProps.additionalInfo}; ${splatItem}` : splatItem;
+          } else if (splatItem != null && typeof splatItem === 'object') {
+            Object.assign(exceptionProps, splatItem);
+          }
+        }
+      }
 
-    if (this.options.version === 3) {
-      this.trackExceptionV3({ exception, properties: exceptionProps });
-    } else {
-      this.trackExceptionV2({ exception, properties: exceptionProps });
+      if (this.options.version === 3) {
+        this.trackExceptionV3({ exception, properties: exceptionProps });
+      } else {
+        this.trackExceptionV2({ exception, properties: exceptionProps });
+      }
     }
   }
 
@@ -170,12 +216,12 @@ export class AzureApplicationInsightsLogger extends TransportStream {
     const { level, message } = info;
     const severity = this.getSeverity(level);
     const splat = Reflect.get(info, Symbol.for('splat')) ?? [];
-    const logMeta = splat.length ? splat[0] : {};
+    const logMeta = splat.length > 0 ? splat[0] : {};
 
     this.handleTrace(severity, info, message, logMeta);
 
     if (this.sendErrorsAsExceptions && severity >= LogLevel.Error) {
-      this.handleException(info, message, logMeta);
+      this.handleException(info, message, splat);
     }
 
     callback();
