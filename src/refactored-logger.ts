@@ -1,4 +1,3 @@
-import { inspect } from 'node:util';
 import TransportStream from 'winston-transport';
 
 export const splatSymbol = Symbol.for('splat');
@@ -28,7 +27,6 @@ export class RefactoredAzureApplicationInsightsTransport extends TransportStream
   }
 
   public override log(info: WinstonInfo, next: () => void) {
-    console.log('Received object', inspect(info, { depth: null, colors: true }));
     this.telemetryHandler.handleTelemetry({
       message: info.message,
     });
@@ -42,8 +40,7 @@ export function unconcatenateStep(info: WinstonInfo): WinstonInfo {
   const firstObject = splat?.[0] as { message?: unknown };
 
   if (firstObject?.message !== undefined) {
-    const expectedSuffix = ` ${firstObject.message?.toString() ?? 'undefined'}`;
-    console.log('Expected suffix', expectedSuffix);
+    const expectedSuffix = ` ${firstObject.message}`;
 
     if (info.message.endsWith(expectedSuffix)) {
       return {
@@ -54,4 +51,23 @@ export function unconcatenateStep(info: WinstonInfo): WinstonInfo {
   }
 
   return info;
+}
+
+export function extractErrorsStep(info: WinstonInfo): Error[] {
+  const errors: Error[] = [];
+
+  if (info instanceof Error) {
+    errors.push(info);
+  }
+
+  const splat = info[splatSymbol];
+  if (splat != null) {
+    for (const item of splat) {
+      if (item instanceof Error) {
+        errors.push(item);
+      }
+    }
+  }
+
+  return errors;
 }
