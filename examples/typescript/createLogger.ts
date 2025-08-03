@@ -3,7 +3,9 @@ import { defaultClient, setup } from 'applicationinsights';
 
 setup().start();
 const logger = createWinstonLogger({
-  console: true,
+  winston: {
+    console: true,
+  },
   insights: {
     version: 3,
     client: defaultClient,
