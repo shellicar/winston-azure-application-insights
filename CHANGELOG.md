@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.1.0]
+
+### Changes
+
+- Updated all dependencies to latest versions
+
 ## [5.0.7]
 
 ### Fixes

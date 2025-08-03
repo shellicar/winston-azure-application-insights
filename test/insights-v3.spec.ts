@@ -1,5 +1,6 @@
 import { KnownSeverityLevel, TelemetryClient } from 'applicationinsightsv3';
-import td from 'testdouble';
+import * as td from 'testdouble';
+import { beforeEach, describe, it } from 'vitest';
 import { type Logger, createLogger } from 'winston';
 import { AzureApplicationInsightsLogger } from '../src';
 

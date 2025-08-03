@@ -1,6 +1,6 @@
 import { defaultClient, setup } from 'applicationinsights';
 import winston from 'winston';
-import { AzureApplicationInsightsLogger } from './src/winston-azure-application-insights';
+import { AzureApplicationInsightsLogger } from '../../src/winston-azure-application-insights';
 
 const shouldPushToAppInsights = 'APPLICATIONINSIGHTS_CONNECTION_STRING' in process.env;
 
@@ -9,6 +9,7 @@ if (shouldPushToAppInsights) {
   winston.add(
     new AzureApplicationInsightsLogger({
       client: defaultClient,
+      version: 3,
     }),
   );
 } else {

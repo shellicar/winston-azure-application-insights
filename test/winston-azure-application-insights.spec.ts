@@ -1,6 +1,7 @@
 import { doesNotThrow, equal, ok } from 'node:assert/strict';
 import { KnownSeverityLevel, TelemetryClient, defaultClient, setup } from 'applicationinsightsv3';
-import td from 'testdouble';
+import * as td from 'testdouble';
+import { afterEach, beforeEach, describe, it } from 'vitest';
 import { type Logger, config, createLogger, format } from 'winston';
 import { AzureApplicationInsightsLogger } from '../src/winston-azure-application-insights';
 
