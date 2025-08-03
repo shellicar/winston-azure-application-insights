@@ -44,6 +44,7 @@ export type FilterTraceArgs = {
 export type AzureApplicationInsightsLoggerOptionsBase = AzureInsightsClientOptions & {
   silent?: boolean;
   sendErrorsAsExceptions?: boolean;
+  warnOnMessageProperty?: boolean;
 };
 
 export type AzureApplicationInsightsLoggerOptions = AzureApplicationInsightsLoggerOptionsBase & {

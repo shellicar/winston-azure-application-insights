@@ -2,8 +2,9 @@ import type { TelemetryClient as TelemetryClientV2 } from 'applicationinsightsv2
 import type { ExceptionTelemetry as ExceptionTelemetryV2, SeverityLevel as KnownSeverityLevelV2, TraceTelemetry as TraceTelemetryV2 } from 'applicationinsightsv2/out/Declarations/Contracts';
 import type { ExceptionTelemetry as ExceptionTelemetryV3, KnownSeverityLevel as KnownSeverityLevelV3, TelemetryClient as TelemetryClientV3, TraceTelemetry as TraceTelemetryV3 } from 'applicationinsightsv3';
 import TransportStream from 'winston-transport';
+import { isRunningLocally } from './isRunningLocally';
 import { defaultLogLevels } from './logLevels';
-import { type AzureApplicationInsightsLoggerOptions, type AzureLogLevels, type ITelemetryFilterV2, type ITelemetryFilterV3, LogLevel, type PlainObject } from './types';
+import { type AzureApplicationInsightsLoggerOptions, type ITelemetryFilterV2, type ITelemetryFilterV3, LogLevel, type PlainObject } from './types';
 
 const severityLevels = {
   v2: {
@@ -40,12 +41,10 @@ const isPlainObject = (obj: unknown): obj is PlainObject => {
 };
 
 export const makeSerializable = (obj: unknown): unknown => {
-  // Handle primitives and null/undefined
   if (typeof obj !== 'object' || obj == null) {
     return obj;
   }
 
-  // Handle Error objects specially
   if (isErrorLike(obj)) {
     return {
       message: obj.message,
@@ -54,18 +53,14 @@ export const makeSerializable = (obj: unknown): unknown => {
       ...Object.fromEntries(Object.entries(obj).filter(([key]) => key !== 'stack')),
     };
   }
-
-  // Handle Date objects
   if (obj instanceof Date) {
-    return new Date(obj.getTime());
+    return obj;
   }
 
-  // For plain objects, return as-is
   if (isPlainObject(obj)) {
     return obj;
   }
 
-  // For other objects (classes, arrays, etc), spread to plain object
   return { ...obj };
 };
 
@@ -95,6 +90,7 @@ const extractErrorPropsForTrace = (errorLike: Error): PlainObject => {
 export class AzureApplicationInsightsLogger extends TransportStream {
   public sendErrorsAsExceptions: boolean;
   readonly name: string;
+  private readonly warnOnMessageProperty: boolean;
 
   public get client(): TelemetryClientV3 | TelemetryClientV2 {
     return this.options.client;
@@ -104,6 +100,7 @@ export class AzureApplicationInsightsLogger extends TransportStream {
     super({ level: options.defaultLevel ?? 'info', silent: options.silent ?? false });
     this.name = 'applicationinsightslogger';
     this.sendErrorsAsExceptions = options.sendErrorsAsExceptions ?? true;
+    this.warnOnMessageProperty = options.warnOnMessageProperty ?? isRunningLocally();
   }
 
   private handleTrace(severity: LogLevel, info: PlainObject, message: string | undefined, logMeta: PlainObject): void {
@@ -212,11 +209,31 @@ export class AzureApplicationInsightsLogger extends TransportStream {
     (this.options.client as TelemetryClientV3).trackException(telemetry);
   }
 
+  private warnIfMessagePropertyFoundInLogData(splat: unknown[]): void {
+    if (!this.warnOnMessageProperty) {
+      return;
+    }
+
+    for (const splatItem of splat) {
+      if (splatItem != null && typeof splatItem === 'object' && !isErrorLike(splatItem)) {
+        const obj = splatItem as Record<string, unknown>;
+        if ('message' in obj) {
+          console.warn(
+            `[winston-azure-application-insights] Warning: Found "message" property with value "${obj.message}" in log data. Winston will merge this with your main message. Consider using a different property name like "description" or "text". Set warnOnMessageProperty: false to disable this warning.`,
+          );
+          break;
+        }
+      }
+    }
+  }
+
   override log(info: PlainObject, callback: () => void): void {
     const { level, message } = info;
     const severity = this.getSeverity(level);
     const splat = Reflect.get(info, Symbol.for('splat')) ?? [];
     const logMeta = splat.length > 0 ? splat[0] : {};
+
+    this.warnIfMessagePropertyFoundInLogData(splat);
 
     this.handleTrace(severity, info, message, logMeta);
 

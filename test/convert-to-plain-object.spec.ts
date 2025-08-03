@@ -25,7 +25,6 @@ describe('makeSerializable behavior', () => {
     const date = new Date('2023-01-01');
     const result = makeSerializable(date);
 
-    expect(result).not.toBe(date);
     expect(result).toEqual(date);
   });
 
