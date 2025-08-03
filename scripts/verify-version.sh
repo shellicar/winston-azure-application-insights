@@ -1,6 +1,7 @@
 #!/bin/sh
 PACKAGE_NAME=$(cat .packagename)
-VERSION=$(git show :packages/$PACKAGE_NAME/package.json | node -p "JSON.parse(require('fs').readFileSync(0)).version")
+# TODO: Adopt monorepo
+VERSION=$(git show :package.json | node -p "JSON.parse(require('fs').readFileSync(0)).version")
 CHANGELOG=$(git show :CHANGELOG.md)
 
 # Check current version has header
