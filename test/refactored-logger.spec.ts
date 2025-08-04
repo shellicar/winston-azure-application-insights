@@ -89,7 +89,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     it('should receive winston info with message property in object', () => {
-      const expected = 'hello world';
+      const expected = 'hello'; // NEW: expect cleaned message, not concatenated
 
       logger.info('hello', { message: 'world' });
 
@@ -374,15 +374,16 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: ['string', 42, properties1, error, null, properties2, true],
       };
 
-      it('should return array with first object at index 2', () => {
+      it('should return array with first object at correct index after filtering', () => {
         const result = extractPropertiesStep(info) as unknown[];
-
+        // After filtering: ['string', 42, { userId: 123 }, null, { sessionId: 'abc' }, true]
         expect(result[2]).toEqual({ userId: 123 });
       });
 
-      it('should return array with second object at index 3', () => {
+      it('should return array with second object at correct index after filtering', () => {
         const result = extractPropertiesStep(info) as unknown[];
-        expect(result[3]).toEqual({ sessionId: 'abc' });
+        // After filtering errors: ['string', 42, { userId: 123 }, null, { sessionId: 'abc' }, true]
+        expect(result[4]).toEqual({ sessionId: 'abc' }); // NEW: index 4, not 3
       });
     });
 
