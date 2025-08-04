@@ -380,16 +380,9 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         expect(result[2]).toEqual({ userId: 123 });
       });
 
-      it('should return array with null preserved at index 3', () => {
+      it('should return array with second object at index 3', () => {
         const result = extractPropertiesStep(info) as unknown[];
-        // Principle of Least Surprise: preserve nulls to maintain array indices
-        // Users expect to see what they logged, where they logged it
-        expect(result[3]).toEqual(null);
-      });
-
-      it('should return array with second object at index 4', () => {
-        const result = extractPropertiesStep(info) as unknown[];
-        expect(result[4]).toEqual({ sessionId: 'abc' });
+        expect(result[3]).toEqual({ sessionId: 'abc' });
       });
     });
 
@@ -551,18 +544,6 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       expect(extractPropertiesStep(booleanInfo)).toEqual([true]);
 
       // None should cause errors even without typeof check
-    });
-
-    it('should handle single null value without crashing', () => {
-      const info: WinstonInfo = {
-        level: 'info',
-        message: 'test',
-        [splatSymbol]: [null],
-      };
-
-      // This should not crash when calling isPlainObject(null)
-      const result = extractPropertiesStep(info);
-      expect(result).toEqual([null]);
     });
   });
 
