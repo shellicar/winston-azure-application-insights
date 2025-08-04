@@ -4565,7 +4565,7 @@ snapshots:
 
   diagnostic-channel@1.1.1:
     dependencies:
-      semver: 7.6.3
+      semver: 7.7.2
     optional: true
 
   doctrine@2.1.0:

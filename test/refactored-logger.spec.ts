@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger, format, transports } from 'winston';
 import TransportStream from 'winston-transport';
-import { RefactoredAzureApplicationInsightsTransport, type WinstonInfo, extractErrorsStep, extractPropertiesStep, splatSymbol, unconcatenateStep } from '../src/refactored-logger';
+import { RefactoredAzureApplicationInsightsTransport, type WinstonInfo, extractErrorsStep, extractMessageStep, extractPropertiesStep, splatSymbol } from '../src/refactored-logger';
 
 class ErrorTransport extends TransportStream {
   public errors: Error[] = [];
@@ -108,7 +108,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [{ message: 'world' }],
       };
 
-      const result = unconcatenateStep(info);
+      const result = extractMessageStep(info);
       const actual = result.message;
 
       expect(actual).toBe(expected);
@@ -121,7 +121,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [{ message: 'universe' }],
       };
 
-      const result = unconcatenateStep(info);
+      const result = extractMessageStep(info);
       expect(result.message).toBe('goodbye');
     });
 
@@ -134,7 +134,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [{ message: { x: '5' } }],
       };
 
-      const result = unconcatenateStep(info);
+      const result = extractMessageStep(info);
       const actual = result.message;
 
       expect(actual).toBe(expected);
@@ -149,7 +149,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [{ message: 50 }],
       };
 
-      const result = unconcatenateStep(info);
+      const result = extractMessageStep(info);
       const actual = result.message;
 
       expect(actual).toBe(expected);
@@ -164,7 +164,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [{ message: null }],
       };
 
-      const result = unconcatenateStep(info);
+      const result = extractMessageStep(info);
       const actual = result.message;
 
       expect(actual).toBe(expected);
@@ -191,7 +191,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [meta],
       };
 
-      const result = unconcatenateStep(info);
+      const result = extractMessageStep(info);
       const actual = result.message;
 
       expect(actual).toBe(expected);
@@ -205,7 +205,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         message: 'hello world',
       };
 
-      const result = unconcatenateStep(info);
+      const result = extractMessageStep(info);
       const actual = result.message;
 
       expect(actual).toBe(expected);
@@ -231,7 +231,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [new Error('2'), new Error('3')],
       };
 
-      const result = unconcatenateStep(info);
+      const result = extractMessageStep(info);
       const actual = result.message;
 
       expect(actual).toBe(expected);
@@ -374,15 +374,22 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: ['string', 42, properties1, error, null, properties2, true],
       };
 
-      it('should wrap with custom0 for first object', () => {
-        const result = extractPropertiesStep(info);
+      it('should return array with first object at index 2', () => {
+        const result = extractPropertiesStep(info) as unknown[];
 
-        expect(result.custom0).toEqual({ userId: 123 });
+        expect(result[2]).toEqual({ userId: 123 });
       });
 
-      it('should wrap with custom1 for second object', () => {
-        const result = extractPropertiesStep(info);
-        expect(result.custom1).toEqual({ sessionId: 'abc' });
+      it('should return array with null preserved at index 3', () => {
+        const result = extractPropertiesStep(info) as unknown[];
+        // Principle of Least Surprise: preserve nulls to maintain array indices
+        // Users expect to see what they logged, where they logged it
+        expect(result[3]).toEqual(null);
+      });
+
+      it('should return array with second object at index 4', () => {
+        const result = extractPropertiesStep(info) as unknown[];
+        expect(result[4]).toEqual({ sessionId: 'abc' });
       });
     });
 
@@ -415,14 +422,156 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       expect(result).toEqual({ key1: 'hello', key2: 'world' });
     });
+
+    it('should return empty object when splat contains only errors', () => {
+      const info: WinstonInfo = {
+        level: 'error',
+        message: 'error occurred',
+        [splatSymbol]: [new Error('test error')],
+      };
+
+      const result = extractPropertiesStep(info);
+
+      expect(result).toEqual({});
+    });
+  });
+
+  describe('Object Type Discrimination Tests', () => {
+    it('should extract plain object directly', () => {
+      const plainObject = { userId: 123, action: 'login' };
+      const info: WinstonInfo = {
+        level: 'info',
+        message: 'test',
+        [splatSymbol]: [plainObject],
+      };
+
+      const result = extractPropertiesStep(info);
+
+      expect(result).toEqual({ userId: 123, action: 'login' });
+    });
+
+    it('should handle array as single item', () => {
+      const arrayObject = [1, 2, 3];
+      const info: WinstonInfo = {
+        level: 'info',
+        message: 'test',
+        [splatSymbol]: [arrayObject],
+      };
+
+      const result = extractPropertiesStep(info);
+
+      // With prototype check: Arrays are wrapped to preserve them as values
+      // This prevents array indices from being extracted as properties
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toEqual([[1, 2, 3]]);
+    });
+
+    it('should handle Date as single item', () => {
+      const dateObject = new Date('2025-01-01');
+      const info: WinstonInfo = {
+        level: 'info',
+        message: 'test',
+        [splatSymbol]: [dateObject],
+      };
+
+      const result = extractPropertiesStep(info);
+
+      // With prototype check: Date is wrapped so it's preserved in Azure telemetry
+      // This ensures the date appears as { 0: "2025-01-01T..." } instead of being ignored
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toEqual([dateObject]);
+    });
+
+    it('should preserve dates by wrapping them in arrays (failing test for desired behavior)', () => {
+      const dateObject = new Date('2025-01-01');
+      const info: WinstonInfo = {
+        level: 'info',
+        message: 'test',
+        [splatSymbol]: [dateObject],
+      };
+
+      const result = extractPropertiesStep(info);
+
+      // DESIRED BEHAVIOR: Date should be wrapped so it's preserved in Azure telemetry
+      // This test will fail with current implementation, but shows what we want
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toEqual([dateObject]);
+    });
+
+    it('should handle custom class as single item', () => {
+      class CustomClass {
+        prop = 'value';
+        method() {
+          return 'test';
+        }
+      }
+      const customObject = new CustomClass();
+
+      const info: WinstonInfo = {
+        level: 'info',
+        message: 'test',
+        [splatSymbol]: [customObject],
+      };
+
+      const result = extractPropertiesStep(info);
+
+      // With prototype check: Custom classes are wrapped in arrays (preserved as objects)
+      // This prevents their properties from being extracted directly
+      expect(Array.isArray(result)).toBe(true);
+      expect(result).toEqual([customObject]);
+    });
+
+    it('should handle primitives without typeof check (testing if prototype check is sufficient)', () => {
+      // Test what happens with primitives when we only have prototype check
+      const stringValue = 'hello';
+      const numberValue = 42;
+      const booleanValue = true;
+
+      const stringInfo: WinstonInfo = {
+        level: 'info',
+        message: 'test',
+        [splatSymbol]: [stringValue],
+      };
+
+      const numberInfo: WinstonInfo = {
+        level: 'info',
+        message: 'test',
+        [splatSymbol]: [numberValue],
+      };
+
+      const booleanInfo: WinstonInfo = {
+        level: 'info',
+        message: 'test',
+        [splatSymbol]: [booleanValue],
+      };
+
+      // All primitives should be wrapped in arrays since they fail prototype check
+      expect(extractPropertiesStep(stringInfo)).toEqual(['hello']);
+      expect(extractPropertiesStep(numberInfo)).toEqual([42]);
+      expect(extractPropertiesStep(booleanInfo)).toEqual([true]);
+
+      // None should cause errors even without typeof check
+    });
+
+    it('should handle single null value without crashing', () => {
+      const info: WinstonInfo = {
+        level: 'info',
+        message: 'test',
+        [splatSymbol]: [null],
+      };
+
+      // This should not crash when calling isPlainObject(null)
+      const result = extractPropertiesStep(info);
+      expect(result).toEqual([null]);
+    });
   });
 
   describe('Integration - Full Pipeline', () => {
     const propertiesTransport = new (class extends TransportStream {
-      public properties: Record<string, unknown> = {};
+      public properties: Record<string, unknown> | unknown[] = {};
       override log(info: any, next: () => void) {
         // Simulate the full pipeline
-        const unconcatenated = unconcatenateStep(info);
+        const unconcatenated = extractMessageStep(info);
         this.properties = extractPropertiesStep(unconcatenated);
         next();
       }
@@ -436,29 +585,99 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       propertiesTransport.properties = {};
     });
 
-    it('should extract properties from logger.info with single object', () => {
-      logger.info('User action', { userId: 123, action: 'login' });
+    describe('Message only', () => {
+      it('should return empty properties when logging just a message', () => {
+        logger.info('Just a message');
 
-      expect(propertiesTransport.properties).toEqual({
-        userId: 123,
-        action: 'login',
+        expect(propertiesTransport.properties).toEqual({});
       });
     });
 
-    it('should extract properties from logger.info with multiple objects', () => {
-      logger.info('Complex action', { userId: 123 }, { sessionId: 'abc-456' });
+    describe('Message + Single Primitive', () => {
+      it('should extract single string as array', () => {
+        logger.info('Single primitive', 'important-value');
 
-      expect(propertiesTransport.properties).toEqual({
-        custom0: { userId: 123 },
-        custom1: { sessionId: 'abc-456' },
+        expect(propertiesTransport.properties).toEqual(['important-value']);
+      });
+
+      it('should extract single number as array', () => {
+        logger.info('Single number', 42);
+
+        expect(propertiesTransport.properties).toEqual([42]);
+      });
+
+      it('should extract single boolean as array', () => {
+        logger.info('Single boolean', true);
+
+        expect(propertiesTransport.properties).toEqual([true]);
       });
     });
 
-    it('should handle mixed types including errors', () => {
-      logger.error('Error occurred', new Error('test error'), { contextId: 'ctx-123' });
+    describe('Message + Single Object', () => {
+      it('should extract single object properties directly', () => {
+        logger.info('User action', { userId: 123, action: 'login' });
 
-      expect(propertiesTransport.properties).toEqual({
-        contextId: 'ctx-123',
+        expect(propertiesTransport.properties).toEqual({
+          userId: 123,
+          action: 'login',
+        });
+      });
+
+      it('should handle object with message property directly', () => {
+        logger.info('Action', { message: 'world', userId: 123 });
+
+        expect(propertiesTransport.properties).toEqual({
+          message: 'world',
+          userId: 123,
+        });
+      });
+    });
+
+    describe('Message + Single Error', () => {
+      it('should return empty properties when logging with single error', () => {
+        logger.error('Error occurred', new Error('test error'));
+
+        expect(propertiesTransport.properties).toEqual({});
+      });
+    });
+
+    describe('Message + Multiple Objects', () => {
+      it('should return multiple objects as array', () => {
+        logger.info('Complex action', { userId: 123 }, { sessionId: 'abc-456' });
+
+        expect(propertiesTransport.properties).toEqual([{ userId: 123 }, { sessionId: 'abc-456' }]);
+      });
+    });
+
+    describe('Message + Multiple Primitives', () => {
+      it('should return multiple primitives as array', () => {
+        logger.info('Mixed primitives', 'user123', 42, true);
+
+        expect(propertiesTransport.properties).toEqual(['user123', 42, true]);
+      });
+    });
+
+    describe('Message + Mixed Types (Objects + Primitives)', () => {
+      it('should return all non-error items as array', () => {
+        logger.info('Mixed types', { userId: 123 }, 'session-abc', 42, { contextId: 'ctx-123' });
+
+        expect(propertiesTransport.properties).toEqual([{ userId: 123 }, 'session-abc', 42, { contextId: 'ctx-123' }]);
+      });
+    });
+
+    describe('Message + Mixed Types Including Errors', () => {
+      it('should extract only non-error items, ignoring errors (single object)', () => {
+        logger.error('Error occurred', new Error('test error'), { contextId: 'ctx-123' });
+
+        expect(propertiesTransport.properties).toEqual({
+          contextId: 'ctx-123',
+        });
+      });
+
+      it('should extract objects and primitives while ignoring errors (multiple items)', () => {
+        logger.error('Complex error', new Error('error1'), { userId: 123 }, 'debug-info', new Error('error2'), 42);
+
+        expect(propertiesTransport.properties).toEqual([{ userId: 123 }, 'debug-info', 42]);
       });
     });
   });

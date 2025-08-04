@@ -35,12 +35,12 @@ export class RefactoredAzureApplicationInsightsTransport extends TransportStream
   }
 }
 
-export function unconcatenateStep(info: WinstonInfo): WinstonInfo {
+export const extractMessageStep = (info: WinstonInfo): WinstonInfo => {
   const splat = info[splatSymbol];
-  const firstObject = splat?.[0] as { message?: unknown };
+  const meta = splat?.[0] as { message?: unknown };
 
-  if (firstObject?.message !== undefined) {
-    const expectedSuffix = ` ${firstObject.message}`;
+  if (meta?.message !== undefined) {
+    const expectedSuffix = ` ${meta.message}`;
 
     if (info.message.endsWith(expectedSuffix)) {
       return {
@@ -51,9 +51,9 @@ export function unconcatenateStep(info: WinstonInfo): WinstonInfo {
   }
 
   return info;
-}
+};
 
-export function extractErrorsStep(info: WinstonInfo): Error[] {
+export const extractErrorsStep = (info: WinstonInfo): Error[] => {
   const errors: Error[] = [];
 
   if (info instanceof Error) {
@@ -70,43 +70,30 @@ export function extractErrorsStep(info: WinstonInfo): Error[] {
   }
 
   return errors;
-}
+};
 
-export function extractPropertiesStep(info: WinstonInfo): Record<string, unknown> {
+const isError = (item: unknown): item is Error => item instanceof Error;
+
+const isPlainObject = (obj: unknown): obj is Record<string, unknown> => obj != null && typeof obj === 'object' && Object.getPrototypeOf(obj) === Object.prototype;
+
+export const extractPropertiesStep = (info: WinstonInfo): Record<string, unknown> | unknown[] => {
   const splat = info[splatSymbol];
 
-  if (!splat || !Array.isArray(splat)) {
-    return {};
+  if (splat != null && splat.length > 0) {
+    const nonErrorItems = splat.filter((x) => !isError(x));
+
+    if (nonErrorItems.length === 0) {
+      return {};
+    }
+
+    if (nonErrorItems.length === 1) {
+      if (isPlainObject(nonErrorItems[0])) {
+        return nonErrorItems[0];
+      }
+    }
+
+    return nonErrorItems;
   }
 
-  // Filter out primitives, null, undefined, and Errors
-  const propertyObjects = splat.filter((item) => {
-    if (item === null || item === undefined) {
-      return false;
-    }
-    if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
-      return false;
-    }
-    if (item instanceof Error) {
-      return false;
-    }
-    return typeof item === 'object';
-  });
-
-  if (propertyObjects.length === 0) {
-    return {};
-  }
-
-  if (propertyObjects.length === 1) {
-    // Single object - return directly
-    return propertyObjects[0] as Record<string, unknown>;
-  }
-
-  // Multiple objects - wrap with custom0, custom1, etc.
-  const result: Record<string, unknown> = {};
-  propertyObjects.forEach((obj, index) => {
-    result[`custom${index}`] = obj;
-  });
-
-  return result;
-}
+  return {};
+};
