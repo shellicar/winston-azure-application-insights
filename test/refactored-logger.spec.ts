@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createLogger } from 'winston';
+import { createLogger, format, transports } from 'winston';
 import TransportStream from 'winston-transport';
-import { RefactoredAzureApplicationInsightsTransport, type WinstonInfo, extractErrorsStep, splatSymbol, unconcatenateStep } from '../src/refactored-logger';
+import { RefactoredAzureApplicationInsightsTransport, type WinstonInfo, extractErrorsStep, extractPropertiesStep, splatSymbol, unconcatenateStep } from '../src/refactored-logger';
 
 class ErrorTransport extends TransportStream {
   public errors: Error[] = [];
@@ -286,7 +286,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       expect(result.length).toBe(0);
     });
 
-    it('should handle mixed types in splat', () => {
+    describe('should handle mixed types in splat', () => {
       const error1 = new Error('error1');
       const error2 = new Error('error2');
 
@@ -296,11 +296,29 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: ['string', 42, { userId: 123 }, error1, null, undefined, error2, true],
       };
 
-      const result = extractErrorsStep(info);
+      it('has two errors in splat', () => {
+        const expected = 2;
 
-      expect(result.length).toBe(2);
-      expect(result[0]).toBe(error1);
-      expect(result[1]).toBe(error2);
+        const result = extractErrorsStep(info);
+
+        expect(result.length).toBe(expected);
+      });
+
+      it('passes first error', () => {
+        const expected = error1;
+
+        const result = extractErrorsStep(info);
+
+        expect(result[0]).toBe(expected);
+      });
+
+      it('passes second error', () => {
+        const expected = error2;
+
+        const result = extractErrorsStep(info);
+
+        expect(result[1]).toBe(expected);
+      });
     });
 
     it('should handle null and undefined items in splat', () => {
@@ -316,6 +334,202 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       expect(result.length).toBe(1);
       expect(result[0]).toBe(error);
+    });
+  });
+
+  describe('extractPropertiesStep', () => {
+    it('should extract single property object directly', () => {
+      const expectedProperties = { userId: 123, action: 'login' };
+
+      const info: WinstonInfo = {
+        level: 'info',
+        message: 'User logged in',
+        [splatSymbol]: [expectedProperties],
+      };
+
+      const result = extractPropertiesStep(info);
+
+      expect(result).toEqual({ userId: 123, action: 'login' });
+    });
+
+    it('should return empty object when no properties', () => {
+      const info: WinstonInfo = {
+        level: 'info',
+        message: 'simple message',
+      };
+
+      const result = extractPropertiesStep(info);
+
+      expect(result).toEqual({});
+    });
+
+    describe('with multiple property objects', () => {
+      const properties1 = { userId: 123 };
+      const properties2 = { sessionId: 'abc' };
+      const error = new Error('test');
+
+      const info: WinstonInfo = {
+        level: 'info',
+        message: 'mixed data',
+        [splatSymbol]: ['string', 42, properties1, error, null, properties2, true],
+      };
+
+      it('should wrap with custom0 for first object', () => {
+        const result = extractPropertiesStep(info);
+
+        expect(result.custom0).toEqual({ userId: 123 });
+      });
+
+      it('should wrap with custom1 for second object', () => {
+        const result = extractPropertiesStep(info);
+        expect(result.custom1).toEqual({ sessionId: 'abc' });
+      });
+    });
+
+    it('should handle object with message property directly when single', () => {
+      const properties = { message: 'world', userId: 123 };
+
+      const info: WinstonInfo = {
+        level: 'info',
+        message: 'hello',
+        [splatSymbol]: [properties],
+      };
+
+      const result = extractPropertiesStep(info);
+
+      expect(result).toEqual({ message: 'world', userId: 123 });
+    });
+
+    it('should extract single property object even with multiple errors', () => {
+      const properties = { key1: 'hello', key2: 'world' };
+      const error1 = new Error('error1');
+      const error2 = new Error('error2');
+
+      const info: WinstonInfo = {
+        level: 'error',
+        message: 'oh noes',
+        [splatSymbol]: [error1, error2, properties],
+      };
+
+      const result = extractPropertiesStep(info);
+
+      expect(result).toEqual({ key1: 'hello', key2: 'world' });
+    });
+  });
+
+  describe('Integration - Full Pipeline', () => {
+    const propertiesTransport = new (class extends TransportStream {
+      public properties: Record<string, unknown> = {};
+      override log(info: any, next: () => void) {
+        // Simulate the full pipeline
+        const unconcatenated = unconcatenateStep(info);
+        this.properties = extractPropertiesStep(unconcatenated);
+        next();
+      }
+    })();
+
+    const logger = createLogger({
+      transports: [propertiesTransport],
+    });
+
+    beforeEach(() => {
+      propertiesTransport.properties = {};
+    });
+
+    it('should extract properties from logger.info with single object', () => {
+      logger.info('User action', { userId: 123, action: 'login' });
+
+      expect(propertiesTransport.properties).toEqual({
+        userId: 123,
+        action: 'login',
+      });
+    });
+
+    it('should extract properties from logger.info with multiple objects', () => {
+      logger.info('Complex action', { userId: 123 }, { sessionId: 'abc-456' });
+
+      expect(propertiesTransport.properties).toEqual({
+        custom0: { userId: 123 },
+        custom1: { sessionId: 'abc-456' },
+      });
+    });
+
+    it('should handle mixed types including errors', () => {
+      logger.error('Error occurred', new Error('test error'), { contextId: 'ctx-123' });
+
+      expect(propertiesTransport.properties).toEqual({
+        contextId: 'ctx-123',
+      });
+    });
+  });
+
+  describe('Winston behavior with edge cases', () => {
+    it('should see how winston handles functions', () => {
+      const logger = createLogger({
+        transports: [
+          new transports.Console({
+            format: format.simple(),
+          }),
+        ],
+      });
+
+      const testFunction = () => 'test';
+      logger.info('Function test', testFunction);
+    });
+
+    it('should see how winston handles arrays', () => {
+      const logger = createLogger({
+        transports: [
+          new transports.Console({
+            format: format.simple(),
+          }),
+        ],
+      });
+
+      logger.info('Array test', [1, 2, 3]);
+    });
+
+    it('should see how winston handles dates', () => {
+      const logger = createLogger({
+        transports: [
+          new transports.Console({
+            format: format.simple(),
+          }),
+        ],
+      });
+
+      logger.info('Date test', new Date('2025-01-01'));
+    });
+
+    it('should see how winston handles regex', () => {
+      const logger = createLogger({
+        transports: [
+          new transports.Console({
+            format: format.simple(),
+          }),
+        ],
+      });
+
+      logger.info('RegExp test', /hello/g);
+    });
+
+    it('should see how winston handles custom classes', () => {
+      const logger = createLogger({
+        transports: [
+          new transports.Console({
+            format: format.simple(),
+          }),
+        ],
+      });
+
+      class CustomClass {
+        prop = 'value';
+        toString() {
+          return 'CustomClass instance';
+        }
+      }
+
+      logger.info('Custom class test', new CustomClass());
     });
   });
 });

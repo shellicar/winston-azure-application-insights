@@ -71,3 +71,42 @@ export function extractErrorsStep(info: WinstonInfo): Error[] {
 
   return errors;
 }
+
+export function extractPropertiesStep(info: WinstonInfo): Record<string, unknown> {
+  const splat = info[splatSymbol];
+
+  if (!splat || !Array.isArray(splat)) {
+    return {};
+  }
+
+  // Filter out primitives, null, undefined, and Errors
+  const propertyObjects = splat.filter((item) => {
+    if (item === null || item === undefined) {
+      return false;
+    }
+    if (typeof item === 'string' || typeof item === 'number' || typeof item === 'boolean') {
+      return false;
+    }
+    if (item instanceof Error) {
+      return false;
+    }
+    return typeof item === 'object';
+  });
+
+  if (propertyObjects.length === 0) {
+    return {};
+  }
+
+  if (propertyObjects.length === 1) {
+    // Single object - return directly
+    return propertyObjects[0] as Record<string, unknown>;
+  }
+
+  // Multiple objects - wrap with custom0, custom1, etc.
+  const result: Record<string, unknown> = {};
+  propertyObjects.forEach((obj, index) => {
+    result[`custom${index}`] = obj;
+  });
+
+  return result;
+}
