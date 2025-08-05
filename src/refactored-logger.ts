@@ -6,11 +6,23 @@ export type ExtractedProperties = Record<string, unknown> | unknown[];
 
 export type SplatFilter = (item: unknown) => boolean;
 
+export interface WinstonLevels {
+  [levelName: string]: number;
+}
+
+export enum TelemetrySeverity {
+  Verbose = 'Verbose',
+  Information = 'Information',
+  Warning = 'Warning',
+  Error = 'Error',
+  Critical = 'Critical',
+}
+
 export interface TelemetryData {
   message: string;
   properties: ExtractedProperties;
   errors: Error[];
-  level: string;
+  severity: TelemetrySeverity;
 }
 
 export interface TelemetryHandler {
@@ -25,25 +37,41 @@ export interface WinstonInfo {
   [key: symbol]: unknown;
 }
 
+export interface SeverityMapping {
+  [level: string]: TelemetrySeverity;
+}
+
 export interface ConstructorOptions {
   telemetryHandler: TelemetryHandler;
   sendErrorsAsExceptions?: boolean;
+  severityMapping?: SeverityMapping;
 }
 
 interface RequiredOptions {
   telemetryHandler: TelemetryHandler;
   sendErrorsAsExceptions: boolean;
+  severityMapping: SeverityMapping;
 }
+
+const defaultSeverityMapping: SeverityMapping = {
+  error: TelemetrySeverity.Error,
+  warn: TelemetrySeverity.Warning,
+  info: TelemetrySeverity.Information,
+  verbose: TelemetrySeverity.Verbose,
+};
 
 export class RefactoredAzureApplicationInsightsTransport extends TransportStream {
   private readonly telemetryHandler: TelemetryHandler;
   private readonly options: RequiredOptions;
+
+  public levels?: WinstonLevels;
 
   constructor(options: ConstructorOptions) {
     super();
     this.options = {
       sendErrorsAsExceptions: options.sendErrorsAsExceptions ?? true,
       telemetryHandler: options.telemetryHandler,
+      severityMapping: options.severityMapping ?? defaultSeverityMapping,
     };
     this.telemetryHandler = options.telemetryHandler;
   }
@@ -59,10 +87,38 @@ export class RefactoredAzureApplicationInsightsTransport extends TransportStream
       message: message.message,
       properties: properties,
       errors: errors,
-      level: info.level,
+      severity: this.mapUnknownLevelToSeverity(info.level),
     });
 
     next();
+  }
+
+  private mapLevelToSeverity(level: string): TelemetrySeverity | null {
+    return this.options.severityMapping[level] ?? null;
+  }
+
+  private mapUnknownLevelToSeverity(level: string): TelemetrySeverity {
+    const directMapping = this.mapLevelToSeverity(level);
+    if (directMapping != null) {
+      return directMapping;
+    }
+
+    if (this.levels != null) {
+      const currentPriority = this.levels[level];
+      const sortedLevels = Object.entries(this.levels)
+        .map((x) => ({ levelName: x[0], priority: x[1] }))
+        .filter((x) => currentPriority < x.priority)
+        .sort((a, b) => a.priority - b.priority);
+
+      for (const { levelName } of sortedLevels) {
+        const severity = this.mapLevelToSeverity(levelName);
+        if (severity) {
+          return severity;
+        }
+      }
+    }
+
+    return TelemetrySeverity.Verbose;
   }
 }
 

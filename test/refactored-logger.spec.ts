@@ -1,24 +1,31 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createLogger, format, transports } from 'winston';
+import { config, createLogger } from 'winston';
 import TransportStream from 'winston-transport';
-import { RefactoredAzureApplicationInsightsTransport, type TelemetryData, type WinstonInfo, extractErrorsStep, extractMessageStep, extractPropertiesStep, splatSymbol } from '../src/refactored-logger';
+import { RefactoredAzureApplicationInsightsTransport, type SeverityMapping, type TelemetryData, TelemetrySeverity, type WinstonInfo, type WinstonLevels, extractErrorsStep, extractMessageStep, extractPropertiesStep, splatSymbol } from '../src/refactored-logger';
 
 class ErrorTransport extends TransportStream {
   public errors: Error[] = [];
-  override log(info: any, next: () => void) {
+  override log(info: WinstonInfo, next: () => void) {
     this.errors = extractErrorsStep(info);
     next();
   }
 }
 
 const telemetryHandler = {
-  telemetry: { message: '' } as TelemetryData,
+  telemetry: { message: '' } as TelemetryData | undefined,
   handleTelemetry: (telemetry: TelemetryData) => {
     telemetryHandler.telemetry = telemetry;
+  },
+  clear() {
+    this.telemetry = undefined;
   },
 };
 
 describe('Refactored AzureApplicationInsightsLogger', () => {
+  beforeEach(() => {
+    telemetryHandler.clear();
+  });
+
   describe('Configuration', () => {
     describe('with sendErrorsAsExceptions set', () => {
       const transport = new RefactoredAzureApplicationInsightsTransport({
@@ -33,7 +40,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
         const result = telemetryHandler.telemetry;
 
-        const actual = result.errors[0];
+        const actual = result?.errors[0];
         expect(actual).toBe(expected);
       });
 
@@ -43,7 +50,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         const error = new Error('test error');
         transport.log({ message: 'test message', level: 'info', [splatSymbol]: [expected, error] }, () => {});
         const result = telemetryHandler.telemetry;
-        const actual = result.properties;
+        const actual = result?.properties;
 
         expect(actual).toEqual(expected);
       });
@@ -52,8 +59,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         transport.log({ message: 'test message', level: 'info', [splatSymbol]: [] }, () => {});
 
         const result = telemetryHandler.telemetry;
+        const actual = result?.properties;
+        const expected = {};
 
-        expect(result.properties).toEqual({});
+        expect(actual).toEqual(expected);
       });
     });
     describe('with sendErrorsAsExceptions unset', () => {
@@ -67,27 +76,66 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
         const result = telemetryHandler.telemetry;
 
-        const actual = result.errors[0];
+        const actual = result?.errors[0];
         expect(actual).toBeUndefined();
       });
 
       it('should preserve errors in properties', () => {
-        const expected = { userId: 123 };
+        const data = { userId: 123 };
         const error = new Error('test error');
+        const expected = [data, error];
 
-        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [expected, error] }, () => {});
+        transport.log({ message: 'test message', level: 'info', [splatSymbol]: expected }, () => {});
 
         const result = telemetryHandler.telemetry;
+        const actual = result?.properties;
 
-        expect(result.properties).toEqual([expected, error]);
+        expect(actual).toEqual(expected);
       });
 
       it('should return empty object for empty splat', () => {
         transport.log({ message: 'test message', level: 'info', [splatSymbol]: [] }, () => {});
 
         const result = telemetryHandler.telemetry;
+        const actual = result?.properties;
+        const expected = {};
 
-        expect(result.properties).toEqual({});
+        expect(actual).toEqual(expected);
+      });
+    });
+    describe('override severity mapping', () => {
+      it('can pass override severity mapping', () => {
+        const severityMapping: SeverityMapping = {};
+
+        const action = () =>
+          new RefactoredAzureApplicationInsightsTransport({
+            telemetryHandler,
+            severityMapping,
+          });
+
+        expect(action).not.toThrow();
+      });
+
+      it('can map silly to critical', () => {
+        const severityMapping: SeverityMapping = {
+          silly: TelemetrySeverity.Critical,
+        };
+
+        const transport = new RefactoredAzureApplicationInsightsTransport({
+          telemetryHandler,
+          severityMapping,
+        });
+
+        const logger = createLogger({
+          level: 'silly',
+          levels: config.npm.levels,
+          transports: [transport],
+        });
+        logger.silly('critical message');
+
+        const actual = telemetryHandler.telemetry?.severity;
+        const expected = TelemetrySeverity.Critical;
+        expect(actual).toBe(expected);
       });
     });
   });
@@ -101,16 +149,17 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     it('should work as a winston transport', () => {
-      expect(() => {
-        logger.info('test message');
-      }).not.toThrow();
+      const actual = () => logger.info('test message');
+
+      expect(actual).not.toThrow();
     });
 
-    it('tesdt', () => {
-      logger.error(new Error('hello'));
+    it('test', () => {
+      const expected = 'hello';
+      logger.error(new Error(expected));
 
-      const actual = telemetryHandler.telemetry.message;
-      expect(actual).toBe('hello');
+      const actual = telemetryHandler.telemetry?.message;
+      expect(actual).toBe(expected);
     });
 
     it('should call telemetry handler when logging', () => {
@@ -118,7 +167,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       transport.log({ level: 'info', message: expected }, () => {});
 
-      const actual = telemetryHandler.telemetry.message;
+      const actual = telemetryHandler.telemetry?.message;
 
       expect(actual).toBe(expected);
     });
@@ -128,7 +177,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       logger.info(expected);
 
-      const actual = telemetryHandler.telemetry.message;
+      const actual = telemetryHandler.telemetry?.message;
       expect(actual).toBe(expected);
     });
 
@@ -137,7 +186,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       logger.info(expected, { userId: 123, action: 'login' });
 
-      const actual = telemetryHandler.telemetry.message;
+      const actual = telemetryHandler.telemetry?.message;
       expect(actual).toBe(expected);
     });
 
@@ -146,7 +195,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       logger.info(expected, { userId: 123, action: 'login' });
 
-      const actual = telemetryHandler.telemetry.message;
+      const actual = telemetryHandler.telemetry?.message;
       expect(actual).toBe(expected);
     });
 
@@ -156,7 +205,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const error = new Error(expected);
       logger.error(error);
 
-      const actual = telemetryHandler.telemetry.message;
+      const actual = telemetryHandler.telemetry?.message;
 
       expect(actual).toBe(expected);
     });
@@ -166,13 +215,13 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       logger.info('hello', { message: 'world' });
 
-      const actual = telemetryHandler.telemetry.message;
+      const actual = telemetryHandler.telemetry?.message;
       expect(actual).toBe(expected);
     });
   });
 
-  describe('unconcatenateStep', () => {
-    it('should unconcatenate winston message in pipeline step', () => {
+  describe('extractMessageStep', () => {
+    it('should extract winston message in pipeline step', () => {
       const expected = 'hello';
 
       const info: WinstonInfo = {
@@ -187,7 +236,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       expect(actual).toBe(expected);
     });
 
-    it('should unconcatenate different messages', () => {
+    it('should extract different messages', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'goodbye universe',
@@ -195,10 +244,13 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const result = extractMessageStep(info);
-      expect(result.message).toBe('goodbye');
+      const actual = result.message;
+      const expected = 'goodbye';
+
+      expect(actual).toBe(expected);
     });
 
-    it('should unconcatenate object message property', () => {
+    it('should extract object message property', () => {
       const expected = 'hello';
 
       const info: WinstonInfo = {
@@ -213,7 +265,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       expect(actual).toBe(expected);
     });
 
-    it('should unconcatenate number message property', () => {
+    it('should extract number message property', () => {
       const expected = 'hello';
 
       const info: WinstonInfo = {
@@ -228,7 +280,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       expect(actual).toBe(expected);
     });
 
-    it('should unconcatenate null message property', () => {
+    it('should extract null message property', () => {
       const expected = 'Hello';
 
       const info: WinstonInfo = {
@@ -243,7 +295,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       expect(actual).toBe(expected);
     });
 
-    it('should unconcatenate error', () => {
+    it('should extract error', () => {
       const expected = 'Hello';
       const transport = new RefactoredAzureApplicationInsightsTransport({
         telemetryHandler,
@@ -256,7 +308,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const meta = new Error('World');
       logger.info(expected, meta);
 
-      const winstonResult = telemetryHandler.telemetry.message;
+      const winstonResult = telemetryHandler.telemetry!.message;
 
       const info: WinstonInfo = {
         level: 'info',
@@ -284,7 +336,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       expect(actual).toBe(expected);
     });
 
-    it('should unconcatenate error objects from splat', () => {
+    it('should extract error objects from splat', () => {
       const expected = 'Error: 1';
       const transport = new RefactoredAzureApplicationInsightsTransport({
         telemetryHandler,
@@ -296,7 +348,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       logger.error('Error: 1', new Error('2'), new Error('3'));
 
-      const winstonResult = telemetryHandler.telemetry.message; // This will be 'Error: 1 2'
+      const winstonResult = telemetryHandler.telemetry!.message; // This will be 'Error: 1 2'
 
       const info: WinstonInfo = {
         level: 'error',
@@ -322,13 +374,12 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     it('should extract error when info is an Error', () => {
-      const error = new Error('single error logged');
-      logger.error(error);
+      const expected = new Error('single error logged');
+      logger.error(expected);
 
-      const actual = transport.errors;
+      const actual = transport.errors[0];
 
-      expect(actual.length).toBe(1);
-      expect(actual[0]).toBe(error);
+      expect(actual).toBe(expected);
     });
 
     it('should return empty array when no errors', () => {
@@ -373,24 +424,27 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         const expected = 2;
 
         const result = extractErrorsStep(info);
+        const actual = result.length;
 
-        expect(result.length).toBe(expected);
+        expect(actual).toBe(expected);
       });
 
       it('passes first error', () => {
         const expected = error1;
 
         const result = extractErrorsStep(info);
+        const actual = result[0];
 
-        expect(result[0]).toBe(expected);
+        expect(actual).toBe(expected);
       });
 
       it('passes second error', () => {
         const expected = error2;
 
         const result = extractErrorsStep(info);
+        const actual = result[1];
 
-        expect(result[1]).toBe(expected);
+        expect(actual).toBe(expected);
       });
     });
 
@@ -404,25 +458,25 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const result = extractErrorsStep(info);
+      const actual = result[0];
 
-      expect(result.length).toBe(1);
-      expect(result[0]).toBe(error);
+      expect(actual).toBe(error);
     });
   });
 
   describe('extractPropertiesStep', () => {
     it('should extract single property object directly', () => {
-      const expectedProperties = { userId: 123, action: 'login' };
+      const expected = { userId: 123, action: 'login' };
 
       const info: WinstonInfo = {
         level: 'info',
         message: 'User logged in',
-        [splatSymbol]: [expectedProperties],
+        [splatSymbol]: [expected],
       };
 
-      const result = extractPropertiesStep(info);
+      const actual = extractPropertiesStep(info);
 
-      expect(result).toEqual({ userId: 123, action: 'login' });
+      expect(actual).toEqual(expected);
     });
 
     it('should return empty object when no properties', () => {
@@ -431,9 +485,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         message: 'simple message',
       };
 
-      const result = extractPropertiesStep(info);
+      const actual = extractPropertiesStep(info);
+      const expected = {};
 
-      expect(result).toEqual({});
+      expect(actual).toEqual(expected);
     });
 
     describe('with multiple property objects', () => {
@@ -449,45 +504,49 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       it('should return array with first object at correct index after filtering', () => {
         const result = extractPropertiesStep(info) as unknown[];
+        const actual = result[2];
+        const expected = { userId: 123 };
         // After filtering: ['string', 42, { userId: 123 }, null, { sessionId: 'abc' }, true]
-        expect(result[2]).toEqual({ userId: 123 });
+        expect(actual).toEqual(expected);
       });
 
       it('should return array with second object at correct index after filtering', () => {
         const result = extractPropertiesStep(info) as unknown[];
         // After filtering errors: ['string', 42, { userId: 123 }, null, { sessionId: 'abc' }, true]
-        expect(result[4]).toEqual({ sessionId: 'abc' }); // NEW: index 4, not 3
+        const actual = result[4];
+        const expected = { sessionId: 'abc' };
+        expect(actual).toEqual(expected);
       });
     });
 
     it('should handle object with message property directly when single', () => {
-      const properties = { message: 'world', userId: 123 };
+      const expected = { message: 'world', userId: 123 };
 
       const info: WinstonInfo = {
         level: 'info',
         message: 'hello',
-        [splatSymbol]: [properties],
+        [splatSymbol]: [expected],
       };
 
-      const result = extractPropertiesStep(info);
+      const actual = extractPropertiesStep(info);
 
-      expect(result).toEqual({ message: 'world', userId: 123 });
+      expect(actual).toEqual(expected);
     });
 
     it('should extract single property object even with multiple errors', () => {
-      const properties = { key1: 'hello', key2: 'world' };
+      const expected = { key1: 'hello', key2: 'world' };
       const error1 = new Error('error1');
       const error2 = new Error('error2');
 
       const info: WinstonInfo = {
         level: 'error',
         message: 'oh noes',
-        [splatSymbol]: [error1, error2, properties],
+        [splatSymbol]: [error1, error2, expected],
       };
 
-      const result = extractPropertiesStep(info);
+      const actual = extractPropertiesStep(info);
 
-      expect(result).toEqual({ key1: 'hello', key2: 'world' });
+      expect(actual).toEqual(expected);
     });
 
     it('should return empty object when splat contains only errors', () => {
@@ -505,16 +564,16 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
   describe('Object Type Discrimination Tests', () => {
     it('should extract plain object directly', () => {
-      const plainObject = { userId: 123, action: 'login' };
+      const expected = { userId: 123, action: 'login' };
       const info: WinstonInfo = {
         level: 'info',
         message: 'test',
-        [splatSymbol]: [plainObject],
+        [splatSymbol]: [expected],
       };
 
-      const result = extractPropertiesStep(info);
+      const actual = extractPropertiesStep(info);
 
-      expect(result).toEqual({ userId: 123, action: 'login' });
+      expect(actual).toEqual(expected);
     });
 
     it('should handle array as single item', () => {
@@ -624,10 +683,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
   describe('Integration - Full Pipeline', () => {
     const propertiesTransport = new (class extends TransportStream {
       public properties: Record<string, unknown> | unknown[] = {};
-      override log(info: any, next: () => void) {
+      override log(info: WinstonInfo, next: () => void) {
         // Simulate the full pipeline
-        const unconcatenated = extractMessageStep(info);
-        this.properties = extractPropertiesStep(unconcatenated);
+        const extractedInfo = extractMessageStep(info);
+        this.properties = extractPropertiesStep(extractedInfo);
         next();
       }
     })();
@@ -679,131 +738,148 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       });
 
       it('should handle object with message property directly', () => {
-        logger.info('Action', { message: 'world', userId: 123 });
+        const expected = { message: 'world', userId: 123 };
+        logger.info('Action', expected);
+        const actual = propertiesTransport.properties;
 
-        expect(propertiesTransport.properties).toEqual({
-          message: 'world',
-          userId: 123,
-        });
+        expect(actual).toEqual(expected);
       });
     });
 
     describe('Message + Single Error', () => {
       it('should return empty properties when logging with single error', () => {
         logger.error('Error occurred', new Error('test error'));
+        const actual = propertiesTransport.properties;
+        const expected = {};
 
-        expect(propertiesTransport.properties).toEqual({});
+        expect(actual).toEqual(expected);
       });
     });
 
     describe('Message + Multiple Objects', () => {
       it('should return multiple objects as array', () => {
-        logger.info('Complex action', { userId: 123 }, { sessionId: 'abc-456' });
+        const meta1 = { userId: 123 };
+        const meta2 = { sessionId: 'abc' };
+        const expected = [meta1, meta2];
 
-        expect(propertiesTransport.properties).toEqual([{ userId: 123 }, { sessionId: 'abc-456' }]);
+        logger.info('Complex action', ...expected);
+        const actual = propertiesTransport.properties;
+
+        expect(actual).toEqual(expected);
       });
     });
 
     describe('Message + Multiple Primitives', () => {
       it('should return multiple primitives as array', () => {
-        logger.info('Mixed primitives', 'user123', 42, true);
+        const expected = ['user123', 42, true];
+        logger.info('Mixed primitives', ...expected);
 
-        expect(propertiesTransport.properties).toEqual(['user123', 42, true]);
+        const actual = propertiesTransport.properties;
+
+        expect(actual).toEqual(expected);
       });
     });
 
     describe('Message + Mixed Types (Objects + Primitives)', () => {
       it('should return all non-error items as array', () => {
-        logger.info('Mixed types', { userId: 123 }, 'session-abc', 42, { contextId: 'ctx-123' });
+        const expected = [{ userId: 123 }, 'session-abc', 42, { contextId: 'ctx-123' }];
+        logger.info('Mixed types', ...expected);
 
-        expect(propertiesTransport.properties).toEqual([{ userId: 123 }, 'session-abc', 42, { contextId: 'ctx-123' }]);
+        const actual = propertiesTransport.properties;
+
+        expect(actual).toEqual(expected);
       });
     });
 
     describe('Message + Mixed Types Including Errors', () => {
       it('should extract only non-error items, ignoring errors (single object)', () => {
-        logger.error('Error occurred', new Error('test error'), { contextId: 'ctx-123' });
+        const expected = { contextId: 'ctx-123' };
 
-        expect(propertiesTransport.properties).toEqual({
-          contextId: 'ctx-123',
-        });
+        logger.error('Error occurred', new Error('test error'), expected);
+        const actual = propertiesTransport.properties;
+
+        expect(actual).toEqual(expected);
       });
 
       it('should extract objects and primitives while ignoring errors (multiple items)', () => {
-        logger.error('Complex error', new Error('error1'), { userId: 123 }, 'debug-info', new Error('error2'), 42);
+        const meta1 = { userId: 123 };
+        const meta2 = { sessionId: 'abc' };
+        const meta3 = 42;
+        const expected = [meta1, meta2, meta3];
+        logger.error('Complex error', new Error('error1'), meta1, meta2, new Error('error2'), meta3);
+        const actual = propertiesTransport.properties;
 
-        expect(propertiesTransport.properties).toEqual([{ userId: 123 }, 'debug-info', 42]);
+        expect(actual).toEqual(expected);
       });
     });
   });
 
   describe('Winston behavior with edge cases', () => {
-    it('should see how winston handles functions', () => {
-      const logger = createLogger({
-        transports: [
-          new transports.Console({
-            format: format.simple(),
-          }),
-        ],
-      });
+    it('should map verbose level to Verbose severity', () => {
+      const transport = new RefactoredAzureApplicationInsightsTransport({ telemetryHandler });
 
-      const testFunction = () => 'test';
-      logger.info('Function test', testFunction);
+      transport.log({ level: 'verbose', message: 'test' }, () => {});
+
+      expect(telemetryHandler.telemetry?.severity).toBe(TelemetrySeverity.Verbose);
     });
 
-    it('should see how winston handles arrays', () => {
-      const logger = createLogger({
-        transports: [
-          new transports.Console({
-            format: format.simple(),
-          }),
-        ],
-      });
+    it('should map silly level to Verbose severity', () => {
+      const transport = new RefactoredAzureApplicationInsightsTransport({ telemetryHandler });
 
-      logger.info('Array test', [1, 2, 3]);
+      transport.log({ level: 'silly', message: 'test' }, () => {});
+
+      expect(telemetryHandler.telemetry?.severity).toBe(TelemetrySeverity.Verbose);
     });
 
-    it('should see how winston handles dates', () => {
-      const logger = createLogger({
-        transports: [
-          new transports.Console({
-            format: format.simple(),
-          }),
-        ],
-      });
+    it('should handle npm-style levels with priority fallback', () => {
+      const transport = new RefactoredAzureApplicationInsightsTransport({ telemetryHandler });
+      transport.levels = {
+        error: 0,
+        warn: 1,
+        info: 2,
+        http: 3,
+        verbose: 4,
+        debug: 5,
+        silly: 6,
+      };
 
-      logger.info('Date test', new Date('2025-01-01'));
+      transport.log({ level: 'http', message: 'test' }, () => {});
+
+      expect(telemetryHandler.telemetry?.severity).toBe(TelemetrySeverity.Verbose);
     });
 
-    it('should see how winston handles regex', () => {
-      const logger = createLogger({
-        transports: [
-          new transports.Console({
-            format: format.simple(),
-          }),
-        ],
-      });
+    it('should handle mixed custom levels falling back to next mappable level', () => {
+      const transport = new RefactoredAzureApplicationInsightsTransport({ telemetryHandler });
+      transport.levels = {
+        fatal: 0,
+        error: 1,
+        warn: 2,
+        audit: 3,
+        info: 4,
+        trace: 5,
+        debug: 6,
+        silly: 7,
+      };
 
-      logger.info('RegExp test', /hello/g);
+      transport.log({ level: 'audit', message: 'test' }, () => {});
+
+      expect(telemetryHandler.telemetry?.severity).toBe(TelemetrySeverity.Information);
     });
 
-    it('should see how winston handles custom classes', () => {
-      const logger = createLogger({
-        transports: [
-          new transports.Console({
-            format: format.simple(),
-          }),
-        ],
-      });
+    it('should handle custom level between debug and info falling back to debug', () => {
+      const transport = new RefactoredAzureApplicationInsightsTransport({ telemetryHandler });
+      transport.levels = {
+        error: 0,
+        warn: 1,
+        info: 2,
+        trace: 3,
+        debug: 4,
+        silly: 5,
+      };
 
-      class CustomClass {
-        prop = 'value';
-        toString() {
-          return 'CustomClass instance';
-        }
-      }
+      transport.log({ level: 'trace', message: 'test' }, () => {});
 
-      logger.info('Custom class test', new CustomClass());
+      expect(telemetryHandler.telemetry?.severity).toBe(TelemetrySeverity.Verbose);
     });
   });
 });
