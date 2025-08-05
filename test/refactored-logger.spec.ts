@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger, format, transports } from 'winston';
 import TransportStream from 'winston-transport';
-import { RefactoredAzureApplicationInsightsTransport, type WinstonInfo, extractErrorsStep, extractMessageStep, extractPropertiesStep, splatSymbol } from '../src/refactored-logger';
+import { RefactoredAzureApplicationInsightsTransport, type TelemetryData, type WinstonInfo, extractErrorsStep, extractMessageStep, extractPropertiesStep, splatSymbol } from '../src/refactored-logger';
 
 class ErrorTransport extends TransportStream {
   public errors: Error[] = [];
@@ -12,13 +12,86 @@ class ErrorTransport extends TransportStream {
 }
 
 const telemetryHandler = {
-  telemetry: { message: '' },
-  handleTelemetry: (telemetry: { message: string }) => {
+  telemetry: { message: '' } as TelemetryData,
+  handleTelemetry: (telemetry: TelemetryData) => {
     telemetryHandler.telemetry = telemetry;
   },
 };
 
 describe('Refactored AzureApplicationInsightsLogger', () => {
+  describe('Configuration', () => {
+    describe('with sendErrorsAsExceptions set', () => {
+      const transport = new RefactoredAzureApplicationInsightsTransport({
+        telemetryHandler,
+        sendErrorsAsExceptions: true,
+      });
+
+      it('should send errors as exceptions', () => {
+        const expected = new Error('test error');
+
+        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [expected] }, () => {});
+
+        const result = telemetryHandler.telemetry;
+
+        const actual = result.errors[0];
+        expect(actual).toBe(expected);
+      });
+
+      it('should filter errors from properties', () => {
+        const expected = { userId: 123 };
+
+        const error = new Error('test error');
+        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [expected, error] }, () => {});
+        const result = telemetryHandler.telemetry;
+        const actual = result.properties;
+
+        expect(actual).toEqual(expected);
+      });
+
+      it('should return empty object for empty splat', () => {
+        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [] }, () => {});
+
+        const result = telemetryHandler.telemetry;
+
+        expect(result.properties).toEqual({});
+      });
+    });
+    describe('with sendErrorsAsExceptions unset', () => {
+      const transport = new RefactoredAzureApplicationInsightsTransport({
+        telemetryHandler,
+        sendErrorsAsExceptions: false,
+      });
+
+      it('should not send errors as exceptions', () => {
+        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [new Error('test error')] }, () => {});
+
+        const result = telemetryHandler.telemetry;
+
+        const actual = result.errors[0];
+        expect(actual).toBeUndefined();
+      });
+
+      it('should preserve errors in properties', () => {
+        const expected = { userId: 123 };
+        const error = new Error('test error');
+
+        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [expected, error] }, () => {});
+
+        const result = telemetryHandler.telemetry;
+
+        expect(result.properties).toEqual([expected, error]);
+      });
+
+      it('should return empty object for empty splat', () => {
+        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [] }, () => {});
+
+        const result = telemetryHandler.telemetry;
+
+        expect(result.properties).toEqual({});
+      });
+    });
+  });
+
   describe('Transport', () => {
     const transport = new RefactoredAzureApplicationInsightsTransport({
       telemetryHandler,

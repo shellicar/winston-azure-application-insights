@@ -1,14 +1,16 @@
-import { TelemetryClient } from 'applicationinsightsv2';
 import TransportStream from 'winston-transport';
 
 export const splatSymbol = Symbol.for('splat');
 
 export type ExtractedProperties = Record<string, unknown> | unknown[];
 
+export type SplatFilter = (item: unknown) => boolean;
+
 export interface TelemetryData {
   message: string;
   properties: ExtractedProperties;
   errors: Error[];
+  level: string;
 }
 
 export interface TelemetryHandler {
@@ -23,27 +25,41 @@ export interface WinstonInfo {
   [key: symbol]: unknown;
 }
 
-interface RefactoredOptions {
+export interface ConstructorOptions {
   telemetryHandler: TelemetryHandler;
+  sendErrorsAsExceptions?: boolean;
+}
+
+interface RequiredOptions {
+  telemetryHandler: TelemetryHandler;
+  sendErrorsAsExceptions: boolean;
 }
 
 export class RefactoredAzureApplicationInsightsTransport extends TransportStream {
   private readonly telemetryHandler: TelemetryHandler;
+  private readonly options: RequiredOptions;
 
-  constructor(options: RefactoredOptions) {
+  constructor(options: ConstructorOptions) {
     super();
+    this.options = {
+      sendErrorsAsExceptions: options.sendErrorsAsExceptions ?? true,
+      telemetryHandler: options.telemetryHandler,
+    };
     this.telemetryHandler = options.telemetryHandler;
   }
 
   public override log(info: WinstonInfo, next: () => void) {
+    const filter: SplatFilter = this.options.sendErrorsAsExceptions ? isNotError : () => true;
+
     const message = extractMessageStep(info);
-    const properties = extractPropertiesStep(info);
-    const errors = extractErrorsStep(info);
+    const properties = extractPropertiesStep(info, filter);
+    const errors = this.options.sendErrorsAsExceptions ? extractErrorsStep(info) : [];
 
     this.telemetryHandler.handleTelemetry({
       message: message.message,
       properties: properties,
       errors: errors,
+      level: info.level,
     });
 
     next();
@@ -89,26 +105,20 @@ export const extractErrorsStep = (info: WinstonInfo): Error[] => {
 
 const isError = (item: unknown): item is Error => item instanceof Error;
 
+const isNotError = (item: unknown): boolean => !isError(item);
+
 const isPlainObject = (obj: unknown): obj is Record<string, unknown> => obj != null && typeof obj === 'object' && Object.getPrototypeOf(obj) === Object.prototype;
 
-export const extractPropertiesStep = (info: WinstonInfo): ExtractedProperties => {
-  const splat = info[splatSymbol];
+export const extractPropertiesStep = (info: WinstonInfo, filter: SplatFilter = isNotError): ExtractedProperties => {
+  const splat = info[splatSymbol]?.filter(filter) ?? [];
 
-  if (splat != null && splat.length > 0) {
-    const nonErrorItems = splat.filter((x) => !isError(x));
-
-    if (nonErrorItems.length === 0) {
-      return {};
-    }
-
-    if (nonErrorItems.length === 1) {
-      if (isPlainObject(nonErrorItems[0])) {
-        return nonErrorItems[0];
-      }
-    }
-
-    return nonErrorItems;
+  if (splat.length === 0) {
+    return {};
   }
 
-  return {};
+  if (splat.length === 1 && isPlainObject(splat[0])) {
+    return splat[0];
+  }
+
+  return splat;
 };
