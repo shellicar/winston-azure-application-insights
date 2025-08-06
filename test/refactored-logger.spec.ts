@@ -385,19 +385,20 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     it('should return empty array when no errors', () => {
       logger.error('hello world');
 
-      const actual = transport.errors;
+      const actual = transport.errors.length;
+      const expected = 0;
 
-      expect(actual.length).toBe(0);
+      expect(actual).toBe(expected);
     });
 
     it('should return all errors', () => {
       logger.error('Error: 1', new Error('2'), new Error('3'));
 
-      const actual = transport.errors;
+      const actual = transport.errors.length;
+      const expected = 2;
 
-      expect(actual.length).toBe(2);
+      expect(actual).toBe(expected);
     });
-
     it('should handle empty splat array', () => {
       const info: WinstonInfo = {
         level: 'info',
@@ -405,9 +406,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [],
       };
 
-      const result = extractErrorsStep(info);
+      const actual = extractErrorsStep(info).length;
+      const expected = 0;
 
-      expect(result.length).toBe(0);
+      expect(actual).toBe(expected);
     });
 
     describe('should handle mixed types in splat', () => {
@@ -449,18 +451,17 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     it('should handle null and undefined items in splat', () => {
-      const error = new Error('test');
+      const expected = new Error('test');
 
       const info: WinstonInfo = {
         level: 'info',
         message: 'hello',
-        [splatSymbol]: [null, undefined, error, null],
+        [splatSymbol]: [null, undefined, expected, null],
       };
 
-      const result = extractErrorsStep(info);
-      const actual = result[0];
+      const actual = extractErrorsStep(info)[0];
 
-      expect(actual).toBe(error);
+      expect(actual).toBe(expected);
     });
   });
 
@@ -556,9 +557,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [new Error('test error')],
       };
 
-      const result = extractPropertiesStep(info);
+      const actual = extractPropertiesStep(info);
+      const expected = {};
 
-      expect(result).toEqual({});
+      expect(actual).toEqual(expected);
     });
   });
 
@@ -584,12 +586,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [arrayObject],
       };
 
-      const result = extractPropertiesStep(info);
+      const actual = extractPropertiesStep(info);
+      const expected = [[1, 2, 3]];
 
-      // With prototype check: Arrays are wrapped to preserve them as values
-      // This prevents array indices from being extracted as properties
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toEqual([[1, 2, 3]]);
+      expect(actual).toEqual(expected);
     });
 
     it('should handle Date as single item', () => {
@@ -600,28 +600,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [dateObject],
       };
 
-      const result = extractPropertiesStep(info);
+      const actual = extractPropertiesStep(info);
+      const expected = [dateObject];
 
-      // With prototype check: Date is wrapped so it's preserved in Azure telemetry
-      // This ensures the date appears as { 0: "2025-01-01T..." } instead of being ignored
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toEqual([dateObject]);
-    });
-
-    it('should preserve dates by wrapping them in arrays (failing test for desired behavior)', () => {
-      const dateObject = new Date('2025-01-01');
-      const info: WinstonInfo = {
-        level: 'info',
-        message: 'test',
-        [splatSymbol]: [dateObject],
-      };
-
-      const result = extractPropertiesStep(info);
-
-      // DESIRED BEHAVIOR: Date should be wrapped so it's preserved in Azure telemetry
-      // This test will fail with current implementation, but shows what we want
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toEqual([dateObject]);
+      expect(actual).toEqual(expected);
     });
 
     it('should handle custom class as single item', () => {
@@ -639,44 +621,49 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: [customObject],
       };
 
-      const result = extractPropertiesStep(info);
+      const actual = extractPropertiesStep(info);
+      const expected = [customObject];
 
-      // With prototype check: Custom classes are wrapped in arrays (preserved as objects)
-      // This prevents their properties from being extracted directly
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toEqual([customObject]);
+      expect(actual).toEqual(expected);
     });
 
-    it('should handle primitives without typeof check (testing if prototype check is sufficient)', () => {
-      // Test what happens with primitives when we only have prototype check
-      const stringValue = 'hello';
-      const numberValue = 42;
-      const booleanValue = true;
-
-      const stringInfo: WinstonInfo = {
+    it('should handle string as single item', () => {
+      const info: WinstonInfo = {
         level: 'info',
         message: 'test',
-        [splatSymbol]: [stringValue],
+        [splatSymbol]: ['hello'],
       };
 
-      const numberInfo: WinstonInfo = {
+      const actual = extractPropertiesStep(info);
+      const expected = ['hello'];
+
+      expect(actual).toEqual(expected);
+    });
+
+    it('should handle number as single item', () => {
+      const info: WinstonInfo = {
         level: 'info',
         message: 'test',
-        [splatSymbol]: [numberValue],
+        [splatSymbol]: [42],
       };
 
-      const booleanInfo: WinstonInfo = {
+      const actual = extractPropertiesStep(info);
+      const expected = [42];
+
+      expect(actual).toEqual(expected);
+    });
+
+    it('should handle boolean as single item', () => {
+      const info: WinstonInfo = {
         level: 'info',
         message: 'test',
-        [splatSymbol]: [booleanValue],
+        [splatSymbol]: [true],
       };
 
-      // All primitives should be wrapped in arrays since they fail prototype check
-      expect(extractPropertiesStep(stringInfo)).toEqual(['hello']);
-      expect(extractPropertiesStep(numberInfo)).toEqual([42]);
-      expect(extractPropertiesStep(booleanInfo)).toEqual([true]);
+      const actual = extractPropertiesStep(info);
+      const expected = [true];
 
-      // None should cause errors even without typeof check
+      expect(actual).toEqual(expected);
     });
   });
 
@@ -684,7 +671,6 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     const propertiesTransport = new (class extends TransportStream {
       public properties: Record<string, unknown> | unknown[] = {};
       override log(info: WinstonInfo, next: () => void) {
-        // Simulate the full pipeline
         const extractedInfo = extractMessageStep(info);
         this.properties = extractPropertiesStep(extractedInfo);
         next();
@@ -703,7 +689,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       it('should return empty properties when logging just a message', () => {
         logger.info('Just a message');
 
-        expect(propertiesTransport.properties).toEqual({});
+        const actual = propertiesTransport.properties;
+        const expected = {};
+
+        expect(actual).toEqual(expected);
       });
     });
 
@@ -711,19 +700,28 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       it('should extract single string as array', () => {
         logger.info('Single primitive', 'important-value');
 
-        expect(propertiesTransport.properties).toEqual(['important-value']);
+        const actual = propertiesTransport.properties;
+        const expected = ['important-value'];
+
+        expect(actual).toEqual(expected);
       });
 
       it('should extract single number as array', () => {
         logger.info('Single number', 42);
 
-        expect(propertiesTransport.properties).toEqual([42]);
+        const actual = propertiesTransport.properties;
+        const expected = [42];
+
+        expect(actual).toEqual(expected);
       });
 
       it('should extract single boolean as array', () => {
         logger.info('Single boolean', true);
 
-        expect(propertiesTransport.properties).toEqual([true]);
+        const actual = propertiesTransport.properties;
+        const expected = [true];
+
+        expect(actual).toEqual(expected);
       });
     });
 
@@ -731,10 +729,13 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       it('should extract single object properties directly', () => {
         logger.info('User action', { userId: 123, action: 'login' });
 
-        expect(propertiesTransport.properties).toEqual({
+        const actual = propertiesTransport.properties;
+        const expected = {
           userId: 123,
           action: 'login',
-        });
+        };
+
+        expect(actual).toEqual(expected);
       });
 
       it('should handle object with message property directly', () => {
@@ -820,7 +821,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       transport.log({ level: 'verbose', message: 'test' }, () => {});
 
-      expect(telemetryHandler.telemetry?.severity).toBe(TelemetrySeverity.Verbose);
+      const actual = telemetryHandler.telemetry?.severity;
+      const expected = TelemetrySeverity.Verbose;
+
+      expect(actual).toBe(expected);
     });
 
     it('should map silly level to Verbose severity', () => {
@@ -828,7 +832,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       transport.log({ level: 'silly', message: 'test' }, () => {});
 
-      expect(telemetryHandler.telemetry?.severity).toBe(TelemetrySeverity.Verbose);
+      const actual = telemetryHandler.telemetry?.severity;
+      const expected = TelemetrySeverity.Verbose;
+
+      expect(actual).toBe(expected);
     });
 
     it('should handle npm-style levels with priority fallback', () => {
@@ -845,7 +852,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       transport.log({ level: 'http', message: 'test' }, () => {});
 
-      expect(telemetryHandler.telemetry?.severity).toBe(TelemetrySeverity.Verbose);
+      const actual = telemetryHandler.telemetry?.severity;
+      const expected = TelemetrySeverity.Verbose;
+
+      expect(actual).toBe(expected);
     });
 
     it('should handle mixed custom levels falling back to next mappable level', () => {
@@ -856,14 +866,17 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         warn: 2,
         audit: 3,
         info: 4,
-        trace: 5,
+        custom: 5,
         debug: 6,
         silly: 7,
       };
 
       transport.log({ level: 'audit', message: 'test' }, () => {});
 
-      expect(telemetryHandler.telemetry?.severity).toBe(TelemetrySeverity.Information);
+      const actual = telemetryHandler.telemetry?.severity;
+      const expected = TelemetrySeverity.Information;
+
+      expect(actual).toBe(expected);
     });
 
     it('should handle custom level between debug and info falling back to debug', () => {
@@ -872,14 +885,17 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         error: 0,
         warn: 1,
         info: 2,
-        trace: 3,
+        custom: 3,
         debug: 4,
         silly: 5,
       };
 
-      transport.log({ level: 'trace', message: 'test' }, () => {});
+      transport.log({ level: 'custom', message: 'test' }, () => {});
 
-      expect(telemetryHandler.telemetry?.severity).toBe(TelemetrySeverity.Verbose);
+      const actual = telemetryHandler.telemetry?.severity;
+      const expected = TelemetrySeverity.Verbose;
+
+      expect(actual).toBe(expected);
     });
   });
 });
