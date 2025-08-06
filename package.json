@@ -25,6 +25,7 @@
     "lint": "biome lint",
     "format": "biome format",
     "check": "biome check",
+    "type-check": "tsc --noEmit --skipLibCheck --composite false",
     "ci": "biome ci --diagnostic-level=error",
     "ci:fix": "biome check --diagnostic-level=error --fix",
     "test": "vitest run",
