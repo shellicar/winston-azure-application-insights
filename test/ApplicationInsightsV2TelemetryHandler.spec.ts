@@ -143,6 +143,93 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
   });
 });
 
+it('should not send trace when trace filter returns false', () => {
+  const client = new SpyTelemetryClient();
+  const handler = new ApplicationInsightsV2TelemetryHandler({
+    client,
+    traceFilter: () => false,
+  });
+
+  handler.handleTelemetry({
+    errors: [],
+    message: 'test',
+    properties: {},
+    severity: TelemetrySeverity.Information,
+  });
+
+  const actual = client.traces.length;
+  const expected = 0;
+  expect(actual).toBe(expected);
+});
+
+it('should pass correct trace telemetry to trace filter', () => {
+  const client = new SpyTelemetryClient();
+  let capturedTraceTelemetry: any;
+
+  const handler = new ApplicationInsightsV2TelemetryHandler({
+    client,
+    traceFilter: (trace) => {
+      capturedTraceTelemetry = trace;
+      return true;
+    },
+  });
+
+  handler.handleTelemetry({
+    errors: [],
+    message: 'test message',
+    properties: { userId: 123 },
+    severity: TelemetrySeverity.Information,
+  });
+
+  const actual = capturedTraceTelemetry.message;
+  const expected = 'test message';
+  expect(actual).toBe(expected);
+});
+
+it('should not send exception when exception filter returns false', () => {
+  const client = new SpyTelemetryClient();
+  const handler = new ApplicationInsightsV2TelemetryHandler({
+    client,
+    exceptionFilter: () => false,
+  });
+
+  const error = new Error('test error');
+  handler.handleTelemetry({
+    errors: [error],
+    message: 'test',
+    properties: {},
+    severity: TelemetrySeverity.Error,
+  });
+
+  const actual = client.exceptions.length;
+  const expected = 0;
+  expect(actual).toBe(expected);
+});
+
+it('should pass correct exception telemetry to exception filter', () => {
+  const client = new SpyTelemetryClient();
+  let capturedExceptionTelemetry: any;
+
+  const handler = new ApplicationInsightsV2TelemetryHandler({
+    client,
+    exceptionFilter: (exception) => {
+      capturedExceptionTelemetry = exception;
+      return true;
+    },
+  });
+
+  const error = new Error('test error');
+  handler.handleTelemetry({
+    errors: [error],
+    message: 'test message',
+    properties: { userId: 123 },
+    severity: TelemetrySeverity.Error,
+  });
+
+  const actual = capturedExceptionTelemetry.exception;
+  expect(actual).toBe(error);
+});
+
 class SpyTelemetryClient extends TelemetryClient {
   public constructor() {
     super('InstrumentationKey=00000000-0000-0000-0000-000000000000');
