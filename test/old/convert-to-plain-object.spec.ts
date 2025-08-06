@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { makeSerializable } from '../src/winston-azure-application-insights';
+import { makeSerializable } from '../../src/old/winston-azure-application-insights';
 
 describe('makeSerializable behavior', () => {
   it('should handle a simple object', () => {

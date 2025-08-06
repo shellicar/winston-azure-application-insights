@@ -2,8 +2,8 @@ import type { TelemetryClient as TelemetryClientV2 } from 'applicationinsightsv2
 import type { ExceptionTelemetry as ExceptionTelemetryV2, SeverityLevel as KnownSeverityLevelV2, TraceTelemetry as TraceTelemetryV2 } from 'applicationinsightsv2/out/Declarations/Contracts';
 import type { ExceptionTelemetry as ExceptionTelemetryV3, KnownSeverityLevel as KnownSeverityLevelV3, TelemetryClient as TelemetryClientV3, TraceTelemetry as TraceTelemetryV3 } from 'applicationinsightsv3';
 import TransportStream from 'winston-transport';
-import { isRunningLocally } from './isRunningLocally';
-import { defaultLogLevels } from './logLevels';
+import { isRunningLocally } from '../isRunningLocally';
+import { defaultLogLevels } from './defaultLogLevels';
 import { type AzureApplicationInsightsLoggerOptions, type ITelemetryFilterV2, type ITelemetryFilterV3, LogLevel, type PlainObject } from './types';
 
 const severityLevels = {

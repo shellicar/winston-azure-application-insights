@@ -3,7 +3,7 @@ import { SeverityLevel } from 'applicationinsightsv2/out/Declarations/Contracts'
 import * as td from 'testdouble';
 import { beforeEach, describe, it } from 'vitest';
 import { type Logger, createLogger } from 'winston';
-import { AzureApplicationInsightsLogger, createWinstonLogger } from '../src';
+import { AzureApplicationInsightsLogger, createWinstonLogger } from '../../src';
 
 describe('appinsights-v2', () => {
   let logger: Logger;

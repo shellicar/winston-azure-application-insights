@@ -1,70 +1,37 @@
-import type { TelemetryClient as TelemetryClientV2 } from 'applicationinsightsv2';
-import type { ExceptionTelemetry as ExceptionTelemetryV2, TraceTelemetry as TraceTelemetryV2 } from 'applicationinsightsv2/out/Declarations/Contracts';
-import type { ExceptionTelemetry as ExceptionTelemetryV3, TelemetryClient as TelemetryClientV3, TraceTelemetry as TraceTelemetryV3 } from 'applicationinsightsv3';
+import { splatSymbol } from './consts';
+import type { TelemetrySeverity } from './enums';
 
-export type PlainObject = Record<string, any>;
-
-export type NodeClient = TelemetryClientV2 | TelemetryClientV3;
-
-export type JsonValue = string | number | JsonObject | JsonValue[] | null;
-export type JsonObject = {
-  [key: string]: JsonValue;
-};
-
-export type AzureLogLevels = {
-  [key: string]: LogLevel;
-};
-
-export enum LogLevel {
-  Verbose = 0,
-  Information = 1,
-  Warning = 2,
-  Error = 3,
-  Critical = 4,
+export interface RequiredOptions {
+  telemetryHandler: TelemetryHandler;
+  sendErrorsAsExceptions: boolean;
+  severityMapping: SeverityMapping;
 }
-
-export type AzureInsightsClientOptions =
-  | {
-      version: 2;
-      client: TelemetryClientV2;
-      filters?: ITelemetryFilterV2[];
-    }
-  | {
-      version: 3;
-      client: TelemetryClientV3;
-      filters?: ITelemetryFilterV3[];
-    };
-
-export type FilterTraceArgs = {
+export interface TelemetryData {
   message: string;
-  severity: LogLevel;
-  properties: PlainObject;
-};
-
-export type AzureApplicationInsightsLoggerOptionsBase = AzureInsightsClientOptions & {
-  silent?: boolean;
+  properties: ExtractedProperties;
+  errors: Error[];
+  severity: TelemetrySeverity;
+}
+export interface TelemetryHandler {
+  handleTelemetry: (telemetry: TelemetryData) => void;
+}
+export interface WinstonInfo {
+  level: string;
+  message: string;
+  [splatSymbol]?: unknown[];
+  [key: string]: unknown;
+  [key: symbol]: unknown;
+}
+export interface SeverityMapping {
+  [level: string]: TelemetrySeverity;
+}
+export interface ConstructorOptions {
+  telemetryHandler: TelemetryHandler;
   sendErrorsAsExceptions?: boolean;
-  warnOnMessageProperty?: boolean;
-};
-
-export type AzureApplicationInsightsLoggerOptions = AzureApplicationInsightsLoggerOptionsBase & {
-  defaultLevel?: string;
-  levels?: AzureLogLevels;
-};
-
-export abstract class ITelemetryFilterV3 {
-  public filterTrace(trace: TraceTelemetryV3, client: TelemetryClientV3): boolean {
-    return true;
-  }
-  public filterException(trace: ExceptionTelemetryV3, client: TelemetryClientV3): boolean {
-    return true;
-  }
+  severityMapping?: SeverityMapping;
 }
-export abstract class ITelemetryFilterV2 {
-  public filterTrace(trace: TraceTelemetryV2, client: TelemetryClientV2): boolean {
-    return true;
-  }
-  public filterException(trace: ExceptionTelemetryV2, client: TelemetryClientV2): boolean {
-    return true;
-  }
+export interface WinstonLevels {
+  [levelName: string]: number;
 }
+export type SplatFilter = (item: unknown) => boolean;
+export type ExtractedProperties = Record<string, unknown> | unknown[];

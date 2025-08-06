@@ -2,7 +2,7 @@ import { TelemetryClient as TelemetryClientV3 } from 'applicationinsightsv3';
 import * as td from 'testdouble';
 import { beforeEach, describe, it } from 'vitest';
 import { createLogger, format } from 'winston';
-import { AzureApplicationInsightsLogger } from '../src/winston-azure-application-insights';
+import { AzureApplicationInsightsLogger } from '../../src/old/winston-azure-application-insights';
 
 describe('Error Logging Behavior', () => {
   let mock: testdouble.DoubledObject<TelemetryClientV3>;

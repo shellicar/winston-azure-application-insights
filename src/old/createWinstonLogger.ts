@@ -1,21 +1,11 @@
-import { createLogger, format, transports } from 'winston';
+import { config, createLogger, format, transports } from 'winston';
 import type TransportStream from 'winston-transport';
 import type { CreateWinstonLoggerOptions } from './CreateWinstonLoggerOptions';
 import { AzureApplicationInsightsLogger } from './winston-azure-application-insights';
 
-const npmLevels = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  http: 3,
-  verbose: 4,
-  debug: 5,
-  silly: 6,
-};
-
 export const createWinstonLogger = (options: CreateWinstonLoggerOptions) => {
   const level = options.winston.level ?? 'info';
-  const levels = options.winston.levels ?? npmLevels;
+  const levels = options.winston.levels ?? config.npm.levels;
 
   const _transports: TransportStream[] = [
     new AzureApplicationInsightsLogger({

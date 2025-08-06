@@ -3,7 +3,7 @@ import { KnownSeverityLevel, TelemetryClient, defaultClient, setup } from 'appli
 import * as td from 'testdouble';
 import { afterEach, beforeEach, describe, it } from 'vitest';
 import { type Logger, config, createLogger, format } from 'winston';
-import { AzureApplicationInsightsLogger } from '../src/winston-azure-application-insights';
+import { AzureApplicationInsightsLogger } from '../../src/old/winston-azure-application-insights';
 
 type WinstonLogLevels = 'error' | 'warn' | 'info' | 'verbose' | 'debug' | 'silly';
 

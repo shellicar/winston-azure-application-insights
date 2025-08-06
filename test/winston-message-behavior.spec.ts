@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest';
 import { createLogger, format, transports } from 'winston';
-import type { WinstonInfo } from '../src/refactored-logger';
+import type { WinstonInfo } from '../src/types';
 
 describe('Winston Message Behavior', () => {
   it('should demonstrate winston behavior with json format', () => {

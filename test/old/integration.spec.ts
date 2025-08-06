@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from 'winston';
-import { RefactoredAzureApplicationInsightsTransport, type WinstonInfo } from '../src/refactored-logger';
+import { ApplicationInsightsTransport } from '../../src/ApplicationInsightsTransport';
+import type { WinstonInfo } from '../../src/types';
 
 // Spy transport to capture what winston actually passes
-class SpyTransport extends RefactoredAzureApplicationInsightsTransport {
+class SpyTransport extends ApplicationInsightsTransport {
   public capturedWinstonInfo: WinstonInfo[] = [];
 
   public override log(info: WinstonInfo, next: () => void) {
@@ -20,7 +21,7 @@ describe('Integration: Winston → Refactored Transport', () => {
       handleTelemetry: (telemetry: any) => capturedTelemetry.push(telemetry),
     };
 
-    const transport = new RefactoredAzureApplicationInsightsTransport({
+    const transport = new ApplicationInsightsTransport({
       telemetryHandler: mockTelemetryHandler,
     });
 

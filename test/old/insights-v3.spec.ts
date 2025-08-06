@@ -2,7 +2,7 @@ import { KnownSeverityLevel, TelemetryClient } from 'applicationinsightsv3';
 import * as td from 'testdouble';
 import { beforeEach, describe, it } from 'vitest';
 import { type Logger, createLogger } from 'winston';
-import { AzureApplicationInsightsLogger } from '../src';
+import { AzureApplicationInsightsLogger } from '../../src';
 
 describe('appinsights-v3', () => {
   let logger: Logger;

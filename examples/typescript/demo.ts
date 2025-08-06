@@ -1,6 +1,6 @@
 import { defaultClient, setup } from 'applicationinsights';
 import winston from 'winston';
-import { AzureApplicationInsightsLogger } from '../../src/winston-azure-application-insights';
+import { AzureApplicationInsightsLogger } from '../../src/old/winston-azure-application-insights';
 
 const shouldPushToAppInsights = 'APPLICATIONINSIGHTS_CONNECTION_STRING' in process.env;
 
