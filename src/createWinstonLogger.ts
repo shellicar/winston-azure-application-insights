@@ -3,24 +3,44 @@ import type TransportStream from 'winston-transport';
 import { ApplicationInsightsTransport } from './ApplicationInsightsTransport';
 import { ApplicationInsightsV2TelemetryHandler } from './ApplicationInsightsV2TelemetryHandler';
 import { ApplicationInsightsV3TelemetryHandler } from './ApplicationInsightsV3TelemetryHandler';
-import type { CreateWinstonLoggerOptions, TelemetryHandler } from './types';
+import type { CreateWinstonLoggerOptions, TelemetryHandler, TelemetryHandlerFactoryBaseOptions, TelemetryHandlerFactoryOptions } from './types';
+
+export const createTelemetryHandler = (options: TelemetryHandlerFactoryOptions): TelemetryHandler => {
+  switch (options.version) {
+    case 2: {
+      return new ApplicationInsightsV2TelemetryHandler({
+        client: options.client,
+        traceFilter: options.traceFilter,
+        exceptionFilter: options.exceptionFilter,
+      });
+    }
+    case 3: {
+      return new ApplicationInsightsV3TelemetryHandler({
+        client: options.client,
+        traceFilter: options.traceFilter,
+        exceptionFilter: options.exceptionFilter,
+      });
+    }
+  }
+};
+
+export const createApplicationInsightsTransport = (options: TelemetryHandlerFactoryBaseOptions) => {
+  const telemetryHandler = createTelemetryHandler(options);
+
+  const transport = new ApplicationInsightsTransport({
+    telemetryHandler,
+    sendErrorsAsExceptions: options.sendErrorsAsExceptions,
+    severityMapping: options.severityMapping,
+  });
+
+  return transport;
+};
 
 export const createWinstonLogger = (options: CreateWinstonLoggerOptions) => {
   const level = options.winston.level ?? 'info';
   const levels = options.winston.levels ?? config.npm.levels;
 
-  const telemetryHandler: TelemetryHandler =
-    options.insights.version === 2
-      ? new ApplicationInsightsV2TelemetryHandler({
-          client: options.insights.client,
-          traceFilter: options.insights.traceFilter,
-          exceptionFilter: options.insights.exceptionFilter,
-        })
-      : new ApplicationInsightsV3TelemetryHandler({
-          client: options.insights.client,
-          traceFilter: options.insights.traceFilter,
-          exceptionFilter: options.insights.exceptionFilter,
-        });
+  const telemetryHandler = createTelemetryHandler(options.insights);
 
   const transport = new ApplicationInsightsTransport({
     telemetryHandler,

@@ -22,6 +22,27 @@ export type ITelemetryFilterV3 = (telemetry: TraceTelemetryV3) => boolean;
 export type IExceptionFilterV2 = (exception: ExceptionTelemetryV2) => boolean;
 export type IExceptionFilterV3 = (exception: ExceptionTelemetryV3) => boolean;
 
+export type TelemetryHandlerFactoryBaseOptions = {
+  sendErrorsAsExceptions?: boolean;
+  severityMapping?: SeverityMapping;
+} & TelemetryHandlerFactoryOptions;
+
+export type TelemetryHandlerFactoryOptions =
+  | {
+      client: TelemetryClientV2;
+      version: 2;
+      traceFilter?: ITelemetryFilterV2;
+      exceptionFilter?: IExceptionFilterV2;
+    }
+  | {
+      client: TelemetryClientV3;
+      version: 3;
+      traceFilter?: ITelemetryFilterV3;
+      exceptionFilter?: IExceptionFilterV3;
+    };
+
+export type TelemetryHandlerFactory = (options: TelemetryHandlerFactoryOptions) => TelemetryHandler;
+
 export interface TelemetryHandler {
   handleTelemetry: (telemetry: TelemetryData) => void;
 }
@@ -52,20 +73,7 @@ export type CreateWinstonLoggerOptions = {
   insights: {
     sendErrorsAsExceptions?: boolean;
     severityMapping?: SeverityMapping;
-  } & (
-    | {
-        client: TelemetryClientV2;
-        version: 2;
-        traceFilter?: ITelemetryFilterV2;
-        exceptionFilter?: IExceptionFilterV2;
-      }
-    | {
-        client: TelemetryClientV3;
-        version: 3;
-        traceFilter?: ITelemetryFilterV3;
-        exceptionFilter?: IExceptionFilterV3;
-      }
-  );
+  } & TelemetryHandlerFactoryOptions;
 };
 
 export interface WinstonLevels {

@@ -13,7 +13,7 @@ An [Azure Application Insights][0] transport for [Winston][1] logging library.
 
 This transport is designed to make it easy to obtain a reference to a standard logging library that broadcasts to Application Insights.
 
-Your logging interface can remain familiar to standard (`logger.info`, `logger.error` etc) without intertwining any Azure-specific implementation detail. 
+Your logging interface can remain familiar to standard (`logger.info`, `logger.error` etc) without intertwining any Azure-specific implementation detail.
 
 **[Read the project changelog](./CHANGELOG.md)**  
 
@@ -54,6 +54,7 @@ const insightsLogger = new AzureApplicationInsightsLogger({
   client: defaultClient,
 });
 ```
+
 ```cjs
 const { setup, defaultClient } = require("applicationinsights");
 const { AzureApplicationInsightsLogger } = require('@shellicar/winston-azure-application-insights');
@@ -140,10 +141,10 @@ up alerts based on the related metrics.
 
 How it works with `sendErrorsAsExceptions: true`:
 
-* `logger.error('error message');` creates a trace with severity level 3; *no* exception is tracked
-* `logger.error(new Error('error message'));` creates a trace with severity level 3, *and* an exception with the Error object as argument
-* `logger.error('error message', new Error('error message'));` creates a trace with severity level 3, *and* an exception with the Error object as argument
+* `logger.error('error message');` creates a trace with severity level 3; _no_ exception is tracked
+* `logger.error(new Error('error message'));` creates a trace with severity level 3, _and_ an exception with the Error object as argument
+* `logger.error('error message', new Error('error message'));` creates a trace with severity level 3, _and_ an exception with the Error object as argument
 * `logger.error(new Error('error message'), logContext);` creates a trace and exception and logContext is set to the customDimensions (properties) track* field
-* `logger.info(new Error('error message'));` creates a trace with severity level 1; *no* exception is tracked
+* `logger.info(new Error('error message'));` creates a trace with severity level 1; _no_ exception is tracked
 
 If you do not wish to track exceptions, you can set the option `sendErrorsAsExceptions: false` when configuring the transport.
