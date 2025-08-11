@@ -3,7 +3,6 @@ import { createLogger } from 'winston';
 import { ApplicationInsightsTransport } from '../../src/ApplicationInsightsTransport';
 import type { WinstonInfo } from '../../src/types';
 
-// Spy transport to capture what winston actually passes
 class SpyTransport extends ApplicationInsightsTransport {
   public capturedWinstonInfo: WinstonInfo[] = [];
 

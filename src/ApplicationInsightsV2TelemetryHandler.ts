@@ -6,13 +6,13 @@ import type { TelemetryData, TelemetryHandler } from './types';
 export interface ApplicationInsightsV2TelemetryHandlerOptions {
   client: TelemetryClient;
   traceFilter?: (telemetry: TraceTelemetry) => boolean;
-  exceptionFilter?: (exception: ExceptionTelemetry, telemetry: TelemetryData) => boolean;
+  exceptionFilter?: (exception: ExceptionTelemetry) => boolean;
 }
 
 export class ApplicationInsightsV2TelemetryHandler implements TelemetryHandler {
   private readonly client: TelemetryClient;
   private readonly traceFilter?: (telemetry: TraceTelemetry) => boolean;
-  private readonly exceptionFilter?: (exception: ExceptionTelemetry, telemetry: TelemetryData) => boolean;
+  private readonly exceptionFilter?: (exception: ExceptionTelemetry) => boolean;
   private readonly severityMapping: Record<TelemetrySeverity, SeverityLevel> = {
     [TelemetrySeverity.Verbose]: SeverityLevel.Verbose,
     [TelemetrySeverity.Information]: SeverityLevel.Information,
@@ -42,7 +42,7 @@ export class ApplicationInsightsV2TelemetryHandler implements TelemetryHandler {
         exception: error,
       };
 
-      if (this.exceptionFilter?.(exceptionTelemetry, telemetry) !== false) {
+      if (this.exceptionFilter?.(exceptionTelemetry) !== false) {
         this.client.trackException(exceptionTelemetry);
       }
     }

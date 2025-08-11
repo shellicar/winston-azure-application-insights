@@ -40,10 +40,10 @@ class ErrorWithMeta extends Error {
 winston.error('Log extended errors with properties', new ErrorWithMeta('some error', 'answer', 42));
 
 class MyError extends Error {
-  public extensions: any;
+  public extensions: Record<string, any>;
   constructor(
     message: string,
-    public readonly options: any,
+    public readonly options: Record<string, any>,
   ) {
     super(message);
     this.extensions = options.extensions;

@@ -3,9 +3,10 @@ import { type ExceptionTelemetry, SeverityLevel, type TraceTelemetry } from 'app
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ApplicationInsightsV2TelemetryHandler } from '../src/ApplicationInsightsV2TelemetryHandler';
 import { TelemetrySeverity } from '../src/enums';
+import { SpyTelemetryClientV2 } from './spies/SpyTelemetryClientV2';
 
 describe('ApplicationInsightsV2TelemetryHandler', () => {
-  const client = new SpyTelemetryClient();
+  const client = new SpyTelemetryClientV2();
   const handler = new ApplicationInsightsV2TelemetryHandler({ client });
 
   beforeEach(() => {
@@ -45,7 +46,7 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
     expect(actual).toBe(expected);
   });
 
-  it('should map error severity to SeverityLevel.Error', () => {
+  it('should map error severity to Error', () => {
     handler.handleTelemetry({
       errors: [],
       message: 'test',
@@ -72,7 +73,7 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
     expect(actual).toBe(expected);
   });
 
-  it('should map warning severity to SeverityLevel.Warning', () => {
+  it('should map warning severity to Warning', () => {
     handler.handleTelemetry({
       errors: [],
       message: 'test',
@@ -85,7 +86,7 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
     expect(actual).toBe(expected);
   });
 
-  it('should map critical severity to SeverityLevel.Critical', () => {
+  it('should map critical severity to Critical', () => {
     handler.handleTelemetry({
       errors: [],
       message: 'test',
@@ -98,7 +99,7 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
     expect(actual).toBe(expected);
   });
 
-  it('should map verbose severity to SeverityLevel.Verbose', () => {
+  it('should map verbose severity to Verbose', () => {
     handler.handleTelemetry({
       errors: [],
       message: 'test',
@@ -144,7 +145,7 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
 });
 
 it('should not send trace when trace filter returns false', () => {
-  const client = new SpyTelemetryClient();
+  const client = new SpyTelemetryClientV2();
   const handler = new ApplicationInsightsV2TelemetryHandler({
     client,
     traceFilter: () => false,
@@ -163,8 +164,8 @@ it('should not send trace when trace filter returns false', () => {
 });
 
 it('should pass correct trace telemetry to trace filter', () => {
-  const client = new SpyTelemetryClient();
-  let capturedTraceTelemetry: any;
+  const client = new SpyTelemetryClientV2();
+  let capturedTraceTelemetry: TraceTelemetry | undefined;
 
   const handler = new ApplicationInsightsV2TelemetryHandler({
     client,
@@ -181,13 +182,13 @@ it('should pass correct trace telemetry to trace filter', () => {
     severity: TelemetrySeverity.Information,
   });
 
-  const actual = capturedTraceTelemetry.message;
+  const actual = capturedTraceTelemetry?.message;
   const expected = 'test message';
   expect(actual).toBe(expected);
 });
 
 it('should not send exception when exception filter returns false', () => {
-  const client = new SpyTelemetryClient();
+  const client = new SpyTelemetryClientV2();
   const handler = new ApplicationInsightsV2TelemetryHandler({
     client,
     exceptionFilter: () => false,
@@ -207,8 +208,8 @@ it('should not send exception when exception filter returns false', () => {
 });
 
 it('should pass correct exception telemetry to exception filter', () => {
-  const client = new SpyTelemetryClient();
-  let capturedExceptionTelemetry: any;
+  const client = new SpyTelemetryClientV2();
+  let capturedExceptionTelemetry: ExceptionTelemetry | undefined;
 
   const handler = new ApplicationInsightsV2TelemetryHandler({
     client,
@@ -226,27 +227,6 @@ it('should pass correct exception telemetry to exception filter', () => {
     severity: TelemetrySeverity.Error,
   });
 
-  const actual = capturedExceptionTelemetry.exception;
+  const actual = capturedExceptionTelemetry?.exception;
   expect(actual).toBe(error);
 });
-
-class SpyTelemetryClient extends TelemetryClient {
-  public constructor() {
-    super('InstrumentationKey=00000000-0000-0000-0000-000000000000');
-  }
-  public traces: TraceTelemetry[] = [];
-  public exceptions: ExceptionTelemetry[] = [];
-
-  public clear() {
-    this.traces.length = 0;
-    this.exceptions.length = 0;
-  }
-
-  override trackTrace(telemetry: TraceTelemetry): void {
-    this.traces.push(telemetry);
-  }
-
-  override trackException(telemetry: ExceptionTelemetry): void {
-    this.exceptions.push(telemetry);
-  }
-}

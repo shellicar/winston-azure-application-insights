@@ -5,7 +5,7 @@ import { extractErrorsStep } from './extractErrorsStep';
 import { extractMessageStep } from './extractMessageStep';
 import { extractPropertiesStep } from './extractPropertiesStep';
 import { isNotError } from './isNotError';
-import type { ConstructorOptions, RequiredOptions, SplatFilter, TelemetryHandler, WinstonInfo, WinstonLevels } from './types';
+import type { AzureApplicationInsightsLoggerOptions, RequiredOptions, SplatFilter, TelemetryHandler, WinstonInfo, WinstonLevels } from './types';
 
 export class ApplicationInsightsTransport extends TransportStream {
   private readonly telemetryHandler: TelemetryHandler;
@@ -13,7 +13,7 @@ export class ApplicationInsightsTransport extends TransportStream {
 
   public levels?: WinstonLevels;
 
-  constructor(options: ConstructorOptions) {
+  constructor(options: AzureApplicationInsightsLoggerOptions) {
     super();
     this.options = {
       sendErrorsAsExceptions: options.sendErrorsAsExceptions ?? true,
