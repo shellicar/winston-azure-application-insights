@@ -1,7 +1,7 @@
+import { SPLAT } from 'triple-beam';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from 'winston';
 import { ApplicationInsightsTransport } from '../src/ApplicationInsightsTransport';
-import { splatSymbol } from '../src/consts';
 import { extractMessageStep } from '../src/extractMessageStep';
 import type { WinstonInfo } from '../src/types';
 import type { TelemetryData } from '../src/types';
@@ -16,7 +16,7 @@ describe('extractMessageStep', () => {
     const info: WinstonInfo = {
       level: 'info',
       message: 'hello world',
-      [splatSymbol]: [{ message: 'world' }],
+      [SPLAT]: [{ message: 'world' }],
     };
 
     const result = extractMessageStep(info);
@@ -29,7 +29,7 @@ describe('extractMessageStep', () => {
     const info: WinstonInfo = {
       level: 'info',
       message: 'goodbye universe',
-      [splatSymbol]: [{ message: 'universe' }],
+      [SPLAT]: [{ message: 'universe' }],
     };
 
     const result = extractMessageStep(info);
@@ -45,7 +45,7 @@ describe('extractMessageStep', () => {
     const info: WinstonInfo = {
       level: 'info',
       message: 'hello [object Object]',
-      [splatSymbol]: [{ message: { x: '5' } }],
+      [SPLAT]: [{ message: { x: '5' } }],
     };
 
     const result = extractMessageStep(info);
@@ -60,7 +60,7 @@ describe('extractMessageStep', () => {
     const info: WinstonInfo = {
       level: 'info',
       message: 'hello 50',
-      [splatSymbol]: [{ message: 50 }],
+      [SPLAT]: [{ message: 50 }],
     };
 
     const result = extractMessageStep(info);
@@ -75,7 +75,7 @@ describe('extractMessageStep', () => {
     const info: WinstonInfo = {
       level: 'info',
       message: expected,
-      [splatSymbol]: [{ message: null }],
+      [SPLAT]: [{ message: null }],
     };
 
     const result = extractMessageStep(info);
@@ -102,7 +102,7 @@ describe('extractMessageStep', () => {
     const info: WinstonInfo = {
       level: 'info',
       message: winstonResult,
-      [splatSymbol]: [meta],
+      [SPLAT]: [meta],
     };
 
     const result = extractMessageStep(info);
@@ -142,7 +142,7 @@ describe('extractMessageStep', () => {
     const info: WinstonInfo = {
       level: 'error',
       message: winstonResult,
-      [splatSymbol]: [new Error('2'), new Error('3')],
+      [SPLAT]: [new Error('2'), new Error('3')],
     };
 
     const result = extractMessageStep(info);
@@ -157,7 +157,7 @@ describe('extractMessageStep', () => {
     const info: WinstonInfo = {
       level: 'error',
       message: 'Error: Database error', // What Winston might generate
-      [splatSymbol]: [error],
+      [SPLAT]: [error],
     };
 
     const result = extractMessageStep(info);
@@ -171,9 +171,9 @@ describe('extractMessageStep', () => {
     it('should convert number to string', () => {
       const info: WinstonInfo = {
         level: 'error',
-        message: 42,
-        [splatSymbol]: [],
-      } as any; // Cast because our types don't allow this yet
+        message: 42 as any,
+        [SPLAT]: [],
+      };
 
       const result = extractMessageStep(info);
 
@@ -183,9 +183,9 @@ describe('extractMessageStep', () => {
     it('should convert null to string', () => {
       const info: WinstonInfo = {
         level: 'error',
-        message: null,
-        [splatSymbol]: [],
-      } as any;
+        message: null as any,
+        [SPLAT]: [],
+      };
 
       const result = extractMessageStep(info);
 
@@ -195,9 +195,9 @@ describe('extractMessageStep', () => {
     it('should convert undefined to string', () => {
       const info: WinstonInfo = {
         level: 'error',
-        message: undefined,
-        [splatSymbol]: [],
-      } as any;
+        message: undefined as any,
+        [SPLAT]: [],
+      };
 
       const result = extractMessageStep(info);
 
@@ -207,9 +207,9 @@ describe('extractMessageStep', () => {
     it('should convert object to string', () => {
       const info: WinstonInfo = {
         level: 'error',
-        message: { foo: 'bar', baz: 123 },
-        [splatSymbol]: [],
-      } as any;
+        message: { foo: 'bar', baz: 123 } as any,
+        [SPLAT]: [],
+      };
 
       const result = extractMessageStep(info);
 
@@ -219,9 +219,9 @@ describe('extractMessageStep', () => {
     it('should convert array to string', () => {
       const info: WinstonInfo = {
         level: 'error',
-        message: [1, 2, 3],
-        [splatSymbol]: [],
-      } as any;
+        message: [1, 2, 3] as any,
+        [SPLAT]: [],
+      };
 
       const result = extractMessageStep(info);
 
@@ -231,9 +231,9 @@ describe('extractMessageStep', () => {
     it('should convert boolean to string', () => {
       const info: WinstonInfo = {
         level: 'error',
-        message: true,
-        [splatSymbol]: [],
-      } as any;
+        message: true as any,
+        [SPLAT]: [],
+      };
 
       const result = extractMessageStep(info);
 

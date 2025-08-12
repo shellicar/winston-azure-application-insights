@@ -1,5 +1,5 @@
 import TransportStream from 'winston-transport';
-import { defaultSeverityMapping, splatSymbol } from './consts';
+import { defaultSeverityMapping } from './consts';
 import { extractErrorsStep } from './extractErrorsStep';
 import { extractMessageStep } from './extractMessageStep';
 import { extractPropertiesStep } from './extractPropertiesStep';

@@ -7,4 +7,3 @@ export const defaultSeverityMapping: SeverityMapping = {
   info: TelemetrySeverity.Information,
   verbose: TelemetrySeverity.Verbose,
 };
-export const splatSymbol = Symbol.for('splat');

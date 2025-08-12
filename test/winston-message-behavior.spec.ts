@@ -1,7 +1,7 @@
+import { SPLAT } from 'triple-beam';
 import { describe, it } from 'vitest';
 import { createLogger, format, transports } from 'winston';
 import TransportStream from 'winston-transport';
-import { splatSymbol } from '../src/consts';
 import type { WinstonInfo } from '../src/types';
 
 class DebugTransport extends TransportStream {
@@ -24,7 +24,7 @@ class DebugTransport extends TransportStream {
       });
     }
 
-    const splat = info[splatSymbol];
+    const splat = info[SPLAT];
     console.log('Splat symbol:', splat);
 
     if (Array.isArray(splat)) {

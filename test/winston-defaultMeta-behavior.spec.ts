@@ -1,3 +1,4 @@
+import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { createLogger } from 'winston';
 import { SpyWinstonTransport } from './spies/SpyWinstonTransport';
@@ -21,7 +22,7 @@ describe('Winston defaultMeta behavior verification', () => {
     console.log('info.appVersion:', info.appVersion);
     console.log('info.userId:', info.userId);
     console.log('info.sessionId:', info.sessionId);
-    console.log('Splat symbol:', info[Symbol.for('splat')]);
+    console.log('Splat symbol:', info[SPLAT]);
     console.log('==============================');
 
     // Let's see what actually happens
@@ -46,7 +47,7 @@ describe('Winston defaultMeta behavior verification', () => {
     console.log('info.userId:', info.userId);
     console.log('info.appVersion:', info.appVersion);
     console.log('info.sessionId:', info.sessionId);
-    console.log('Splat symbol:', info[Symbol.for('splat')]);
+    console.log('Splat symbol:', info[SPLAT]);
     console.log('==============================');
 
     expect(info).toBeDefined();
@@ -70,7 +71,7 @@ describe('Winston defaultMeta behavior verification', () => {
     console.log('info.userId:', info.userId);
     console.log('info.appVersion:', info.appVersion);
     console.log('info.contextId:', info.contextId);
-    console.log('Splat symbol:', info[Symbol.for('splat')]);
+    console.log('Splat symbol:', info[SPLAT]);
     console.log('==============================');
 
     expect(info).toBeDefined();

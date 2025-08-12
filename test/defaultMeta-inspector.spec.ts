@@ -1,7 +1,7 @@
+import { SPLAT } from 'triple-beam';
 import { describe, it } from 'vitest';
 import { createLogger } from 'winston';
 import TransportStream from 'winston-transport';
-import { splatSymbol } from '../src/consts';
 import type { WinstonInfo } from '../src/types';
 
 class InspectorTransport extends TransportStream {
@@ -10,7 +10,7 @@ class InspectorTransport extends TransportStream {
     console.log('Full info object:', JSON.stringify(info, null, 2));
     console.log('Info keys:', Object.keys(info));
     console.log('Info.message:', info.message);
-    console.log('Info[splatSymbol]:', info[splatSymbol]);
+    console.log('Info[SPLAT]:', info[SPLAT]);
     console.log('Info.defaultMeta:', (info as any).defaultMeta);
     console.log('========================');
     next();

@@ -1,6 +1,6 @@
+import { SPLAT } from 'triple-beam';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from 'winston';
-import { splatSymbol } from '../src/consts';
 import { extractErrorsStep } from '../src/extractErrorsStep';
 import { isError } from '../src/isError';
 import type { WinstonInfo } from '../src/types';
@@ -54,7 +54,7 @@ describe('extractErrorsStep', () => {
     const info: WinstonInfo = {
       level: 'info',
       message: 'hello',
-      [splatSymbol]: [],
+      [SPLAT]: [],
     };
 
     const actual = extractErrorsStep(info, isError).length;
@@ -70,7 +70,7 @@ describe('extractErrorsStep', () => {
     const info: WinstonInfo = {
       level: 'info',
       message: 'hello',
-      [splatSymbol]: ['string', 42, { userId: 123 }, error1, null, undefined, error2, true],
+      [SPLAT]: ['string', 42, { userId: 123 }, error1, null, undefined, error2, true],
     };
 
     it('has two errors in splat', () => {
@@ -107,7 +107,7 @@ describe('extractErrorsStep', () => {
     const info: WinstonInfo = {
       level: 'info',
       message: 'hello',
-      [splatSymbol]: [null, undefined, expected, null],
+      [SPLAT]: [null, undefined, expected, null],
     };
 
     const actual = extractErrorsStep(info, isError)[0];

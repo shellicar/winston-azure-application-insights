@@ -1,7 +1,7 @@
+import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { createLogger, format } from 'winston';
 import * as winston from 'winston';
-import { splatSymbol } from '../src/consts';
 import { SpyWinstonTransport } from './spies/SpyWinstonTransport';
 
 describe('Winston defaultMeta behavior verification', () => {
@@ -24,7 +24,7 @@ describe('Winston defaultMeta behavior verification', () => {
     console.log('splat item:', { appVersion: '2.3.4', sessionId: 'abc' });
     console.log('Winston info object:', JSON.stringify(capturedInfo, null, 2));
     console.log('Info keys:', Object.keys(capturedInfo));
-    console.log('Splat symbol:', capturedInfo[splatSymbol]);
+    console.log('Splat symbol:', capturedInfo[SPLAT]);
     console.log('==========================================');
 
     // Log the actual behavior for manual inspection
@@ -47,7 +47,7 @@ describe('Winston defaultMeta behavior verification', () => {
     console.log('splat items:', [{ sessionId: 'abc' }, { requestId: 'req-123' }, 'extra-data']);
     console.log('Winston info object:', JSON.stringify(capturedInfo, null, 2));
     console.log('Info keys:', Object.keys(capturedInfo));
-    console.log('Splat symbol:', capturedInfo[splatSymbol]);
+    console.log('Splat symbol:', capturedInfo[SPLAT]);
     console.log('===========================================');
 
     expect(capturedInfo).toBeDefined();
@@ -69,7 +69,7 @@ describe('Winston defaultMeta behavior verification', () => {
     console.log('message only:', 'hello world');
     console.log('Winston info object:', JSON.stringify(capturedInfo, null, 2));
     console.log('Info keys:', Object.keys(capturedInfo));
-    console.log('Splat symbol:', capturedInfo[splatSymbol]);
+    console.log('Splat symbol:', capturedInfo[SPLAT]);
     console.log('=====================================');
 
     expect(capturedInfo).toBeDefined();
@@ -264,7 +264,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', customObject);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('===========================');
     });
 
@@ -281,7 +281,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', customObject);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('================================');
     });
 
@@ -301,7 +301,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', [customObject1, customObject2]);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('===============================================');
     });
 
@@ -328,7 +328,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', [customObjectA, customObjectB]);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('====================================================');
     });
 
@@ -370,7 +370,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', [customObject, 'extra-string', 42, { sessionId: 'abc' }]);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
     });
   });
 
@@ -450,7 +450,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', [{ my: 'object' }, testError]);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('===================================');
     });
 
@@ -469,7 +469,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', [{ my: 'object' }, testError, { another: 'object' }, 'extra']);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('===================================');
     });
 
@@ -489,7 +489,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', ['hello', 'world']);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('================================');
     });
 
@@ -509,7 +509,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', ['hello', { my: 'object' }]);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('=============================');
     });
   });
@@ -529,7 +529,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', [42, { sessionId: 'abc' }]);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('===========================');
     });
 
@@ -546,7 +546,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', ['hello', { sessionId: 'abc' }]);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('===========================');
     });
 
@@ -563,7 +563,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', [true, { sessionId: 'abc' }]);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('============================');
     });
 
@@ -580,7 +580,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', [null, { sessionId: 'abc' }]);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('=========================');
     });
 
@@ -598,7 +598,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', [testDate, { sessionId: 'abc' }]);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('=========================');
     });
 
@@ -615,7 +615,7 @@ describe('Winston defaultMeta behavior verification', () => {
       console.log('splat:', [[1, 2, 3], { sessionId: 'abc' }]);
       console.log('Winston info:', JSON.stringify(info, null, 2));
       console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[splatSymbol]);
+      console.log('Splat symbol:', info[SPLAT]);
       console.log('==========================');
     });
   });

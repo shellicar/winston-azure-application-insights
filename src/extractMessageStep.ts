@@ -1,10 +1,10 @@
-import { splatSymbol } from './consts';
+import { SPLAT } from 'triple-beam';
 import type { WinstonInfo } from './types';
 
 export const extractMessageStep = (info: WinstonInfo): WinstonInfo => {
   const messageAsString = String(info.message);
 
-  const splat = info[splatSymbol];
+  const splat = info[SPLAT];
   const meta = splat?.[0] as { message?: unknown };
 
   if (meta?.message !== undefined) {

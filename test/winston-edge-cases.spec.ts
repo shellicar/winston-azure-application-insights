@@ -1,8 +1,8 @@
+import { SPLAT } from 'triple-beam';
 import { describe, it } from 'vitest';
 import { createLogger } from 'winston';
 import TransportStream from 'winston-transport';
 import { ApplicationInsightsTransport } from '../src/ApplicationInsightsTransport';
-import { splatSymbol } from '../src/consts';
 import type { WinstonInfo } from '../src/types';
 import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
@@ -13,7 +13,7 @@ class DebugTransport extends TransportStream {
     console.log('Info.message:', info.message);
     console.log('Info.message type:', typeof info.message);
     console.log('Info instanceof Error:', info instanceof Error);
-    console.log('Info[splatSymbol]:', info[splatSymbol]);
+    console.log('Info[SPLAT]:', info[SPLAT]);
     console.log('Info keys:', Object.keys(info));
     console.log('=====================');
     next();

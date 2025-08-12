@@ -2,7 +2,7 @@ import type { TelemetryClient as TelemetryClientV2 } from 'applicationinsightsv2
 import type { ExceptionTelemetry as ExceptionTelemetryV2, TraceTelemetry as TraceTelemetryV2 } from 'applicationinsightsv2/out/Declarations/Contracts';
 import type { ExceptionTelemetry as ExceptionTelemetryV3, TelemetryClient as TelemetryClientV3, TraceTelemetry as TraceTelemetryV3 } from 'applicationinsightsv3';
 import type { Format } from 'logform';
-import { splatSymbol } from './consts';
+import { SPLAT } from 'triple-beam';
 import type { TelemetrySeverity } from './enums';
 
 export interface RequiredOptions {
@@ -63,8 +63,8 @@ type MakeNever<T> = {
 
 interface BaseWinstonInfo {
   level: string;
-  [splatSymbol]?: unknown[];
-  defaultMeta?: JsonObject;
+  [SPLAT]?: unknown[];
+  [key: string]: unknown;
 }
 
 // For regular Winston info (most common case)

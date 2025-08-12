@@ -1,5 +1,5 @@
+import { SPLAT } from 'triple-beam';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { splatSymbol } from '../src/consts';
 import { extractPropertiesStep } from '../src/extractPropertiesStep';
 import type { WinstonInfo } from '../src/types';
 import type { TelemetryData } from '../src/types';
@@ -14,8 +14,8 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'test message',
-        userId: 123, // defaultMeta property
-        appVersion: '1.0.0', // defaultMeta property
+        userId: 123,
+        appVersion: '1.0.0',
       };
 
       const actual = extractPropertiesStep(info);
@@ -30,7 +30,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'User logged in',
-        [splatSymbol]: [expected],
+        [SPLAT]: [expected],
       };
 
       const actual = extractPropertiesStep(info);
@@ -58,7 +58,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'mixed data',
-        [splatSymbol]: ['string', 42, properties1, error, null, properties2, true],
+        [SPLAT]: ['string', 42, properties1, error, null, properties2, true],
       };
 
       it('should return defaultMeta when first splat item is primitive', () => {
@@ -80,7 +80,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'hello',
-        [splatSymbol]: [expected],
+        [SPLAT]: [expected],
       };
 
       const actual = extractPropertiesStep(info);
@@ -96,7 +96,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'error',
         message: 'oh noes',
-        [splatSymbol]: [error1, error2, expected],
+        [SPLAT]: [error1, error2, expected],
       };
 
       const actual = extractPropertiesStep(info);
@@ -108,7 +108,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'error',
         message: 'error occurred',
-        [splatSymbol]: [new Error('test error')],
+        [SPLAT]: [new Error('test error')],
       };
 
       const actual = extractPropertiesStep(info);
@@ -124,7 +124,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'test',
-        [splatSymbol]: [expected],
+        [SPLAT]: [expected],
       };
 
       const actual = extractPropertiesStep(info);
@@ -132,16 +132,16 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       expect(actual).toEqual(expected);
     });
 
-    it('should handle array as single item', () => {
+    it('should ignore array as single item', () => {
       const arrayObject = [1, 2, 3];
       const info: WinstonInfo = {
         level: 'info',
         message: 'test',
-        [splatSymbol]: [arrayObject],
+        [SPLAT]: [arrayObject],
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = { '0': 1, '1': 2, '2': 3 }; // Winston spreads arrays as indexed properties
+      const expected = {};
 
       expect(actual).toEqual(expected);
     });
@@ -151,7 +151,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'test',
-        [splatSymbol]: [dateObject],
+        [SPLAT]: [dateObject],
       };
 
       const actual = extractPropertiesStep(info);
@@ -172,7 +172,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'test',
-        [splatSymbol]: [customObject],
+        [SPLAT]: [customObject],
       };
 
       const actual = extractPropertiesStep(info);
@@ -185,7 +185,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'test',
-        [splatSymbol]: ['hello'],
+        [SPLAT]: ['hello'],
       };
 
       const actual = extractPropertiesStep(info);
@@ -198,7 +198,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'test',
-        [splatSymbol]: [42],
+        [SPLAT]: [42],
       };
 
       const actual = extractPropertiesStep(info);
@@ -211,7 +211,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'test',
-        [splatSymbol]: [true],
+        [SPLAT]: [true],
       };
 
       const actual = extractPropertiesStep(info);

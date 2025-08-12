@@ -1,4 +1,4 @@
-import { splatSymbol } from './consts';
+import { SPLAT } from 'triple-beam';
 import { isPlainObject } from './isPlainObject';
 import type { ExtractedProperties, WinstonInfo } from './types';
 
@@ -27,7 +27,7 @@ const extractDefaultMeta = (info: WinstonInfo, isError: (obj: unknown) => boolea
 export const extractPropertiesStep = (info: WinstonInfo, isError: (obj: unknown) => boolean = (x) => x instanceof Error): ExtractedProperties => {
   const defaultMeta = extractDefaultMeta(info, isError);
 
-  const splat = info[splatSymbol];
+  const splat = info[SPLAT];
   if (splat == null) {
     return defaultMeta ?? {};
   }

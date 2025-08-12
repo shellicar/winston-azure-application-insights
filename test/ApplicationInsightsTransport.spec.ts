@@ -1,7 +1,7 @@
+import { SPLAT } from 'triple-beam';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { config, createLogger } from 'winston';
 import { ApplicationInsightsTransport } from '../src/ApplicationInsightsTransport';
-import { splatSymbol } from '../src/consts';
 import { TelemetrySeverity } from '../src/enums';
 import type { SeverityMapping } from '../src/types';
 import { SpyPropertiesTransport } from './spies/SpyPropertiesTransport';
@@ -19,7 +19,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       it('should send errors as exceptions', () => {
         const expected = new Error('test error');
 
-        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [expected] }, () => {});
+        transport.log({ message: 'test message', level: 'info', [SPLAT]: [expected] }, () => {});
 
         const result = telemetryHandler.telemetry;
 
@@ -31,7 +31,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         const expected = { userId: 123 };
 
         const error = new Error('test error');
-        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [expected, error] }, () => {});
+        transport.log({ message: 'test message', level: 'info', [SPLAT]: [expected, error] }, () => {});
         const result = telemetryHandler.telemetry;
         const actual = result?.trace?.properties;
 
@@ -39,7 +39,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       });
 
       it('should return empty object for empty splat', () => {
-        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [] }, () => {});
+        transport.log({ message: 'test message', level: 'info', [SPLAT]: [] }, () => {});
 
         const result = telemetryHandler.telemetry;
         const actual = result?.trace?.properties;

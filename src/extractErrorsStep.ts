@@ -1,4 +1,4 @@
-import { splatSymbol } from './consts';
+import { SPLAT } from 'triple-beam';
 import type { WinstonInfo } from './types';
 
 export const extractErrorsStep = (info: WinstonInfo, isError: (obj: unknown) => boolean): Error[] => {
@@ -8,7 +8,7 @@ export const extractErrorsStep = (info: WinstonInfo, isError: (obj: unknown) => 
     errors.push(info as unknown as Error);
   }
 
-  const splat = info[splatSymbol];
+  const splat = info[SPLAT];
   if (splat != null) {
     for (const item of splat) {
       if (isError(item)) {
