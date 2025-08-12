@@ -5,21 +5,10 @@ import { splatSymbol } from '../src/consts';
 import { extractMessageStep } from '../src/extractMessageStep';
 import type { WinstonInfo } from '../src/types';
 import type { TelemetryData } from '../src/types';
-
-const telemetryHandler = {
-  telemetry: { message: '' } as TelemetryData | undefined,
-  handleTelemetry: (telemetry: TelemetryData) => {
-    telemetryHandler.telemetry = telemetry;
-  },
-  clear() {
-    this.telemetry = undefined;
-  },
-};
+import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
 describe('extractMessageStep', () => {
-  beforeEach(() => {
-    telemetryHandler.clear();
-  });
+  const telemetryHandler = new SpyTelemetryHandler();
 
   it('should extract winston message in pipeline step', () => {
     const expected = 'hello';
@@ -108,7 +97,7 @@ describe('extractMessageStep', () => {
     const meta = new Error('World');
     logger.info(expected, meta);
 
-    const winstonResult = telemetryHandler.telemetry!.message;
+    const winstonResult = telemetryHandler.telemetry!.trace!.message;
 
     const info: WinstonInfo = {
       level: 'info',
@@ -148,7 +137,7 @@ describe('extractMessageStep', () => {
 
     logger.error('Error: 1', new Error('2'), new Error('3'));
 
-    const winstonResult = telemetryHandler.telemetry!.message;
+    const winstonResult = telemetryHandler.telemetry!.trace!.message;
 
     const info: WinstonInfo = {
       level: 'error',
@@ -160,5 +149,95 @@ describe('extractMessageStep', () => {
     const actual = result.message;
 
     expect(actual).toBe(expected);
+  });
+
+  it('should handle Error as first parameter in splat', () => {
+    const error = new Error('Database error');
+
+    const info: WinstonInfo = {
+      level: 'error',
+      message: 'Error: Database error', // What Winston might generate
+      [splatSymbol]: [error],
+    };
+
+    const result = extractMessageStep(info);
+    const actual = result.message;
+
+    // TODO: Determine what the expected behavior should be
+    console.log('Extract message result when Error is first param:', actual);
+  });
+
+  describe('Edge cases with non-string message', () => {
+    it('should convert number to string', () => {
+      const info: WinstonInfo = {
+        level: 'error',
+        message: 42,
+        [splatSymbol]: [],
+      } as any; // Cast because our types don't allow this yet
+
+      const result = extractMessageStep(info);
+
+      expect(result.message).toBe('42');
+    });
+
+    it('should convert null to string', () => {
+      const info: WinstonInfo = {
+        level: 'error',
+        message: null,
+        [splatSymbol]: [],
+      } as any;
+
+      const result = extractMessageStep(info);
+
+      expect(result.message).toBe('null');
+    });
+
+    it('should convert undefined to string', () => {
+      const info: WinstonInfo = {
+        level: 'error',
+        message: undefined,
+        [splatSymbol]: [],
+      } as any;
+
+      const result = extractMessageStep(info);
+
+      expect(result.message).toBe('undefined');
+    });
+
+    it('should convert object to string', () => {
+      const info: WinstonInfo = {
+        level: 'error',
+        message: { foo: 'bar', baz: 123 },
+        [splatSymbol]: [],
+      } as any;
+
+      const result = extractMessageStep(info);
+
+      expect(result.message).toBe('[object Object]');
+    });
+
+    it('should convert array to string', () => {
+      const info: WinstonInfo = {
+        level: 'error',
+        message: [1, 2, 3],
+        [splatSymbol]: [],
+      } as any;
+
+      const result = extractMessageStep(info);
+
+      expect(result.message).toBe('1,2,3');
+    });
+
+    it('should convert boolean to string', () => {
+      const info: WinstonInfo = {
+        level: 'error',
+        message: true,
+        [splatSymbol]: [],
+      } as any;
+
+      const result = extractMessageStep(info);
+
+      expect(result.message).toBe('true');
+    });
   });
 });

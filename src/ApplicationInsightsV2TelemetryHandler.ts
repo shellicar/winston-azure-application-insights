@@ -28,19 +28,21 @@ export class ApplicationInsightsV2TelemetryHandler implements TelemetryHandler {
   }
 
   public handleTelemetry(telemetry: TelemetryData): void {
-    const trace: TraceTelemetry = {
-      message: telemetry.message,
-      severity: this.mapSeverity(telemetry.severity),
-      properties: telemetry.properties,
-    };
-    if (this.traceFilter?.(trace) !== false) {
-      this.client.trackTrace(trace);
+    if (telemetry.trace != null) {
+      const trace: TraceTelemetry = {
+        message: telemetry.trace.message,
+        severity: this.mapSeverity(telemetry.trace.severity),
+        properties: telemetry.trace.properties,
+      };
+      if (this.traceFilter?.(trace) !== false) {
+        this.client.trackTrace(trace);
+      }
     }
 
     for (const error of telemetry.errors) {
       const exceptionTelemetry = {
         exception: error,
-      };
+      } satisfies ExceptionTelemetry;
 
       if (this.exceptionFilter?.(exceptionTelemetry) !== false) {
         this.client.trackException(exceptionTelemetry);

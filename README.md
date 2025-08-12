@@ -1,150 +1,301 @@
-@shellicar/winston-azure-application-insights
-==================================
+# @shellicar/winston-azure-application-insights
 
-## Update
+> An [Azure Application Insights](https://azure.microsoft.com/en-us/services/application-insights/) transport for [Winston](https://github.com/winstonjs/winston) logging library.
 
-This has been forked as the original and other forks have not been updated in quite a while.
+[![npm package](https://img.shields.io/npm/v/@shellicar/winston-azure-application-insights.svg)](https://npmjs.com/package/@shellicar/winston-azure-application-insights)
+[![build status](https://github.com/shellicar/winston-azure-application-insights/actions/workflows/node.js.yml/badge.svg)](https://github.com/shellicar/winston-azure-application-insights/actions/workflows/node.js.yml)
 
-Most of this README has been left as is, with relevant updates only.
+## Features
 
-## Intro
+• 🔄 **Dual SDK Support** - Works with both Application Insights v2 and v3 SDKs
+• 🚀 **Simple Factory Functions** - Easy setup with `createApplicationInsightsTransport()` and `createWinstonLogger()`  
+• 🔍 **Automatic Error Detection** - Extracts Error objects from logs and sends them as Application Insights exceptions
+• 📊 **Trace + Exception Logging** - Sends logs as traces while also tracking errors as detailed exceptions
+• 🎯 **Flexible Filtering** - Optional trace and exception filters for fine-grained control
+• 🔧 **Custom Severity Mapping** - Map Winston levels to Application Insights severity levels
+• 🏠 **Local Development** - Log to console locally while sending to Application Insights in production
 
-An [Azure Application Insights][0] transport for [Winston][1] logging library.
-
-This transport is designed to make it easy to obtain a reference to a standard logging library that broadcasts to Application Insights.
-
-Your logging interface can remain familiar to standard (`logger.info`, `logger.error` etc) without intertwining any Azure-specific implementation detail.
-
-**[Read the project changelog](./CHANGELOG.md)**  
-
-## Installation
+## Installation & Quick Start
 
 ```sh
-pnpm install @shellicar/winston-azure-application-insights
+pnpm add @shellicar/winston-azure-application-insights
 ```
-
-## Support
-
-This library has CJS and ESM outputs.
-
-Continuous integration tests are run against the NodeJS LTS versions.
-
-## Usage
-
-See `demo.ts` and the `examples` directory for a usage examples.
-
-**Connection String**
-
-**Note**: an connection string is required before any data can be sent. Please see the
-"[Connection Strings in Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/sdk-connection-string?tabs=dotnet5#find-your-connection-string)"
-for more information.
-
-The connection string can be supplied:
-
-* Passing an initialized Application Insights client in the "client" options property:
 
 ```typescript
 import { setup, defaultClient } from 'applicationinsights';
-import { AzureApplicationInsightsLogger } from '@shellicar/winston-azure-application-insights';
+import { createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
+import { createLogger } from 'winston';
 
 setup().start();
 
-const insightsLogger = new AzureApplicationInsightsLogger({
-  version: 3, // or 2 if using applicationinsights^3
+const transport = createApplicationInsightsTransport({
+  version: 3,
   client: defaultClient,
 });
+
+const logger = createLogger({
+  transports: [transport],
+});
+
+logger.info('Hello Application Insights!');
+logger.error('Something failed', new Error('Connection timeout'));
 ```
 
-```cjs
-const { setup, defaultClient } = require("applicationinsights");
-const { AzureApplicationInsightsLogger } = require('@shellicar/winston-azure-application-insights');
+<!-- BEGIN_ECOSYSTEM -->
 
-setup(process.env.APPLICATIONINSIGHTS_CONNECTION_STRING).start();
+## @shellicar TypeScript Ecosystem
 
-const insightsLogger = new AzureApplicationInsightsLogger({
+### Core Libraries
+
+- [`@shellicar/core-config`](https://github.com/shellicar/core-config) - A library for securely handling sensitive configuration values like connection strings, URLs, and secrets.
+- [`@shellicar/core-di`](https://github.com/shellicar/core-di) - A basic dependency injection library.
+
+### Reference Architectures
+
+- [`@shellicar/reference-foundation`](https://github.com/shellicar/reference-foundation) - A comprehensive starter repository. Illustrates individual concepts.
+- [`@shellicar/reference-enterprise`](https://github.com/shellicar/reference-enterprise) - A comprehensive starter repository. Can be used as the basis for creating a new Azure application workload.
+
+### Build Tools
+
+- [`@shellicar/build-version`](https://github.com/shellicar/build-version) - Build plugin that calculates and exposes version information through a virtual module import.
+- [`@shellicar/build-graphql`](https://github.com/shellicar/build-graphql) - Build plugin that loads GraphQL files and makes them available through a virtual module import.
+
+### Framework Adapters
+
+- [`@shellicar/svelte-adapter-azure-functions`](https://github.com/shellicar/svelte-adapter-azure-functions) - A [SvelteKit adapter](https://kit.svelte.dev/docs/adapters) that builds your app into an Azure Function.
+
+### Logging & Monitoring
+
+- [`@shellicar/winston-azure-application-insights`](https://github.com/shellicar/winston-azure-application-insights) - An [Azure Application Insights](https://azure.microsoft.com/en-us/services/application-insights/) transport for [Winston](https://github.com/winstonjs/winston) logging library.
+- [`@shellicar/pino-applicationinsights-transport`](https://github.com/shellicar/pino-applicationinsights-transport) - [Azure Application Insights](https://azure.microsoft.com/en-us/services/application-insights) transport for [pino](https://github.com/pinojs/pino)
+
+<!-- END_ECOSYSTEM -->
+
+## Motivation
+
+When logging directly to Application Insights using the telemetry client, it makes debugging locally more difficult. Logging to console pollutes logs in Azure, so this provides a compromise.
+
+I forked the original library to add support for Application Insights v3, which is relatively recent. I have also refactored it to handle certain error logging scenarios that weren't working as expected.
+
+## Feature Examples
+
+See [examples](./examples) for example source code.
+
+* **Factory Functions** - Simple setup with clean API.
+
+```typescript
+import { setup, defaultClient } from 'applicationinsights';
+import { createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
+
+setup().start();
+
+const transport = createApplicationInsightsTransport({
   version: 3,
   client: defaultClient,
 });
 ```
 
-**I get an error when using this transport**
+* **Complete Logger Setup** - Create a Winston logger with both console and Application Insights.
 
-If you receive the error:
+```typescript
+import { createWinstonLogger } from '@shellicar/winston-azure-application-insights';
 
-`No instrumentation key or connection string was provided to the Azure Monitor Exporter`
+const logger = createWinstonLogger({
+  winston: {
+    console: true,
+    level: 'info',
+  },
+  insights: {
+    version: 3,
+    client: defaultClient,
+  },
+});
 
-Then you didn't specify a suitable instrumentation key. See the section above.
-
-`Error: @opentelemetry/api: Attempted duplicate registration of API: context`
-
-This may be because your environment has already (maybe implicitly) loaded applicationinsights and called `.setup()`.
-This happens if you are running an Azure Function App and have `APPLICATIONINSIGHTS_CONNECTION_STRING` set.
-The best solution to this is to load `applicationinsights` and pass in `appInsights.defaultClient` using the `client`
-option as per example.
-
-**I'm seeing multiple traces with similar/identical messages**
-
-`applicationinsights` deeply integrates into the `console` transports, and `winston` itself (via `diagnostic-channel`).
-If you are integrating this transport, it's recommended to disable `diagnostic-channel` and console auto collection:
-
-To control `diagnostic-channel`, [follow the guide in the main repository](https://github.com/Microsoft/ApplicationInsights-node.js#automatic-third-party-instrumentation).
-
-It is recommended to use _only_ this transport where your application is running in production mode and needs to
-stream data to Application Insights. In all other scenarios such as local debug and test suites, the console transport
-(or similar) should suffice. This is to avoid polluting instances/unnecessary cost.
-
-Despite this notice, to specifically disable console transport collection, use `.setAutoCollectConsole(false)`:
-
-```js
-setup().setAutoCollectConsole(false);
+logger.info('Application started');
 ```
 
-## Options
+* **Error Extraction** - Automatically detects Error objects and sends them as exceptions.
 
-* **level**: lowest logging level transport to be logged (default: `info`)
-* **sendErrorsAsExceptions**: Boolean flag indicating whether to also track errors to the AI exceptions table.
-See section below for more details (default: `true`).
+```typescript
+// Creates trace only
+logger.error('Something went wrong');
 
-**SDK integration options (required):**
+// Creates trace + exception  
+logger.error(new Error('Database error'));
 
-* **client**: An existing App Insights client
+// Creates trace + exception (Error extracted from additional parameters)
+logger.error('Operation failed', new Error('Timeout'));
 
-## Log Levels
+// Creates trace + two exceptions (multiple Error objects)
+logger.error('Multiple failures', new Error('DB error'), new Error('Cache error'));
+```
 
-Supported log levels are:
+* **Properties Extraction** - Winston splat parameters become telemetry properties.
 
-Winston Level | App Insights level
----------------|------------------
-error          | error (3)
-warn           | warning (2)
-info           | informational (1)
-verbose        | verbose (0)
-debug          | verbose (0)
-silly          | verbose (0)
+```typescript
+// Simple properties
+logger.info('User logged in', { userId: 123, action: 'login' });
 
-**All other possible levels, or custom levels, will default to `info`**
+// Mixed types - Error objects are extracted, others become properties
+logger.error('Complex operation failed', 
+  { userId: 123, operation: 'checkout' }, 
+  new Error('Payment failed'),
+  { retryCount: 3 }
+);
+```
 
-[0]: https://azure.microsoft.com/en-us/services/application-insights/
-[1]: https://github.com/winstonjs/winston
+* **Severity Mapping** - Winston levels map to Application Insights severity with priority fallback.
 
-## Error & Exception Logging: Exceptions vs. Traces
+```typescript
+logger.error('Critical issue');   // → Error (3)
+logger.warn('Warning message');   // → Warning (2)  
+logger.info('Info message');      // → Information (1)
+logger.verbose('Debug info');     // → Verbose (0)
 
-The Application Insights "exceptions" table allows you to see more detailed error information including the stack trace.
-Therefore for all log events at severity level error or above, an exception is logged if the library detects that an
-Error object has been passed.
-The log event will still generate a trace with the correct severity level regardless of this setting, but please note
-that any Error object will have its `stack` property omitted when sent to `trackTrace`.
-All other properties are included.
+// Custom levels fall back to next available mapping
+logger.log('audit', 'Audit event'); // → Falls back based on level priority
+```
 
-This allows you to see clearly Azure Application Insights instead of having to access trace information manually and set
-up alerts based on the related metrics.
+* **Custom Severity Mapping** - Override default level mappings.
 
-How it works with `sendErrorsAsExceptions: true`:
+```typescript
+const transport = createApplicationInsightsTransport({
+  version: 3,
+  client: defaultClient,
+  severityMapping: {
+    error: TelemetrySeverity.Error,
+    warn: TelemetrySeverity.Warning,
+    info: TelemetrySeverity.Information,
+    debug: TelemetrySeverity.Verbose,
+    // Custom levels
+    audit: TelemetrySeverity.Critical,
+    security: TelemetrySeverity.Error,
+  },
+});
+```
 
-* `logger.error('error message');` creates a trace with severity level 3; _no_ exception is tracked
-* `logger.error(new Error('error message'));` creates a trace with severity level 3, _and_ an exception with the Error object as argument
-* `logger.error('error message', new Error('error message'));` creates a trace with severity level 3, _and_ an exception with the Error object as argument
-* `logger.error(new Error('error message'), logContext);` creates a trace and exception and logContext is set to the customDimensions (properties) track* field
-* `logger.info(new Error('error message'));` creates a trace with severity level 1; _no_ exception is tracked
+* **Dual SDK Support** - Works with both Application Insights v2 and v3.
 
-If you do not wish to track exceptions, you can set the option `sendErrorsAsExceptions: false` when configuring the transport.
+```typescript
+// Application Insights v2
+import { setup, defaultClient } from 'applicationinsights'; // v2
+const transport = createApplicationInsightsTransport({
+  version: 2,
+  client: defaultClient,
+});
+
+// Application Insights v3  
+import { setup, defaultClient } from 'applicationinsightsv3'; // v3
+const transport = createApplicationInsightsTransport({
+  version: 3,
+  client: defaultClient,
+});
+```
+
+* **Filtering** - Optional filters for traces and exceptions.
+
+```typescript
+const transport = createApplicationInsightsTransport({
+  version: 3,
+  client: defaultClient,
+  // Filter out verbose traces
+  traceFilter: (trace) => trace.severity !== KnownSeverityLevel.Verbose,
+  // Skip exceptions for specific errors
+  exceptionFilter: (exception) => !exception.exception.message.includes('ignore'),
+});
+```
+
+* **Disable Exception Tracking** - Treat all Error objects as regular properties.
+
+```typescript
+const transport = createApplicationInsightsTransport({
+  version: 3,
+  client: defaultClient,
+  sendErrorsAsExceptions: false,
+});
+```
+
+## Usage
+
+```typescript
+import { setup, defaultClient } from 'applicationinsights';
+import { createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
+import { createLogger } from 'winston';
+
+// Setup Application Insights
+setup().start(); // Uses APPLICATIONINSIGHTS_CONNECTION_STRING environment variable
+
+// Create transport
+const transport = createApplicationInsightsTransport({
+  version: 3,
+  client: defaultClient,
+});
+
+// Create Winston logger
+const logger = createLogger({
+  transports: [transport],
+});
+
+// Log messages
+logger.info('Application started', { version: '1.0.0' });
+logger.error('Database connection failed', new Error('Connection timeout'), { 
+  host: 'db.example.com',
+  retryCount: 3 
+});
+```
+
+### Connection String Setup
+
+A connection string is required before any data can be sent. See [Connection Strings in Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/sdk-connection-string?tabs=dotnet5#find-your-connection-string) for more information.
+
+```typescript
+// Option 1: Environment variable (recommended)
+process.env.APPLICATIONINSIGHTS_CONNECTION_STRING = 'InstrumentationKey=your-key-here';
+setup().start();
+
+// Option 2: Explicit connection string
+setup('InstrumentationKey=your-key-here').start();
+```
+
+### Configuration Options
+
+* **version**: `2` or `3` - Application Insights SDK version (required)
+* **client**: Application Insights client instance (required)
+* **sendErrorsAsExceptions**: Extract Error objects as exceptions (default: `true`)
+* **severityMapping**: Custom Winston level to Application Insights severity mapping
+* **traceFilter**: Optional function to filter traces before sending
+* **exceptionFilter**: Optional function to filter exceptions before sending
+
+### Troubleshooting
+
+**Missing Connection String**
+
+```
+No instrumentation key or connection string was provided
+```
+
+Set the connection string via environment variable or setup parameter.
+
+**Duplicate API Registration** 
+
+```
+Attempted duplicate registration of API: context
+```
+
+Your environment already loaded Application Insights (common in Azure Functions). Use the existing client without calling setup():
+
+```typescript
+import { defaultClient } from 'applicationinsights';
+const transport = createApplicationInsightsTransport({
+  version: 3,
+  client: defaultClient, // Use existing client
+});
+```
+
+**Multiple/Duplicate Traces**
+
+Application Insights auto-collects from console and Winston. Disable auto-collection:
+
+```typescript
+setup().setAutoCollectConsole(false).start();
+```

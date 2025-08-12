@@ -1,17 +1,16 @@
 import { defaultClient, setup } from 'applicationinsights';
 import winston from 'winston';
-import { AzureApplicationInsightsLogger } from '../../src/old/winston-azure-application-insights';
+import { createApplicationInsightsTransport } from '../../src';
 
 const shouldPushToAppInsights = 'APPLICATIONINSIGHTS_CONNECTION_STRING' in process.env;
 
 if (shouldPushToAppInsights) {
   setup().start();
-  winston.add(
-    new AzureApplicationInsightsLogger({
-      client: defaultClient,
-      version: 3,
-    }),
-  );
+  const transport = createApplicationInsightsTransport({
+    version: 3,
+    client: defaultClient,
+  });
+  winston.add(transport);
 } else {
   winston.add(new winston.transports.Console());
 }

@@ -1,8 +1,12 @@
 import { type ExceptionTelemetry, TelemetryClient, type TraceTelemetry } from 'applicationinsightsv3';
+import { beforeEach } from 'vitest';
 
 export class SpyTelemetryClientV3 extends TelemetryClient {
   public constructor() {
     super('InstrumentationKey=00000000-0000-0000-0000-000000000000');
+    beforeEach(() => {
+      this.clear();
+    });
   }
 
   public traces: TraceTelemetry[] = [];

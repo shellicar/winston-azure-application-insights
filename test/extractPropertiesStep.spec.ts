@@ -3,21 +3,10 @@ import { splatSymbol } from '../src/consts';
 import { extractPropertiesStep } from '../src/extractPropertiesStep';
 import type { WinstonInfo } from '../src/types';
 import type { TelemetryData } from '../src/types';
-
-const telemetryHandler = {
-  telemetry: { message: '' } as TelemetryData | undefined,
-  handleTelemetry: (telemetry: TelemetryData) => {
-    telemetryHandler.telemetry = telemetry;
-  },
-  clear() {
-    this.telemetry = undefined;
-  },
-};
+import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
 describe('Refactored AzureApplicationInsightsLogger', () => {
-  beforeEach(() => {
-    telemetryHandler.clear();
-  });
+  const telemetryHandler = new SpyTelemetryHandler();
 
   describe('extractPropertiesStep', () => {
     it('should extract single property object directly', () => {

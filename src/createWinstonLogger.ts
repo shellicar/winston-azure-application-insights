@@ -29,7 +29,6 @@ export const createApplicationInsightsTransport = (options: TelemetryHandlerFact
 
   const transport = new ApplicationInsightsTransport({
     telemetryHandler,
-    sendErrorsAsExceptions: options.sendErrorsAsExceptions,
     severityMapping: options.severityMapping,
   });
 
@@ -44,7 +43,6 @@ export const createWinstonLogger = (options: CreateWinstonLoggerOptions) => {
 
   const transport = new ApplicationInsightsTransport({
     telemetryHandler,
-    sendErrorsAsExceptions: options.insights.sendErrorsAsExceptions,
     severityMapping: options.insights.severityMapping,
   });
 

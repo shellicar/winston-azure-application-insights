@@ -7,14 +7,19 @@ import type { TelemetrySeverity } from './enums';
 
 export interface RequiredOptions {
   telemetryHandler: TelemetryHandler;
-  sendErrorsAsExceptions: boolean;
   severityMapping: SeverityMapping;
+  isError: (obj: unknown) => boolean;
 }
-export interface TelemetryData {
+
+export interface TelemetryDataTrace {
   message: string;
   properties: ExtractedProperties;
-  errors: Error[];
   severity: TelemetrySeverity;
+}
+
+export interface TelemetryData {
+  trace: TelemetryDataTrace | null;
+  errors: Error[];
 }
 
 export type ITelemetryFilterV2 = (telemetry: TraceTelemetryV2) => boolean;
@@ -23,7 +28,6 @@ export type IExceptionFilterV2 = (exception: ExceptionTelemetryV2) => boolean;
 export type IExceptionFilterV3 = (exception: ExceptionTelemetryV3) => boolean;
 
 export type TelemetryHandlerFactoryBaseOptions = {
-  sendErrorsAsExceptions?: boolean;
   severityMapping?: SeverityMapping;
 } & TelemetryHandlerFactoryOptions;
 
@@ -46,20 +50,35 @@ export type TelemetryHandlerFactory = (options: TelemetryHandlerFactoryOptions) 
 export interface TelemetryHandler {
   handleTelemetry: (telemetry: TelemetryData) => void;
 }
-export interface WinstonInfo {
+
+// Base Winston properties that are always present
+interface BaseWinstonInfo {
   level: string;
-  message: string;
   [splatSymbol]?: unknown[];
-  [key: string]: unknown;
   [key: symbol]: unknown;
 }
+
+// For regular Winston info (most common case)
+interface RegularWinstonInfo extends BaseWinstonInfo {
+  message: string;
+}
+
+// For when an Error is passed as first parameter to logger
+interface ErrorWinstonInfo extends BaseWinstonInfo, Error {
+  // Error already has message, name, stack, etc.
+}
+
+// WinstonInfo can be either case
+export type WinstonInfo = RegularWinstonInfo | ErrorWinstonInfo;
+
 export interface SeverityMapping {
   [level: string]: TelemetrySeverity;
 }
+
 export interface AzureApplicationInsightsLoggerOptions {
   telemetryHandler: TelemetryHandler;
-  sendErrorsAsExceptions?: boolean;
   severityMapping?: SeverityMapping;
+  isError?: (obj: unknown) => boolean;
 }
 
 export type CreateWinstonLoggerOptions = {
@@ -71,7 +90,6 @@ export type CreateWinstonLoggerOptions = {
     levels?: WinstonLevels;
   };
   insights: {
-    sendErrorsAsExceptions?: boolean;
     severityMapping?: SeverityMapping;
   } & TelemetryHandlerFactoryOptions;
 };
@@ -79,5 +97,4 @@ export type CreateWinstonLoggerOptions = {
 export interface WinstonLevels {
   [levelName: string]: number;
 }
-export type SplatFilter = (item: unknown) => boolean;
 export type ExtractedProperties = Record<string, unknown> | unknown[];

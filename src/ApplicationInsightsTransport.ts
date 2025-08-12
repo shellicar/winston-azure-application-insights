@@ -1,11 +1,11 @@
 import TransportStream from 'winston-transport';
-import { defaultSeverityMapping } from './consts';
-import { TelemetrySeverity } from './enums';
+import { defaultSeverityMapping, splatSymbol } from './consts';
 import { extractErrorsStep } from './extractErrorsStep';
 import { extractMessageStep } from './extractMessageStep';
 import { extractPropertiesStep } from './extractPropertiesStep';
-import { isNotError } from './isNotError';
-import type { AzureApplicationInsightsLoggerOptions, RequiredOptions, SplatFilter, TelemetryHandler, WinstonInfo, WinstonLevels } from './types';
+import { extractSeverityStep } from './extractSeverityStep';
+import { isError } from './isError';
+import type { AzureApplicationInsightsLoggerOptions, RequiredOptions, TelemetryHandler, WinstonInfo, WinstonLevels } from './types';
 
 export class ApplicationInsightsTransport extends TransportStream {
   private readonly telemetryHandler: TelemetryHandler;
@@ -16,55 +16,40 @@ export class ApplicationInsightsTransport extends TransportStream {
   constructor(options: AzureApplicationInsightsLoggerOptions) {
     super();
     this.options = {
-      sendErrorsAsExceptions: options.sendErrorsAsExceptions ?? true,
       telemetryHandler: options.telemetryHandler,
       severityMapping: options.severityMapping ?? defaultSeverityMapping,
+      isError: options.isError ?? isError,
     };
     this.telemetryHandler = options.telemetryHandler;
   }
 
   public override log(info: WinstonInfo, next: () => void) {
-    const filter: SplatFilter = this.options.sendErrorsAsExceptions ? isNotError : () => true;
-
-    const message = extractMessageStep(info);
-    const properties = extractPropertiesStep(info, filter);
-    const errors = this.options.sendErrorsAsExceptions ? extractErrorsStep(info) : [];
+    const errors = extractErrorsStep(info, this.options.isError);
+    const trace = this.getTrace(info, errors);
 
     this.telemetryHandler.handleTelemetry({
-      message: message.message,
-      properties: properties,
-      errors: errors,
-      severity: this.mapUnknownLevelToSeverity(info.level),
+      trace,
+      errors,
     });
 
     next();
   }
 
-  private mapLevelToSeverity(level: string): TelemetrySeverity | null {
-    return this.options.severityMapping[level] ?? null;
-  }
+  private getTrace(info: WinstonInfo, errors: Error[]) {
+    const shouldSendOnlyException = errors.length > 0 && this.options.isError(info);
 
-  private mapUnknownLevelToSeverity(level: string): TelemetrySeverity {
-    const directMapping = this.mapLevelToSeverity(level);
-    if (directMapping != null) {
-      return directMapping;
+    if (shouldSendOnlyException) {
+      return null;
     }
 
-    if (this.levels != null) {
-      const currentPriority = this.levels[level];
-      const sortedLevels = Object.entries(this.levels)
-        .map((x) => ({ levelName: x[0], priority: x[1] }))
-        .filter((x) => currentPriority < x.priority)
-        .sort((a, b) => a.priority - b.priority);
+    const message = extractMessageStep(info);
+    const properties = extractPropertiesStep(info, this.options.isError);
+    const severity = extractSeverityStep(info, this.options.severityMapping, this.levels);
 
-      for (const { levelName } of sortedLevels) {
-        const severity = this.mapLevelToSeverity(levelName);
-        if (severity) {
-          return severity;
-        }
-      }
-    }
-
-    return TelemetrySeverity.Verbose;
+    return {
+      message: message.message,
+      properties,
+      severity,
+    };
   }
 }

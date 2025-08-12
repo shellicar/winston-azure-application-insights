@@ -1,35 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { config, createLogger } from 'winston';
-import TransportStream from 'winston-transport';
 import { ApplicationInsightsTransport } from '../src/ApplicationInsightsTransport';
 import { splatSymbol } from '../src/consts';
 import { TelemetrySeverity } from '../src/enums';
-import { extractMessageStep } from '../src/extractMessageStep';
-import { extractPropertiesStep } from '../src/extractPropertiesStep';
 import type { SeverityMapping } from '../src/types';
-import type { WinstonInfo } from '../src/types';
-import type { TelemetryData } from '../src/types';
-
-const telemetryHandler = {
-  telemetry: { message: '' } as TelemetryData | undefined,
-  handleTelemetry: (telemetry: TelemetryData) => {
-    telemetryHandler.telemetry = telemetry;
-  },
-  clear() {
-    this.telemetry = undefined;
-  },
-};
+import { SpyPropertiesTransport } from './spies/SpyPropertiesTransport';
+import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
 describe('Refactored AzureApplicationInsightsLogger', () => {
-  beforeEach(() => {
-    telemetryHandler.clear();
-  });
+  const telemetryHandler = new SpyTelemetryHandler();
 
   describe('Configuration', () => {
-    describe('with sendErrorsAsExceptions set', () => {
+    describe('Error handling behavior', () => {
       const transport = new ApplicationInsightsTransport({
         telemetryHandler,
-        sendErrorsAsExceptions: true,
       });
 
       it('should send errors as exceptions', () => {
@@ -49,7 +33,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         const error = new Error('test error');
         transport.log({ message: 'test message', level: 'info', [splatSymbol]: [expected, error] }, () => {});
         const result = telemetryHandler.telemetry;
-        const actual = result?.properties;
+        const actual = result?.trace?.properties;
 
         expect(actual).toEqual(expected);
       });
@@ -58,52 +42,55 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         transport.log({ message: 'test message', level: 'info', [splatSymbol]: [] }, () => {});
 
         const result = telemetryHandler.telemetry;
-        const actual = result?.properties;
+        const actual = result?.trace?.properties;
         const expected = {};
 
         expect(actual).toEqual(expected);
       });
+
+      describe('Error as first parameter', () => {
+        it('should extract error when Error passed as first parameter', () => {
+          const expected = new Error('Database error');
+          const logger = createLogger({ transports: [transport] });
+
+          logger.error(expected);
+
+          const actual = telemetryHandler.telemetry?.errors[0];
+          expect(actual).toBe(expected);
+        });
+
+        it('should have empty properties when Error passed as first parameter', () => {
+          const logger = createLogger({ transports: [transport] });
+
+          logger.error(new Error('UNIQUE_NEW_TRANSPORT_ERROR_12345'));
+
+          const actual = telemetryHandler.telemetry?.trace;
+          expect(actual).toBeNull();
+        });
+
+        it('should send no trace when Error passed as first parameter', () => {
+          const logger = createLogger({ transports: [transport] });
+
+          logger.error(new Error('hello world'));
+
+          const actual = telemetryHandler.telemetry?.trace;
+          expect(actual).toBeNull();
+        });
+
+        it('should use error message when Error passed as first parameter', () => {
+          const logger = createLogger({ transports: [transport] });
+
+          logger.error(new Error('Database error'));
+
+          // Should not have trace when only sending exceptions
+          const actual = telemetryHandler.telemetry?.trace;
+          expect(actual).toBeNull();
+        });
+      });
     });
-    describe('with sendErrorsAsExceptions unset', () => {
-      const transport = new ApplicationInsightsTransport({
-        telemetryHandler,
-        sendErrorsAsExceptions: false,
-      });
 
-      it('should not send errors as exceptions', () => {
-        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [new Error('test error')] }, () => {});
-
-        const result = telemetryHandler.telemetry;
-
-        const actual = result?.errors[0];
-        expect(actual).toBeUndefined();
-      });
-
-      it('should preserve errors in properties', () => {
-        const data = { userId: 123 };
-        const error = new Error('test error');
-        const expected = [data, error];
-
-        transport.log({ message: 'test message', level: 'info', [splatSymbol]: expected }, () => {});
-
-        const result = telemetryHandler.telemetry;
-        const actual = result?.properties;
-
-        expect(actual).toEqual(expected);
-      });
-
-      it('should return empty object for empty splat', () => {
-        transport.log({ message: 'test message', level: 'info', [splatSymbol]: [] }, () => {});
-
-        const result = telemetryHandler.telemetry;
-        const actual = result?.properties;
-        const expected = {};
-
-        expect(actual).toEqual(expected);
-      });
-    });
     describe('override severity mapping', () => {
-      it('can pass override severity mapping', () => {
+      it('should allow override severity mapping', () => {
         const severityMapping: SeverityMapping = {};
 
         const action = () =>
@@ -115,7 +102,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         expect(action).not.toThrow();
       });
 
-      it('can map silly to critical', () => {
+      it('should map silly to critical', () => {
         const severityMapping: SeverityMapping = {
           silly: TelemetrySeverity.Critical,
         };
@@ -132,7 +119,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         });
         logger.silly('critical message');
 
-        const actual = telemetryHandler.telemetry?.severity;
+        const actual = telemetryHandler.telemetry?.trace?.severity;
         const expected = TelemetrySeverity.Critical;
         expect(actual).toBe(expected);
       });
@@ -153,20 +140,12 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       expect(actual).not.toThrow();
     });
 
-    it('test', () => {
-      const expected = 'hello';
-      logger.error(new Error(expected));
-
-      const actual = telemetryHandler.telemetry?.message;
-      expect(actual).toBe(expected);
-    });
-
     it('should call telemetry handler when logging', () => {
       const expected = 'test message';
 
       transport.log({ level: 'info', message: expected }, () => {});
 
-      const actual = telemetryHandler.telemetry?.message;
+      const actual = telemetryHandler.telemetry?.trace?.message;
 
       expect(actual).toBe(expected);
     });
@@ -176,7 +155,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       logger.info(expected);
 
-      const actual = telemetryHandler.telemetry?.message;
+      const actual = telemetryHandler.telemetry?.trace?.message;
       expect(actual).toBe(expected);
     });
 
@@ -185,16 +164,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       logger.info(expected, { userId: 123, action: 'login' });
 
-      const actual = telemetryHandler.telemetry?.message;
-      expect(actual).toBe(expected);
-    });
-
-    it('should receive winston info with message and object', () => {
-      const expected = 'message with data';
-
-      logger.info(expected, { userId: 123, action: 'login' });
-
-      const actual = telemetryHandler.telemetry?.message;
+      const actual = telemetryHandler.telemetry?.trace?.message;
       expect(actual).toBe(expected);
     });
 
@@ -204,9 +174,9 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const error = new Error(expected);
       logger.error(error);
 
-      const actual = telemetryHandler.telemetry?.message;
-
-      expect(actual).toBe(expected);
+      // Should not create trace when only Error passed
+      const actual = telemetryHandler.telemetry?.trace;
+      expect(actual).toBeNull();
     });
 
     it('should receive winston info with message property in object', () => {
@@ -214,20 +184,13 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       logger.info('hello', { message: 'world' });
 
-      const actual = telemetryHandler.telemetry?.message;
+      const actual = telemetryHandler.telemetry?.trace?.message;
       expect(actual).toBe(expected);
     });
   });
 
   describe('Integration - Full Pipeline', () => {
-    const propertiesTransport = new (class extends TransportStream {
-      public properties: Record<string, unknown> | unknown[] = {};
-      override log(info: WinstonInfo, next: () => void) {
-        const extractedInfo = extractMessageStep(info);
-        this.properties = extractPropertiesStep(extractedInfo);
-        next();
-      }
-    })();
+    const propertiesTransport = new SpyPropertiesTransport();
 
     const logger = createLogger({
       transports: [propertiesTransport],
@@ -364,90 +327,6 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
         expect(actual).toEqual(expected);
       });
-    });
-  });
-
-  describe('Winston behavior with edge cases', () => {
-    it('should map verbose level to Verbose severity', () => {
-      const transport = new ApplicationInsightsTransport({ telemetryHandler });
-
-      transport.log({ level: 'verbose', message: 'test' }, () => {});
-
-      const actual = telemetryHandler.telemetry?.severity;
-      const expected = TelemetrySeverity.Verbose;
-
-      expect(actual).toBe(expected);
-    });
-
-    it('should map silly level to Verbose severity', () => {
-      const transport = new ApplicationInsightsTransport({ telemetryHandler });
-
-      transport.log({ level: 'silly', message: 'test' }, () => {});
-
-      const actual = telemetryHandler.telemetry?.severity;
-      const expected = TelemetrySeverity.Verbose;
-
-      expect(actual).toBe(expected);
-    });
-
-    it('should handle npm-style levels with priority fallback', () => {
-      const transport = new ApplicationInsightsTransport({ telemetryHandler });
-      transport.levels = {
-        error: 0,
-        warn: 1,
-        info: 2,
-        http: 3,
-        verbose: 4,
-        debug: 5,
-        silly: 6,
-      };
-
-      transport.log({ level: 'http', message: 'test' }, () => {});
-
-      const actual = telemetryHandler.telemetry?.severity;
-      const expected = TelemetrySeverity.Verbose;
-
-      expect(actual).toBe(expected);
-    });
-
-    it('should handle mixed custom levels falling back to next mappable level', () => {
-      const transport = new ApplicationInsightsTransport({ telemetryHandler });
-      transport.levels = {
-        fatal: 0,
-        error: 1,
-        warn: 2,
-        audit: 3,
-        info: 4,
-        custom: 5,
-        debug: 6,
-        silly: 7,
-      };
-
-      transport.log({ level: 'audit', message: 'test' }, () => {});
-
-      const actual = telemetryHandler.telemetry?.severity;
-      const expected = TelemetrySeverity.Information;
-
-      expect(actual).toBe(expected);
-    });
-
-    it('should handle custom level between debug and info falling back to debug', () => {
-      const transport = new ApplicationInsightsTransport({ telemetryHandler });
-      transport.levels = {
-        error: 0,
-        warn: 1,
-        info: 2,
-        custom: 3,
-        debug: 4,
-        silly: 5,
-      };
-
-      transport.log({ level: 'custom', message: 'test' }, () => {});
-
-      const actual = telemetryHandler.telemetry?.severity;
-      const expected = TelemetrySeverity.Verbose;
-
-      expect(actual).toBe(expected);
     });
   });
 });

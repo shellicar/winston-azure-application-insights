@@ -22,9 +22,11 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
   it('can send trace telemetry', () => {
     handler.handleTelemetry({
       errors: [],
-      message: 'hello world',
-      properties: {},
-      severity: TelemetrySeverity.Information,
+      trace: {
+        message: 'hello world',
+        properties: {},
+        severity: TelemetrySeverity.Information,
+      },
     });
 
     const actual = client.traces;
@@ -37,9 +39,11 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
 
     handler.handleTelemetry({
       errors: [],
-      message: expected,
-      properties: {},
-      severity: TelemetrySeverity.Information,
+      trace: {
+        message: expected,
+        properties: {},
+        severity: TelemetrySeverity.Information,
+      },
     });
 
     const actual = client.traces[0]?.message;
@@ -49,9 +53,11 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
   it('should map error severity to Error', () => {
     handler.handleTelemetry({
       errors: [],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Error,
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Error,
+      },
     });
 
     const actual = client.traces[0]?.severity;
@@ -64,9 +70,11 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
 
     handler.handleTelemetry({
       errors: [],
-      message: 'test',
-      properties: expected,
-      severity: TelemetrySeverity.Information,
+      trace: {
+        message: 'test',
+        properties: expected,
+        severity: TelemetrySeverity.Information,
+      },
     });
 
     const actual = client.traces[0]?.properties;
@@ -76,9 +84,11 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
   it('should map warning severity to Warning', () => {
     handler.handleTelemetry({
       errors: [],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Warning,
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Warning,
+      },
     });
 
     const actual = client.traces[0]?.severity;
@@ -89,9 +99,11 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
   it('should map critical severity to Critical', () => {
     handler.handleTelemetry({
       errors: [],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Critical,
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Critical,
+      },
     });
 
     const actual = client.traces[0]?.severity;
@@ -102,9 +114,11 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
   it('should map verbose severity to Verbose', () => {
     handler.handleTelemetry({
       errors: [],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Verbose,
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Verbose,
+      },
     });
 
     const actual = client.traces[0]?.severity;
@@ -117,9 +131,11 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
 
     handler.handleTelemetry({
       errors: [error],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Error,
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Error,
+      },
     });
 
     const actual = client.exceptions.length;
@@ -133,9 +149,11 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
 
     handler.handleTelemetry({
       errors: [error1, error2],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Error,
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Error,
+      },
     });
 
     const actual = client.exceptions.length;
@@ -153,9 +171,11 @@ it('should not send trace when trace filter returns false', () => {
 
   handler.handleTelemetry({
     errors: [],
-    message: 'test',
-    properties: {},
-    severity: TelemetrySeverity.Information,
+    trace: {
+      message: 'test',
+      properties: {},
+      severity: TelemetrySeverity.Information,
+    },
   });
 
   const actual = client.traces.length;
@@ -177,9 +197,11 @@ it('should pass correct trace telemetry to trace filter', () => {
 
   handler.handleTelemetry({
     errors: [],
-    message: 'test message',
-    properties: { userId: 123 },
-    severity: TelemetrySeverity.Information,
+    trace: {
+      message: 'test message',
+      properties: { userId: 123 },
+      severity: TelemetrySeverity.Information,
+    },
   });
 
   const actual = capturedTraceTelemetry?.message;
@@ -197,9 +219,11 @@ it('should not send exception when exception filter returns false', () => {
   const error = new Error('test error');
   handler.handleTelemetry({
     errors: [error],
-    message: 'test',
-    properties: {},
-    severity: TelemetrySeverity.Error,
+    trace: {
+      message: 'test',
+      properties: {},
+      severity: TelemetrySeverity.Error,
+    },
   });
 
   const actual = client.exceptions.length;
@@ -222,9 +246,11 @@ it('should pass correct exception telemetry to exception filter', () => {
   const error = new Error('test error');
   handler.handleTelemetry({
     errors: [error],
-    message: 'test message',
-    properties: { userId: 123 },
-    severity: TelemetrySeverity.Error,
+    trace: {
+      message: 'test message',
+      properties: { userId: 123 },
+      severity: TelemetrySeverity.Error,
+    },
   });
 
   const actual = capturedExceptionTelemetry?.exception;

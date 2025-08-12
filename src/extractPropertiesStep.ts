@@ -1,18 +1,23 @@
 import { splatSymbol } from './consts';
-import { isNotError } from './isNotError';
 import { isPlainObject } from './isPlainObject';
-import type { ExtractedProperties, SplatFilter, WinstonInfo } from './types';
+import type { ExtractedProperties, WinstonInfo } from './types';
 
-export const extractPropertiesStep = (info: WinstonInfo, filter: SplatFilter = isNotError): ExtractedProperties => {
-  const splat = info[splatSymbol]?.filter(filter) ?? [];
-
-  if (splat.length === 0) {
+export const extractPropertiesStep = (info: WinstonInfo, isError: (obj: unknown) => boolean = (x) => x instanceof Error): ExtractedProperties => {
+  // Only process splat items that are NOT errors
+  const splat = info[splatSymbol];
+  if (!splat) {
     return {};
   }
 
-  if (splat.length === 1 && isPlainObject(splat[0])) {
-    return splat[0];
+  const nonErrorItems = splat.filter((item) => !isError(item));
+
+  if (nonErrorItems.length === 0) {
+    return {};
   }
 
-  return splat;
+  if (nonErrorItems.length === 1 && isPlainObject(nonErrorItems[0])) {
+    return nonErrorItems[0];
+  }
+
+  return nonErrorItems;
 };

@@ -141,6 +141,7 @@ describe('winston-azure-application-insights', () => {
         logger = createLogger({
           levels: config.syslog.levels,
           transports: [aiTransport],
+          format: format.json(),
         });
       });
 

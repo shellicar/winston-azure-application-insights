@@ -1,38 +1,16 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from 'winston';
-import TransportStream from 'winston-transport';
 import { splatSymbol } from '../src/consts';
 import { extractErrorsStep } from '../src/extractErrorsStep';
+import { isError } from '../src/isError';
 import type { WinstonInfo } from '../src/types';
-import type { TelemetryData } from '../src/types';
-
-class ErrorTransport extends TransportStream {
-  public errors: Error[] = [];
-  override log(info: WinstonInfo, next: () => void) {
-    this.errors = extractErrorsStep(info);
-    next();
-  }
-}
-
-const telemetryHandler = {
-  telemetry: { message: '' } as TelemetryData | undefined,
-  handleTelemetry: (telemetry: TelemetryData) => {
-    telemetryHandler.telemetry = telemetry;
-  },
-  clear() {
-    this.telemetry = undefined;
-  },
-};
+import { SpyErrorTransport } from './spies/SpyErrorTransport';
+import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
 describe('extractErrorsStep', () => {
-  const transport = new ErrorTransport();
+  const transport = new SpyErrorTransport();
   const logger = createLogger({
     transports: [transport],
-  });
-
-  beforeEach(() => {
-    telemetryHandler.clear();
-    transport.errors = [];
   });
 
   it('should extract error when info is an Error', () => {
@@ -61,6 +39,17 @@ describe('extractErrorsStep', () => {
 
     expect(actual).toBe(expected);
   });
+
+  it('does not extract first error as winston treats it as a string', () => {
+    // @ts-expect-error - Argument of type 'Error' is not assignable to parameter of type 'string'.
+    logger.error(new Error('first'), new Error('second'), new Error('third'));
+
+    const actual = transport.errors.length;
+    const expected = 2;
+
+    expect(actual).toBe(expected);
+  });
+
   it('should handle empty splat array', () => {
     const info: WinstonInfo = {
       level: 'info',
@@ -68,7 +57,7 @@ describe('extractErrorsStep', () => {
       [splatSymbol]: [],
     };
 
-    const actual = extractErrorsStep(info).length;
+    const actual = extractErrorsStep(info, isError).length;
     const expected = 0;
 
     expect(actual).toBe(expected);
@@ -87,7 +76,7 @@ describe('extractErrorsStep', () => {
     it('has two errors in splat', () => {
       const expected = 2;
 
-      const result = extractErrorsStep(info);
+      const result = extractErrorsStep(info, isError);
       const actual = result.length;
 
       expect(actual).toBe(expected);
@@ -96,7 +85,7 @@ describe('extractErrorsStep', () => {
     it('passes first error', () => {
       const expected = error1;
 
-      const result = extractErrorsStep(info);
+      const result = extractErrorsStep(info, isError);
       const actual = result[0];
 
       expect(actual).toBe(expected);
@@ -105,7 +94,7 @@ describe('extractErrorsStep', () => {
     it('passes second error', () => {
       const expected = error2;
 
-      const result = extractErrorsStep(info);
+      const result = extractErrorsStep(info, isError);
       const actual = result[1];
 
       expect(actual).toBe(expected);
@@ -121,7 +110,7 @@ describe('extractErrorsStep', () => {
       [splatSymbol]: [null, undefined, expected, null],
     };
 
-    const actual = extractErrorsStep(info)[0];
+    const actual = extractErrorsStep(info, isError)[0];
 
     expect(actual).toBe(expected);
   });

@@ -8,10 +8,6 @@ describe('ApplicationInsightsV3TelemetryHandler', () => {
   const client = new SpyTelemetryClientV3();
   const handler = new ApplicationInsightsV3TelemetryHandler({ client });
 
-  beforeEach(() => {
-    client.clear();
-  });
-
   it('can create handler with telemetry client', () => {
     const action = () => new ApplicationInsightsV3TelemetryHandler({ client });
 
@@ -20,10 +16,12 @@ describe('ApplicationInsightsV3TelemetryHandler', () => {
 
   it('can send trace telemetry', () => {
     handler.handleTelemetry({
+      trace: {
+        message: 'hello world',
+        properties: {},
+        severity: TelemetrySeverity.Information,
+      },
       errors: [],
-      message: 'hello world',
-      properties: {},
-      severity: TelemetrySeverity.Information,
     });
 
     const actual = client.traces;
@@ -36,9 +34,11 @@ describe('ApplicationInsightsV3TelemetryHandler', () => {
 
     handler.handleTelemetry({
       errors: [],
-      message: expected,
-      properties: {},
-      severity: TelemetrySeverity.Information,
+      trace: {
+        message: expected,
+        properties: {},
+        severity: TelemetrySeverity.Information,
+      },
     });
 
     const actual = client.traces[0]?.message;
@@ -47,10 +47,12 @@ describe('ApplicationInsightsV3TelemetryHandler', () => {
 
   it('should map error severity to Error', () => {
     handler.handleTelemetry({
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Error,
+      },
       errors: [],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Error,
     });
 
     const actual = client.traces[0]?.severity;
@@ -63,9 +65,11 @@ describe('ApplicationInsightsV3TelemetryHandler', () => {
 
     handler.handleTelemetry({
       errors: [],
-      message: 'test',
-      properties: expected,
-      severity: TelemetrySeverity.Information,
+      trace: {
+        message: 'test',
+        properties: expected,
+        severity: TelemetrySeverity.Information,
+      },
     });
 
     const actual = client.traces[0]?.properties;
@@ -75,9 +79,11 @@ describe('ApplicationInsightsV3TelemetryHandler', () => {
   it('should map warning severity to Warning', () => {
     handler.handleTelemetry({
       errors: [],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Warning,
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Warning,
+      },
     });
 
     const actual = client.traces[0]?.severity;
@@ -88,9 +94,11 @@ describe('ApplicationInsightsV3TelemetryHandler', () => {
   it('should map critical severity to Critical', () => {
     handler.handleTelemetry({
       errors: [],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Critical,
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Critical,
+      },
     });
 
     const actual = client.traces[0]?.severity;
@@ -101,9 +109,11 @@ describe('ApplicationInsightsV3TelemetryHandler', () => {
   it('should map verbose severity to Verbose', () => {
     handler.handleTelemetry({
       errors: [],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Verbose,
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Verbose,
+      },
     });
 
     const actual = client.traces[0]?.severity;
@@ -116,9 +126,11 @@ describe('ApplicationInsightsV3TelemetryHandler', () => {
 
     handler.handleTelemetry({
       errors: [error],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Error,
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Error,
+      },
     });
 
     const actual = client.exceptions.length;
@@ -132,100 +144,97 @@ describe('ApplicationInsightsV3TelemetryHandler', () => {
 
     handler.handleTelemetry({
       errors: [error1, error2],
-      message: 'test',
-      properties: {},
-      severity: TelemetrySeverity.Error,
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Error,
+      },
     });
 
     const actual = client.exceptions.length;
     const expected = 2;
     expect(actual).toBe(expected);
   });
-});
 
-it('should not send trace when trace filter returns false', () => {
-  const client = new SpyTelemetryClientV3();
-  const handler = new ApplicationInsightsV3TelemetryHandler({
-    client,
-    traceFilter: () => false,
+  it('should not send trace when trace filter returns false', () => {
+    const client = new SpyTelemetryClientV3();
+    const handler = new ApplicationInsightsV3TelemetryHandler({
+      client,
+      traceFilter: () => false,
+    });
+
+    handler.handleTelemetry({
+      errors: [],
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Information,
+      },
+    });
+
+    const actual = client.traces.length;
+    const expected = 0;
+    expect(actual).toBe(expected);
   });
 
-  handler.handleTelemetry({
-    errors: [],
-    message: 'test',
-    properties: {},
-    severity: TelemetrySeverity.Information,
+  it('sends trace telemetry with correct trace data', () => {
+    const expected = 'this is the message';
+
+    handler.handleTelemetry({
+      trace: {
+        message: expected,
+        properties: {},
+        severity: TelemetrySeverity.Information,
+      },
+      errors: [],
+    });
   });
 
-  const actual = client.traces.length;
-  const expected = 0;
-  expect(actual).toBe(expected);
-});
+  it('should not send exception when exception filter returns false', () => {
+    const client = new SpyTelemetryClientV3();
+    const handler = new ApplicationInsightsV3TelemetryHandler({
+      client,
+      exceptionFilter: () => false,
+    });
 
-it('should pass correct trace telemetry to trace filter', () => {
-  const client = new SpyTelemetryClientV3();
-  let capturedTraceTelemetry: TraceTelemetry | undefined;
+    const error = new Error('test error');
+    handler.handleTelemetry({
+      errors: [error],
+      trace: {
+        message: 'test',
+        properties: {},
+        severity: TelemetrySeverity.Error,
+      },
+    });
 
-  const handler = new ApplicationInsightsV3TelemetryHandler({
-    client,
-    traceFilter: (trace) => {
-      capturedTraceTelemetry = trace;
-      return true;
-    },
+    const actual = client.exceptions.length;
+    const expected = 0;
+    expect(actual).toBe(expected);
   });
 
-  handler.handleTelemetry({
-    errors: [],
-    message: 'test message',
-    properties: { userId: 123 },
-    severity: TelemetrySeverity.Information,
+  it('should pass correct exception telemetry to exception filter', () => {
+    const client = new SpyTelemetryClientV3();
+    let capturedExceptionTelemetry: ExceptionTelemetry | undefined;
+
+    const handler = new ApplicationInsightsV3TelemetryHandler({
+      client,
+      exceptionFilter: (exception) => {
+        capturedExceptionTelemetry = exception;
+        return true;
+      },
+    });
+
+    const error = new Error('test error');
+    handler.handleTelemetry({
+      errors: [error],
+      trace: {
+        message: 'test message',
+        properties: { userId: 123 },
+        severity: TelemetrySeverity.Error,
+      },
+    });
+
+    const actual = capturedExceptionTelemetry?.exception;
+    expect(actual).toBe(error);
   });
-
-  const actual = capturedTraceTelemetry?.message;
-  const expected = 'test message';
-  expect(actual).toBe(expected);
-});
-
-it('should not send exception when exception filter returns false', () => {
-  const client = new SpyTelemetryClientV3();
-  const handler = new ApplicationInsightsV3TelemetryHandler({
-    client,
-    exceptionFilter: () => false,
-  });
-
-  const error = new Error('test error');
-  handler.handleTelemetry({
-    errors: [error],
-    message: 'test',
-    properties: {},
-    severity: TelemetrySeverity.Error,
-  });
-
-  const actual = client.exceptions.length;
-  const expected = 0;
-  expect(actual).toBe(expected);
-});
-
-it('should pass correct exception telemetry to exception filter', () => {
-  const client = new SpyTelemetryClientV3();
-  let capturedExceptionTelemetry: ExceptionTelemetry | undefined;
-
-  const handler = new ApplicationInsightsV3TelemetryHandler({
-    client,
-    exceptionFilter: (exception) => {
-      capturedExceptionTelemetry = exception;
-      return true;
-    },
-  });
-
-  const error = new Error('test error');
-  handler.handleTelemetry({
-    errors: [error],
-    message: 'test message',
-    properties: { userId: 123 },
-    severity: TelemetrySeverity.Error,
-  });
-
-  const actual = capturedExceptionTelemetry?.exception;
-  expect(actual).toBe(error);
 });

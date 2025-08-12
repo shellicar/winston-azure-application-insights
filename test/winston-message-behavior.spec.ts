@@ -1,6 +1,47 @@
 import { describe, it } from 'vitest';
 import { createLogger, format, transports } from 'winston';
+import TransportStream from 'winston-transport';
 import type { WinstonInfo } from '../src/types';
+
+class DebugTransport extends TransportStream {
+  constructor() {
+    super({ silent: false });
+  }
+
+  log(info: WinstonInfo, callback: () => void) {
+    console.log('=== SPLAT INSPECTION ===');
+    console.log('Message:', info.message);
+    console.log('Message type:', typeof info.message);
+    console.log('Message constructor:', (info.message as any)?.constructor?.name);
+    console.log('Info instanceof Error:', info instanceof Error); // ← Add this check
+
+    if ((info.message as any) instanceof Error) {
+      const errorMessage = info.message as unknown as Error;
+      console.log('Message is Error:', {
+        message: errorMessage.message,
+        stack: errorMessage.stack,
+      });
+    }
+
+    const splat = info[Symbol.for('splat')];
+    console.log('Splat symbol:', splat);
+
+    if (Array.isArray(splat)) {
+      console.log('Splat items:');
+      splat.forEach((item, index) => {
+        console.log(`  [${index}]:`, item);
+        if (item instanceof Error) {
+          console.log(`    Error message: ${item.message}`);
+          console.log(`    Error stack: ${item.stack}`);
+        }
+      });
+    }
+
+    console.log('Full info keys:', Object.keys(info));
+    console.log('==================');
+    callback();
+  }
+}
 
 describe('Winston Message Behavior', () => {
   it('should demonstrate winston behavior with json format', () => {
@@ -86,17 +127,7 @@ describe('Winston Message Behavior', () => {
 
   describe('Splat inspection', () => {
     it('should show what Winston puts in the splat for each type', () => {
-      const debugTransport = new (class extends transports.Console {
-        log(info: WinstonInfo, callback: () => void) {
-          console.log('=== SPLAT INSPECTION ===');
-          console.log('Message:', info.message);
-          console.log('Splat symbol:', info[Symbol.for('splat')]);
-          console.log('Full info keys:', Object.keys(info));
-          console.log('Info object:', JSON.stringify(info, null, 2));
-          console.log('==================');
-          callback();
-        }
-      })({ silent: false });
+      const debugTransport = new DebugTransport();
 
       const logger = createLogger({
         transports: [debugTransport],
@@ -124,6 +155,12 @@ describe('Winston Message Behavior', () => {
         }
       }
       logger.info('Custom class test', new CustomClass());
+
+      console.log('--- Error object ---');
+      logger.error(new Error('Database error'));
+
+      console.log('--- Error with message ---');
+      logger.error('Custom message', new Error('Database error'));
     });
   });
 });

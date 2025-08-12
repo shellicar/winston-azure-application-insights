@@ -1,18 +1,18 @@
 import { splatSymbol } from './consts';
 import type { WinstonInfo } from './types';
 
-export const extractErrorsStep = (info: WinstonInfo): Error[] => {
+export const extractErrorsStep = (info: WinstonInfo, isError: (obj: unknown) => boolean): Error[] => {
   const errors: Error[] = [];
 
-  if (info instanceof Error) {
-    errors.push(info);
+  if (isError(info)) {
+    errors.push(info as unknown as Error);
   }
 
   const splat = info[splatSymbol];
   if (splat != null) {
     for (const item of splat) {
-      if (item instanceof Error) {
-        errors.push(item);
+      if (isError(item)) {
+        errors.push(item as Error);
       }
     }
   }
