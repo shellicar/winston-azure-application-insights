@@ -51,22 +51,28 @@ export interface TelemetryHandler {
   handleTelemetry: (telemetry: TelemetryData) => void;
 }
 
-// Base Winston properties that are always present
+type JsonValue = string | number | JsonObject | JsonValue[] | null;
+type JsonObject = {
+  [key: string]: JsonValue;
+};
+
+// Utility type to make all properties of T optional and never
+type MakeNever<T> = {
+  [K in keyof T]?: never;
+};
+
 interface BaseWinstonInfo {
   level: string;
   [splatSymbol]?: unknown[];
-  [key: symbol]: unknown;
+  defaultMeta?: JsonObject;
 }
 
 // For regular Winston info (most common case)
-interface RegularWinstonInfo extends BaseWinstonInfo {
+interface RegularWinstonInfo extends BaseWinstonInfo, MakeNever<Omit<Error, 'message'>> {
   message: string;
 }
 
-// For when an Error is passed as first parameter to logger
-interface ErrorWinstonInfo extends BaseWinstonInfo, Error {
-  // Error already has message, name, stack, etc.
-}
+interface ErrorWinstonInfo extends BaseWinstonInfo, Error {}
 
 // WinstonInfo can be either case
 export type WinstonInfo = RegularWinstonInfo | ErrorWinstonInfo;

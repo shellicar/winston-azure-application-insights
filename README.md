@@ -120,7 +120,7 @@ logger.info('Application started');
 // Creates trace only
 logger.error('Something went wrong');
 
-// Creates trace + exception  
+// Creates EXCEPTION ONLY (no trace) - when first parameter is Error
 logger.error(new Error('Database error'));
 
 // Creates trace + exception (Error extracted from additional parameters)
@@ -129,6 +129,8 @@ logger.error('Operation failed', new Error('Timeout'));
 // Creates trace + two exceptions (multiple Error objects)
 logger.error('Multiple failures', new Error('DB error'), new Error('Cache error'));
 ```
+
+**Key Behavior:** When you log an Error as the first parameter (`logger.error(new Error())`), it sends **only the exception** to Application Insights, not a trace. This avoids duplicate telemetry.
 
 * **Properties Extraction** - Winston splat parameters become telemetry properties.
 
@@ -205,13 +207,14 @@ const transport = createApplicationInsightsTransport({
 });
 ```
 
-* **Disable Exception Tracking** - Treat all Error objects as regular properties.
+* **Disable Exception Tracking** - Customize error detection logic.
 
 ```typescript
 const transport = createApplicationInsightsTransport({
   version: 3,
   client: defaultClient,
-  sendErrorsAsExceptions: false,
+  // Custom function to determine what counts as an error
+  isError: (obj) => obj instanceof CustomError,
 });
 ```
 
@@ -261,7 +264,7 @@ setup('InstrumentationKey=your-key-here').start();
 
 * **version**: `2` or `3` - Application Insights SDK version (required)
 * **client**: Application Insights client instance (required)
-* **sendErrorsAsExceptions**: Extract Error objects as exceptions (default: `true`)
+* **isError**: Custom function to determine what counts as an error (default: detects Error instances)
 * **severityMapping**: Custom Winston level to Application Insights severity mapping
 * **traceFilter**: Optional function to filter traces before sending
 * **exceptionFilter**: Optional function to filter exceptions before sending

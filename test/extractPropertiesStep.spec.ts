@@ -9,6 +9,21 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
   const telemetryHandler = new SpyTelemetryHandler();
 
   describe('extractPropertiesStep', () => {
+    it('should extract defaultMeta properties from info object', () => {
+      // Simulate what Winston does when defaultMeta is set
+      const info: WinstonInfo = {
+        level: 'info',
+        message: 'test message',
+        userId: 123, // defaultMeta property
+        appVersion: '1.0.0', // defaultMeta property
+      };
+
+      const actual = extractPropertiesStep(info);
+      const expected = { userId: 123, appVersion: '1.0.0' };
+
+      expect(actual).toEqual(expected);
+    });
+
     it('should extract single property object directly', () => {
       const expected = { userId: 123, action: 'login' };
 
@@ -46,20 +61,16 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [splatSymbol]: ['string', 42, properties1, error, null, properties2, true],
       };
 
-      it('should return array with first object at correct index after filtering', () => {
-        const result = extractPropertiesStep(info) as unknown[];
-        const actual = result[2];
-        const expected = { userId: 123 };
-        // After filtering: ['string', 42, { userId: 123 }, null, { sessionId: 'abc' }, true]
-        expect(actual).toEqual(expected);
+      it('should return defaultMeta when first splat item is primitive', () => {
+        const result = extractPropertiesStep(info);
+        const expected = {};
+        expect(result).toEqual(expected);
       });
 
-      it('should return array with second object at correct index after filtering', () => {
-        const result = extractPropertiesStep(info) as unknown[];
-        // After filtering errors: ['string', 42, { userId: 123 }, null, { sessionId: 'abc' }, true]
-        const actual = result[4];
-        const expected = { sessionId: 'abc' };
-        expect(actual).toEqual(expected);
+      it('should return defaultMeta when first splat item is primitive ignoring later objects', () => {
+        const result = extractPropertiesStep(info);
+        const expected = {};
+        expect(result).toEqual(expected);
       });
     });
 
@@ -130,7 +141,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = [[1, 2, 3]];
+      const expected = { '0': 1, '1': 2, '2': 3 }; // Winston spreads arrays as indexed properties
 
       expect(actual).toEqual(expected);
     });
@@ -144,7 +155,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = [dateObject];
+      const expected = {}; // Winston ignores primitives like Date for property extraction
 
       expect(actual).toEqual(expected);
     });
@@ -165,7 +176,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = [customObject];
+      const expected = {}; // Winston ignores non-plain objects for property extraction
 
       expect(actual).toEqual(expected);
     });
@@ -178,7 +189,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = ['hello'];
+      const expected = {}; // Winston ignores primitives for property extraction
 
       expect(actual).toEqual(expected);
     });
@@ -191,7 +202,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = [42];
+      const expected = {}; // Winston ignores primitives for property extraction
 
       expect(actual).toEqual(expected);
     });
@@ -204,7 +215,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = [true];
+      const expected = {}; // Winston ignores primitives for property extraction
 
       expect(actual).toEqual(expected);
     });

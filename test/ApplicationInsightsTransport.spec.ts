@@ -82,7 +82,6 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
           logger.error(new Error('Database error'));
 
-          // Should not have trace when only sending exceptions
           const actual = telemetryHandler.telemetry?.trace;
           expect(actual).toBeNull();
         });
@@ -174,13 +173,12 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       const error = new Error(expected);
       logger.error(error);
 
-      // Should not create trace when only Error passed
       const actual = telemetryHandler.telemetry?.trace;
       expect(actual).toBeNull();
     });
 
     it('should receive winston info with message property in object', () => {
-      const expected = 'hello'; // NEW: expect cleaned message, not concatenated
+      const expected = 'hello';
 
       logger.info('hello', { message: 'world' });
 
@@ -212,29 +210,29 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     describe('Message + Single Primitive', () => {
-      it('should extract single string as array', () => {
+      it('should ignore single string primitive (Winston behavior)', () => {
         logger.info('Single primitive', 'important-value');
 
         const actual = propertiesTransport.properties;
-        const expected = ['important-value'];
+        const expected = {};
 
         expect(actual).toEqual(expected);
       });
 
-      it('should extract single number as array', () => {
+      it('should ignore single number primitive (Winston behavior)', () => {
         logger.info('Single number', 42);
 
         const actual = propertiesTransport.properties;
-        const expected = [42];
+        const expected = {};
 
         expect(actual).toEqual(expected);
       });
 
-      it('should extract single boolean as array', () => {
+      it('should ignore single boolean primitive (Winston behavior)', () => {
         logger.info('Single boolean', true);
 
         const actual = propertiesTransport.properties;
-        const expected = [true];
+        const expected = {};
 
         expect(actual).toEqual(expected);
       });
@@ -273,12 +271,12 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     describe('Message + Multiple Objects', () => {
-      it('should return multiple objects as array', () => {
+      it('should merge defaultMeta with first object only (Winston behavior)', () => {
         const meta1 = { userId: 123 };
         const meta2 = { sessionId: 'abc' };
-        const expected = [meta1, meta2];
+        const expected = meta1;
 
-        logger.info('Complex action', ...expected);
+        logger.info('Complex action', meta1, meta2);
         const actual = propertiesTransport.properties;
 
         expect(actual).toEqual(expected);
@@ -286,10 +284,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     describe('Message + Multiple Primitives', () => {
-      it('should return multiple primitives as array', () => {
-        const expected = ['user123', 42, true];
-        logger.info('Mixed primitives', ...expected);
+      it('should ignore multiple primitives (Winston behavior)', () => {
+        const expected = {};
 
+        logger.info('Multiple primitives', 'user123', 42, true);
         const actual = propertiesTransport.properties;
 
         expect(actual).toEqual(expected);
@@ -297,9 +295,9 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     describe('Message + Mixed Types (Objects + Primitives)', () => {
-      it('should return all non-error items as array', () => {
-        const expected = [{ userId: 123 }, 'session-abc', 42, { contextId: 'ctx-123' }];
-        logger.info('Mixed types', ...expected);
+      it('should return first object only (Winston behavior)', () => {
+        const expected = { userId: 123 };
+        logger.info('Mixed types', { userId: 123 }, 'session-abc', 42, { contextId: 'ctx-123' });
 
         const actual = propertiesTransport.properties;
 
@@ -321,7 +319,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         const meta1 = { userId: 123 };
         const meta2 = { sessionId: 'abc' };
         const meta3 = 42;
-        const expected = [meta1, meta2, meta3];
+        const expected = meta1;
         logger.error('Complex error', new Error('error1'), meta1, meta2, new Error('error2'), meta3);
         const actual = propertiesTransport.properties;
 

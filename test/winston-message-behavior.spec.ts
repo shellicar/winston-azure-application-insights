@@ -1,6 +1,7 @@
 import { describe, it } from 'vitest';
 import { createLogger, format, transports } from 'winston';
 import TransportStream from 'winston-transport';
+import { splatSymbol } from '../src/consts';
 import type { WinstonInfo } from '../src/types';
 
 class DebugTransport extends TransportStream {
@@ -23,7 +24,7 @@ class DebugTransport extends TransportStream {
       });
     }
 
-    const splat = info[Symbol.for('splat')];
+    const splat = info[splatSymbol];
     console.log('Splat symbol:', splat);
 
     if (Array.isArray(splat)) {
