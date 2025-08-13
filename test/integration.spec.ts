@@ -9,6 +9,7 @@ import { ApplicationInsightsV3TelemetryHandler } from '../src/ApplicationInsight
 import type { TelemetryHandler } from '../src/types';
 import { SpyTelemetryClientV2 } from './spies/SpyTelemetryClientV2';
 import { SpyTelemetryClientV3 } from './spies/SpyTelemetryClientV3';
+import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
 type TelemetryHandlerConfig =
   | {
@@ -210,6 +211,33 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
       expect(filterCalled).toBe(true);
       expect(capturedException?.exception).toBe(testError);
       expect(client.exceptions).toHaveLength(1);
+    });
+  });
+
+  it('should handle Object.create(null) objects from Apollo Server errors', () => {
+    const telemetryHandler = new SpyTelemetryHandler();
+    const transport = new ApplicationInsightsTransport({ telemetryHandler });
+    const logger = createLogger({
+      defaultMeta: { service: 'graphql-api' },
+      transports: [transport],
+    });
+
+    const apolloError = Object.create(null);
+    apolloError.errorCode = 'APOLLO_VALIDATION_ERROR';
+    apolloError.extensions = {
+      code: 'GRAPHQL_VALIDATION_FAILED',
+      field: 'userInput',
+    };
+
+    logger.error('GraphQL validation failed', apolloError);
+
+    expect(telemetryHandler.telemetry?.trace?.properties).toEqual({
+      service: 'graphql-api',
+      errorCode: 'APOLLO_VALIDATION_ERROR',
+      extensions: {
+        code: 'GRAPHQL_VALIDATION_FAILED',
+        field: 'userInput',
+      },
     });
   });
 });

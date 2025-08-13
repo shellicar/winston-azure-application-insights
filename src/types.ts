@@ -61,6 +61,9 @@ type MakeNever<T> = {
   [K in keyof T]?: never;
 };
 
+// Utility type to make specific properties optional
+type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
 export interface BaseWinstonInfo {
   level: string;
   [SPLAT]?: unknown[];
@@ -70,7 +73,7 @@ export interface BaseWinstonInfo {
 export interface RegularWinstonInfo extends BaseWinstonInfo, MakeNever<Omit<Error, 'message'>> {
   message: unknown;
 }
-export interface ErrorWinstonInfo extends BaseWinstonInfo, Error {}
+export interface ErrorWinstonInfo extends BaseWinstonInfo, Optional<Error, 'name'> {}
 export type WinstonInfo = RegularWinstonInfo | ErrorWinstonInfo;
 
 export interface SeverityMapping {

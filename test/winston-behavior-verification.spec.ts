@@ -2,6 +2,7 @@ import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { createLogger, format } from 'winston';
 import type { WinstonInfo } from '../src';
+import { GraphQLError } from './GraphQLError';
 import { createWinstonInfoFromErrorOnly } from './createWinstonInfoFromErrorOnly';
 import { createWinstonInfo } from './createWinstonInfoWithErrorInSplat';
 import { expectInfo } from './expectInfoEntries';
@@ -358,6 +359,232 @@ describe('Winston behaviour verification', () => {
           };
           expectInfo(actual, expected);
         });
+
+        it('extracts properties from Object.create(null) objects', () => {
+          const logger = createLogger({
+            defaultMeta: { userId: 123 },
+            transports: [captureTransport],
+          });
+
+          const nullProtoObject = Object.create(null);
+          nullProtoObject.errorCode = 'APOLLO_ERROR';
+          nullProtoObject.message = 'GraphQL error';
+
+          logger.error('Apollo error', nullProtoObject);
+          const actual = captureTransport.lastInfo;
+
+          const expected = {
+            userId: 123,
+            errorCode: 'APOLLO_ERROR',
+            message: 'Apollo error GraphQL error',
+            level: 'error',
+            [SPLAT]: [nullProtoObject],
+          };
+          expectInfo(actual, expected);
+        });
+
+        it('extracts properties from objects containing Object.create(null) property values', () => {
+          const logger = createLogger({
+            defaultMeta: { userId: 123 },
+            transports: [captureTransport],
+          });
+
+          const nullProtoExtensions = Object.create(null);
+          nullProtoExtensions.code = 'GRAPHQL_VALIDATION_FAILED';
+          nullProtoExtensions.field = 'userInput';
+
+          const errorObject = {
+            errorCode: 'APOLLO_ERROR',
+            extensions: nullProtoExtensions,
+            severity: 'high',
+          };
+
+          logger.error('Apollo validation error', errorObject);
+          const actual = captureTransport.lastInfo;
+
+          const expected = {
+            userId: 123,
+            errorCode: 'APOLLO_ERROR',
+            extensions: nullProtoExtensions,
+            severity: 'high',
+            level: 'error',
+            message: 'Apollo validation error',
+            [SPLAT]: [errorObject],
+          };
+          expectInfo(actual, expected);
+        });
+
+        it('extracts properties from Error objects with Object.create(null) extensions', () => {
+          const logger = createLogger({
+            defaultMeta: { userId: 123 },
+            transports: [captureTransport],
+          });
+
+          const error = new GraphQLError('GraphQL validation failed', {
+            extensions: Object.create(null),
+          });
+
+          logger.error('Apollo error', error);
+          const actual = captureTransport.lastInfo;
+
+          const expected = {
+            userId: 123,
+            extensions: error.extensions,
+            locations: error.locations,
+            path: error.path,
+            level: 'error',
+            message: 'Apollo error GraphQL validation failed',
+            stack: error.stack,
+            [SPLAT]: [error],
+          };
+          expectInfo(actual, expected);
+        });
+
+        it('extracts properties from Error objects with populated Object.create(null) extensions', () => {
+          const logger = createLogger({
+            defaultMeta: { userId: 123 },
+            transports: [captureTransport],
+          });
+
+          const extensions = Object.create(null);
+          extensions.code = 'GRAPHQL_VALIDATION_FAILED';
+          extensions.field = 'userInput';
+          extensions.locations = [{ line: 1, column: 5 }];
+          extensions.errorCode = 'APOLLO_ERROR';
+
+          const error = new GraphQLError('GraphQL validation failed', {
+            extensions,
+          });
+
+          logger.error('Apollo error', error);
+          const actual = captureTransport.lastInfo;
+
+          const expected = {
+            userId: 123,
+            extensions: extensions,
+            locations: error.locations,
+            path: error.path,
+            level: 'error',
+            message: 'Apollo error GraphQL validation failed',
+            stack: error.stack,
+            [SPLAT]: [error],
+          };
+          expectInfo(actual, expected);
+        });
+      });
+
+      describe('Object.create(null) property extraction scenarios', () => {
+        it('extracts properties from Object.create(null) objects as first splat', () => {
+          const logger = createLogger({
+            defaultMeta: { userId: 123 },
+            transports: [captureTransport],
+          });
+
+          const nullProtoObject = Object.create(null);
+          nullProtoObject.errorCode = 'APOLLO_ERROR';
+          nullProtoObject.message = 'GraphQL error';
+
+          logger.error('Apollo error', nullProtoObject);
+          const actual = captureTransport.lastInfo;
+
+          const expected = {
+            userId: 123,
+            errorCode: 'APOLLO_ERROR',
+            message: 'Apollo error GraphQL error',
+            level: 'error',
+            [SPLAT]: [nullProtoObject],
+          };
+          expectInfo(actual, expected);
+        });
+
+        it('extracts properties from regular objects containing Object.create(null) property values', () => {
+          const logger = createLogger({
+            defaultMeta: { userId: 123 },
+            transports: [captureTransport],
+          });
+
+          const nullProtoExtensions = Object.create(null);
+          nullProtoExtensions.code = 'GRAPHQL_VALIDATION_FAILED';
+          nullProtoExtensions.field = 'userInput';
+
+          const errorObject = {
+            errorCode: 'APOLLO_ERROR',
+            extensions: nullProtoExtensions,
+            severity: 'high',
+          };
+
+          logger.error('Apollo validation error', errorObject);
+          const actual = captureTransport.lastInfo;
+
+          const expected = {
+            userId: 123,
+            errorCode: 'APOLLO_ERROR',
+            extensions: nullProtoExtensions,
+            severity: 'high',
+            level: 'error',
+            message: 'Apollo validation error',
+            [SPLAT]: [errorObject],
+          };
+          expectInfo(actual, expected);
+        });
+
+        it('extracts properties from Error objects with Object.create(null) extensions', () => {
+          const logger = createLogger({
+            defaultMeta: { userId: 123 },
+            transports: [captureTransport],
+          });
+
+          const error = new GraphQLError('GraphQL validation failed', {
+            extensions: Object.create(null),
+          });
+
+          logger.error('Apollo error', error);
+          const actual = captureTransport.lastInfo;
+
+          const expected = {
+            userId: 123,
+            extensions: error.extensions,
+            locations: error.locations,
+            path: error.path,
+            level: 'error',
+            message: 'Apollo error GraphQL validation failed',
+            stack: error.stack,
+            [SPLAT]: [error],
+          };
+          expectInfo(actual, expected);
+        });
+
+        it('extracts properties from Error objects with populated Object.create(null) extensions', () => {
+          const logger = createLogger({
+            defaultMeta: { userId: 123 },
+            transports: [captureTransport],
+          });
+
+          const extensions = Object.create(null);
+          extensions.code = 'GRAPHQL_VALIDATION_FAILED';
+          extensions.field = 'userInput';
+          extensions.locations = [{ line: 1, column: 5 }];
+          extensions.errorCode = 'APOLLO_ERROR';
+
+          const error = new GraphQLError('GraphQL validation failed', {
+            extensions,
+          });
+
+          logger.error('Apollo error', error);
+          const actual = captureTransport.lastInfo;
+
+          const expected = {
+            userId: 123,
+            extensions: extensions,
+            locations: error.locations,
+            path: error.path,
+            level: 'error',
+            message: 'Apollo error GraphQL validation failed',
+            stack: error.stack,
+            [SPLAT]: [error],
+          };
+          expectInfo(actual, expected);
+        });
       });
 
       describe('no splat scenarios', () => {
@@ -492,8 +719,6 @@ describe('Winston behaviour verification', () => {
             testError,
           );
           expected.stack = testError.stack;
-
-          console.log('Actual splat:', actual[SPLAT]);
 
           expect(actual.message).toBeTypeOf('string');
           expect(actual).not.toBeInstanceOf(Error);
@@ -1025,6 +1250,123 @@ describe('Winston behaviour verification', () => {
             message: 'hello',
             userId: 123,
             my: 'object',
+          };
+          expect(actual).toEqual(expected);
+        });
+
+        it('should extract Object.create(null) properties in console JSON output', () => {
+          const spyConsole = new SpyConsoleTransport({ format: format.json() });
+          const logger = createLogger({
+            level: 'error',
+            defaultMeta: { userId: 123 },
+            transports: [spyConsole],
+          });
+
+          const nullProtoObject = Object.create(null);
+          nullProtoObject.errorCode = 'APOLLO_ERROR';
+          nullProtoObject.extensions = { code: 'GRAPHQL_ERROR' };
+
+          logger.error('Apollo error', nullProtoObject);
+
+          const actual = JSON.parse(spyConsole.lastOutput!);
+          const expected = {
+            level: 'error',
+            message: 'Apollo error',
+            userId: 123,
+            errorCode: 'APOLLO_ERROR',
+            extensions: { code: 'GRAPHQL_ERROR' },
+          };
+          expect(actual).toEqual(expected);
+        });
+
+        it('should extract properties from objects containing Object.create(null) property values in console JSON output', () => {
+          const spyConsole = new SpyConsoleTransport({ format: format.json() });
+          const logger = createLogger({
+            level: 'error',
+            defaultMeta: { userId: 123 },
+            transports: [spyConsole],
+          });
+
+          const nullProtoExtensions = Object.create(null);
+          nullProtoExtensions.code = 'GRAPHQL_VALIDATION_FAILED';
+          nullProtoExtensions.field = 'userInput';
+
+          const errorObject = {
+            errorCode: 'APOLLO_ERROR',
+            extensions: nullProtoExtensions,
+            severity: 'high',
+          };
+
+          logger.error('Apollo validation error', errorObject);
+
+          const actual = JSON.parse(spyConsole.lastOutput!);
+          const expected = {
+            level: 'error',
+            message: 'Apollo validation error',
+            userId: 123,
+            errorCode: 'APOLLO_ERROR',
+            extensions: nullProtoExtensions,
+            severity: 'high',
+          };
+          expect(actual).toEqual(expected);
+        });
+
+        it('should extract GraphQLError properties with Object.create(null) extensions in console JSON output', () => {
+          const spyConsole = new SpyConsoleTransport({ format: format.json() });
+          const logger = createLogger({
+            level: 'error',
+            defaultMeta: { userId: 123 },
+            transports: [spyConsole],
+          });
+
+          const error = new GraphQLError('GraphQL validation failed', {
+            extensions: Object.create(null),
+          });
+
+          logger.error('Apollo error', error);
+
+          const actual = JSON.parse(spyConsole.lastOutput!);
+          const expected = {
+            level: 'error',
+            message: 'Apollo error GraphQL validation failed',
+            userId: 123,
+            extensions: error.extensions,
+            locations: error.locations,
+            path: error.path,
+            stack: error.stack,
+          };
+          expect(actual).toEqual(expected);
+        });
+
+        it('should extract GraphQLError properties with populated Object.create(null) extensions in console JSON output', () => {
+          const spyConsole = new SpyConsoleTransport({ format: format.json() });
+          const logger = createLogger({
+            level: 'error',
+            defaultMeta: { userId: 123 },
+            transports: [spyConsole],
+          });
+
+          const extensions = Object.create(null);
+          extensions.code = 'GRAPHQL_VALIDATION_FAILED';
+          extensions.field = 'userInput';
+          extensions.locations = [{ line: 1, column: 5 }];
+          extensions.errorCode = 'APOLLO_ERROR';
+
+          const error = new GraphQLError('GraphQL validation failed', {
+            extensions,
+          });
+
+          logger.error('Apollo error', error);
+
+          const actual = JSON.parse(spyConsole.lastOutput!);
+          const expected = {
+            level: 'error',
+            message: 'Apollo error GraphQL validation failed',
+            userId: 123,
+            extensions: extensions,
+            locations: error.locations,
+            path: error.path,
+            stack: error.stack,
           };
           expect(actual).toEqual(expected);
         });

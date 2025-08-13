@@ -2,6 +2,7 @@ import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { extractPropertiesStep } from '../src/extractPropertiesStep';
 import type { WinstonInfo } from '../src/types';
+import { GraphQLError } from './GraphQLError';
 
 describe('Refactored AzureApplicationInsightsLogger', () => {
   describe('extractPropertiesStep', () => {
@@ -201,6 +202,93 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         level: 'info',
         message: 'test',
         [SPLAT]: [true],
+      };
+
+      const actual = extractPropertiesStep(info);
+      const expected = {};
+
+      expect(actual).toEqual(expected);
+    });
+
+    it('should extract Object.create(null) properties', () => {
+      const nullProtoObject = Object.create(null);
+      nullProtoObject.errorCode = 'APOLLO_ERROR';
+      nullProtoObject.extensions = { code: 'GRAPHQL_ERROR' };
+
+      const info: WinstonInfo = {
+        level: 'error',
+        message: 'Apollo error',
+        [SPLAT]: [nullProtoObject],
+      };
+
+      const actual = extractPropertiesStep(info);
+      const expected = {
+        errorCode: 'APOLLO_ERROR',
+        extensions: { code: 'GRAPHQL_ERROR' },
+      };
+
+      expect(actual).toEqual(expected);
+    });
+
+    it('should extract properties from regular objects containing Object.create(null) property values', () => {
+      const nullProtoExtensions = Object.create(null);
+      nullProtoExtensions.code = 'GRAPHQL_VALIDATION_FAILED';
+      nullProtoExtensions.field = 'userInput';
+
+      const errorObject = {
+        errorCode: 'APOLLO_ERROR',
+        extensions: nullProtoExtensions,
+        severity: 'high',
+      };
+
+      const info: WinstonInfo = {
+        level: 'error',
+        message: 'Apollo validation error',
+        [SPLAT]: [errorObject],
+      };
+
+      const actual = extractPropertiesStep(info);
+      const expected = {
+        errorCode: 'APOLLO_ERROR',
+        extensions: nullProtoExtensions,
+        severity: 'high',
+      };
+
+      expect(actual).toEqual(expected);
+    });
+
+    it('should extract properties from Error objects with Object.create(null) extensions', () => {
+      const error = new GraphQLError('GraphQL validation failed', {
+        extensions: Object.create(null),
+      });
+
+      const info: WinstonInfo = {
+        level: 'error',
+        message: 'Apollo error',
+        [SPLAT]: [error],
+      };
+
+      const actual = extractPropertiesStep(info);
+      const expected = {};
+
+      expect(actual).toEqual(expected);
+    });
+
+    it('should extract properties from Error objects with populated Object.create(null) extensions', () => {
+      const extensions = Object.create(null);
+      extensions.code = 'GRAPHQL_VALIDATION_FAILED';
+      extensions.field = 'userInput';
+      extensions.locations = [{ line: 1, column: 5 }];
+      extensions.errorCode = 'APOLLO_ERROR';
+
+      const error = new GraphQLError('GraphQL validation failed', {
+        extensions,
+      });
+
+      const info: WinstonInfo = {
+        level: 'error',
+        message: 'Apollo error',
+        [SPLAT]: [error],
       };
 
       const actual = extractPropertiesStep(info);
