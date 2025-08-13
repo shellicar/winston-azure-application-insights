@@ -31,7 +31,7 @@ describe('Winston behavior verification', () => {
 
   describe('Splat Processing Logic', () => {
     describe('Raw: basic splat vs defaultMeta conflicts', () => {
-      it('should merge splat properties with defaultMeta, with splat taking precedence over conflicts', () => {
+      it('merges splat properties with defaultMeta, splat taking precedence over conflicts', () => {
         const logger = createLogger({
           defaultMeta: { appVersion: '1.2.3', userId: 123 },
           format: format.json(),
@@ -54,7 +54,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('Raw: multiple splat items (first object wins)', () => {
-      it('should merge only first splat object properties, ignoring subsequent objects', () => {
+      it('merges only first splat object properties, ignoring subsequent objects', () => {
         const logger = createLogger({
           defaultMeta: { appVersion: '1.2.3', userId: 123 },
           format: format.json(),
@@ -77,7 +77,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('Raw: primitive first splat parameters', () => {
-      it('should ignore number primitives as first splat parameter and not extract properties', () => {
+      it('ignores number primitives', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -94,7 +94,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should ignore string primitives as first splat parameter and not extract properties', () => {
+      it('ignores string primitives', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -111,7 +111,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should ignore boolean primitives as first splat parameter and not extract properties', () => {
+      it('ignores boolean primitives', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -128,7 +128,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should ignore null primitives as first splat parameter and not extract properties', () => {
+      it('ignores null primitives', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -145,7 +145,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should ignore Date objects as first splat parameter and not extract properties', () => {
+      it('ignores Date objects', () => {
         const testDate = new Date('2025-01-01T00:00:00Z');
         const logger = createLogger({
           defaultMeta: { userId: 123 },
@@ -163,7 +163,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should extract array elements as enumerable properties but ignore subsequent splat objects', () => {
+      it('extracts array elements as enumerable properties', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -183,7 +183,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should ignore function primitives as first splat parameter and not extract properties', () => {
+      it('ignores function primitives', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -201,7 +201,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should ignore bigint primitives as first splat parameter and not extract properties', () => {
+      it('ignores bigint primitives', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -221,7 +221,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('Raw: custom class property extraction', () => {
-      it('should extract custom class properties and merge with defaultMeta', () => {
+      it('extracts custom class properties and merges with defaultMeta', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -241,7 +241,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should extract custom class properties when no defaultMeta is present', () => {
+      it('extracts custom class properties when no defaultMeta is present', () => {
         const logger = createLogger({
           transports: [captureTransport],
         });
@@ -259,7 +259,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should extract properties from first custom class only, ignoring properties from subsequent classes with same property names', () => {
+      it('extracts properties from first custom class only, ignoring subsequent classes with same property names', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -280,7 +280,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should extract properties from first custom class only, ignoring properties from subsequent classes with different property names', () => {
+      it('extracts properties from first custom class only, ignoring different property names from subsequent classes', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -301,7 +301,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should extract properties from first custom class only, ignoring subsequent non-object splat parameters', () => {
+      it('extracts properties from first custom class only, ignoring subsequent non-object splat parameters', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -321,7 +321,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should extract properties from first object and preserve Error in SPLAT, ignoring subsequent objects', () => {
+      it('extracts properties from first object and preserves Error in SPLAT, ignoring subsequent objects', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -341,7 +341,7 @@ describe('Winston behavior verification', () => {
         expectInfo(actual, expected);
       });
 
-      it('should extract properties from first object only, preserving Error and subsequent items in SPLAT', () => {
+      it('extracts properties from first object only, preserving Error and subsequent items in SPLAT', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -908,372 +908,149 @@ describe('Winston behavior verification', () => {
         expect(actual).toEqual(expected);
       });
     });
-  });
-});
 
-describe('Console Output Format Verification', () => {
-  it('should handle message property conflicts in JSON format console output', () => {
-    const spyConsole = new SpyConsoleTransport({ format: format.combine(format.json()) });
-    const logger = createLogger({
-      transports: [spyConsole],
+    describe('Message property concatenation', () => {
+      it('concatenates message property with log message in JSON format', () => {
+        const spyConsole = new SpyConsoleTransport({ format: format.combine(format.json()) });
+        const logger = createLogger({
+          transports: [spyConsole],
+        });
+
+        logger.info('Hello', { message: 'World', userId: 123 });
+
+        const actual = JSON.parse(spyConsole.lastOutput!);
+        const expected = {
+          level: 'info',
+          message: 'Hello World',
+          userId: 123,
+        };
+        expect(actual).toEqual(expected);
+      });
+
+      it('concatenates message property with log message in simple format', () => {
+        const spyConsole = new SpyConsoleTransport({ format: format.simple() });
+        const logger = createLogger({
+          transports: [spyConsole],
+        });
+
+        logger.info('Hello', { message: 'World', userId: 123 });
+
+        const actual = spyConsole.lastOutput!;
+        const expected = 'info: Hello World {"userId":123}';
+        expect(actual).toBe(expected);
+      });
     });
 
-    logger.info('Hello', { message: 'World', userId: 123 });
+    describe('Error formatting in console output', () => {
+      it('concatenates Error message with log message and includes stack in JSON format', () => {
+        const spyConsole = new SpyConsoleTransport({ format: format.json() });
+        const logger = createLogger({
+          level: 'error',
+          defaultMeta: { userId: 123 },
+          transports: [spyConsole],
+        });
 
-    const actual = JSON.parse(spyConsole.lastOutput!);
-    const expected = {
-      level: 'info',
-      message: 'Hello World',
-      userId: 123,
-    };
-    expect(actual).toEqual(expected);
-  });
+        const testError = new Error('Test error message');
+        logger.error('hello', testError, 'world');
 
-  it('should format properties correctly in JSON console output without message conflicts #1', () => {
-    const spyConsole = new SpyConsoleTransport({ format: format.combine(format.json()) });
-    const logger = createLogger({
-      transports: [spyConsole],
+        const actual = JSON.parse(spyConsole.lastOutput!);
+        const expected = {
+          level: 'error',
+          message: 'hello Test error message',
+          stack: testError.stack,
+          userId: 123,
+        };
+        expect(actual).toEqual(expected);
+      });
+
+      it('ignores Error object when not in first splat position', () => {
+        const spyConsole = new SpyConsoleTransport({ format: format.json() });
+        const logger = createLogger({
+          level: 'error',
+          defaultMeta: { userId: 123 },
+          transports: [spyConsole],
+        });
+
+        const testError = new Error('Test error message');
+        logger.error('hello', { my: 'object' }, testError);
+
+        const actual = JSON.parse(spyConsole.lastOutput!);
+        const expected = {
+          level: 'error',
+          message: 'hello',
+          userId: 123,
+          my: 'object',
+        };
+        expect(actual).toEqual(expected);
+      });
     });
 
-    logger.info('Hello world');
-
-    const actual = JSON.parse(spyConsole.lastOutput!);
-    const expected = {
-      level: 'info',
-      message: 'Hello world',
-    };
-    expect(actual).toEqual(expected);
-  });
-
-  it('should format properties correctly in JSON console output without message conflicts #2', () => {
-    const spyConsole = new SpyConsoleTransport({ format: format.combine(format.json()) });
-    const logger = createLogger({
-      transports: [spyConsole],
-    });
-
-    logger.info('Hello world');
-
-    const actual = JSON.parse(spyConsole.lastOutput!);
-    const expected = {
-      level: 'info',
-      message: 'Hello world',
-    };
-
-    expect(actual).toEqual(expected);
-  });
-
-  it('should format properties correctly in simple format console output', () => {
-    const spyConsole = new SpyConsoleTransport({ format: format.simple() });
-    const logger = createLogger({
-      transports: [spyConsole],
-    });
-
-    logger.info('Hello', { message: 'World', userId: 123 });
-
-    const actual = spyConsole.lastOutput!;
-    const expected = 'info: Hello World {"userId":123}';
-    expect(actual).toBe(expected);
-  });
-
-  describe('Edge case behaviors', () => {
-    const spyConsole = new SpyConsoleTransport({ format: format.simple() });
-    const logger = createLogger({
-      format: format.simple(),
-      transports: [spyConsole],
-    });
-
-    it('should demonstrate winston behavior with functions', () => {
-      const testFunction = () => 'test';
-      logger.info('Function test', testFunction);
-
-      const actual = spyConsole.lastOutput!;
-      const expected = 'info: Function test';
-      expect(actual).toBe(expected);
-    });
-
-    it('should demonstrate winston behavior with function as property', () => {
-      const callback = () => console.log('callback executed');
-      logger.info('Function property test', { userId: 123, callback: callback });
-
-      const actual = spyConsole.lastOutput!;
-      const expected = 'info: Function property test {"userId":123}';
-      expect(actual).toBe(expected);
-    });
-
-    it('should demonstrate winston behavior with arrays', () => {
-      logger.info('Array test', [1, 2, 3]);
-
-      const actual = spyConsole.lastOutput!;
-      const expected = 'info: Array test {"0":1,"1":2,"2":3}';
-      expect(actual).toBe(expected);
-    });
-
-    it('should demonstrate winston behavior with dates', () => {
-      logger.info('Date test', new Date('2025-01-01'));
-
-      const actual = spyConsole.lastOutput!;
-      const expected = 'info: Date test';
-      expect(actual).toBe(expected);
-    });
-
-    it('should demonstrate winston behavior with regex', () => {
-      logger.info('Regex test', /hello/g);
-
-      const actual = spyConsole.lastOutput!;
-      const expected = 'info: Regex test';
-      expect(actual).toBe(expected);
-    });
-
-    it('should demonstrate winston behavior with custom classes', () => {
-      class CustomClass {
-        prop = 'value';
-        toString() {
-          return 'CustomClass instance';
-        }
-      }
-
-      logger.info('Custom class test', new CustomClass());
-
-      const actual = spyConsole.lastOutput!;
-      const expected = 'info: Custom class test {"prop":"value"}';
-      expect(actual).toBe(expected);
-    });
-  });
-
-  describe('Splat inspection', () => {
-    const spyTransport = new SpyWinstonTransport();
-    const logger = createLogger({
-      transports: [spyTransport],
-    });
-
-    it('should show what Winston puts in the splat for function as property', () => {
-      const callback = () => console.log('callback executed');
-      logger.info('Function property test', { userId: 123, callback: callback });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        callback: callback,
-        userId: 123,
-        level: 'info',
-        message: 'Function property test',
-        [SPLAT]: [{ userId: 123, callback: callback }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when function is used as message property value', () => {
-      const callback = () => console.log('callback executed');
-      logger.info('Hello', { message: callback });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        level: 'info',
-        message: `Hello ${callback}`,
-        [SPLAT]: [{ message: callback }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when string is used as message property value', () => {
-      logger.info('Hello', { message: 'World' });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        level: 'info',
-        message: 'Hello World',
-        [SPLAT]: [{ message: 'World' }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when number is used as message property value', () => {
-      logger.info('Hello', { message: 42 });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        level: 'info',
-        message: 'Hello 42',
-        [SPLAT]: [{ message: 42 }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when zero is used as message property value', () => {
-      logger.info('Hello', { message: 0 });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        level: 'info',
-        message: 'Hello',
-        [SPLAT]: [{ message: 0 }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when boolean true is used as message property value', () => {
-      logger.info('Hello', { message: true });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        level: 'info',
-        message: 'Hello true',
-        [SPLAT]: [{ message: true }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when boolean false is used as message property value', () => {
-      logger.info('Hello', { message: false });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        level: 'info',
-        message: 'Hello',
-        [SPLAT]: [{ message: false }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when bigint is used as message property value', () => {
-      logger.info('Hello', { message: 123n });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        level: 'info',
-        message: 'Hello 123',
-        [SPLAT]: [{ message: 123n }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when bigint zero is used as message property value', () => {
-      logger.info('Hello', { message: 0n });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        level: 'info',
-        message: 'Hello',
-        [SPLAT]: [{ message: 0n }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when null is used as message property value', () => {
-      logger.info('Hello', { message: null });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        level: 'info',
-        message: 'Hello',
-        [SPLAT]: [{ message: null }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when undefined is used as message property value', () => {
-      logger.info('Hello', { message: undefined });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        level: 'info',
-        message: 'Hello',
-        [SPLAT]: [{ message: undefined }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when object is used as message property value', () => {
-      logger.info('Hello', { message: { nested: 'value' } });
-
-      const actual = spyTransport.lastInfo;
-
-      const expected = {
-        level: 'info',
-        message: 'Hello [object Object]',
-        [SPLAT]: [{ message: { nested: 'value' } }],
-      };
-      expectInfo(actual, expected);
-    });
-
-    it('should show what Winston does when empty object is used as message property value', () => {
-      logger.info('Hello', { message: {} });
-
-      const info = spyTransport.lastInfo;
-
-      const expected = 'Hello [object Object]';
-      const actual = info.message;
-
-      expect(actual).toBe(expected);
-      expect(info.level).toBe('info');
-      expect(info[SPLAT]).toEqual([{ message: {} }]);
-    });
-
-    it('should show what Winston does when custom class is used as message property value', () => {
-      class TestClass {
-        constructor(public prop: string) {}
-      }
-      const customObject = new TestClass('test');
-      logger.info('Hello', { message: customObject });
-
-      const info = spyTransport.lastInfo;
-
-      const expected = 'Hello [object Object]';
-      const actual = info.message;
-
-      expect(actual).toBe(expected);
-      expect(info.level).toBe('info');
-      expect(info[SPLAT]).toEqual([{ message: customObject }]);
-    });
-
-    it('should show what Winston does when array is used as message property value', () => {
-      logger.info('Hello', { message: [1, 2, 3] });
-
-      const info = spyTransport.lastInfo;
-
-      const expected = 'Hello 1,2,3';
-      const actual = info.message;
-
-      expect(actual).toBe(expected);
-      expect(info.level).toBe('info');
-      expect(info[SPLAT]).toEqual([{ message: [1, 2, 3] }]);
-    });
-
-    it('should show what Winston does when empty array is used as message property value', () => {
-      logger.info('Hello', { message: [] });
-
-      const info = spyTransport.lastInfo;
-
-      const expected = 'Hello ';
-      const actual = info.message;
-
-      expect(actual).toBe(expected);
-      expect(info.level).toBe('info');
-      expect(info[SPLAT]).toEqual([{ message: [] }]);
-    });
-
-    it('should show what Winston does when Date is used as message property value', () => {
-      const testDate = new Date('2025-01-01T00:00:00Z');
-      logger.info('Hello', { message: testDate });
-
-      const info = spyTransport.lastInfo;
-
-      const expected = `Hello ${testDate.toString()}`;
-      const actual = info.message;
-
-      expect(actual).toBe(expected);
-      expect(info.level).toBe('info');
-      expect(info[SPLAT]).toEqual([{ message: testDate }]);
+    describe('Object property extraction in console output', () => {
+      it('extracts custom class properties in JSON format', () => {
+        const spyConsole = new SpyConsoleTransport({ format: format.json() });
+        const logger = createLogger({
+          level: 'info',
+          transports: [spyConsole],
+        });
+
+        const customObject = new CustomClass('value');
+        logger.info('Custom class test', customObject);
+
+        const output = spyConsole.lastOutput;
+        expect(output).toBeDefined();
+
+        const actual = JSON.parse(output!);
+        const expected = {
+          level: 'info',
+          message: 'Custom class test',
+          prop: 'value',
+        };
+        expect(actual).toEqual(expected);
+      });
+
+      it('extracts array elements as enumerable properties in simple format', () => {
+        const spyConsole = new SpyConsoleTransport({ format: format.simple() });
+        const logger = createLogger({
+          format: format.simple(),
+          transports: [spyConsole],
+        });
+
+        logger.info('Array test', [1, 2, 3]);
+
+        const actual = spyConsole.lastOutput!;
+        const expected = 'info: Array test {"0":1,"1":2,"2":3}';
+        expect(actual).toBe(expected);
+      });
+
+      it('excludes function properties from JSON serialization', () => {
+        const spyConsole = new SpyConsoleTransport({ format: format.simple() });
+        const logger = createLogger({
+          format: format.simple(),
+          transports: [spyConsole],
+        });
+
+        const callback = () => console.log('callback executed');
+        logger.info('Function property test', { userId: 123, callback: callback });
+
+        const actual = spyConsole.lastOutput!;
+        const expected = 'info: Function property test {"userId":123}';
+        expect(actual).toBe(expected);
+      });
+
+      it('ignores non-extractable objects in console output', () => {
+        const spyConsole = new SpyConsoleTransport({ format: format.simple() });
+        const logger = createLogger({
+          format: format.simple(),
+          transports: [spyConsole],
+        });
+
+        const testFunction = () => 'test';
+        logger.info('Function test', testFunction);
+
+        const actual = spyConsole.lastOutput!;
+        const expected = 'info: Function test';
+        expect(actual).toBe(expected);
+      });
     });
   });
 });
