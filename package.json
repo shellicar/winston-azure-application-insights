@@ -68,12 +68,14 @@
     "syncpack": "^13.0.4",
     "terser": "^5.43.1",
     "testdouble": "^3.20.2",
+    "triple-beam": "^1.4.1",
     "tsup": "^8.5.0",
     "tsx": "^4.20.3",
     "turbo": "^2.5.5",
     "typescript": "^5.9.2",
     "vitest": "^3.2.4",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "winston-transport": "^4.9.0"
   },
   "optionalDependencies": {
     "applicationinsightsv2": "npm:applicationinsights@^2",
