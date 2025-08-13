@@ -52,9 +52,9 @@ describe('defaultMeta support', () => {
 
       const actual = telemetryHandler.telemetry?.trace?.properties;
       const expected = {
-        userId: 456, // Splat overrides defaultMeta
-        appVersion: '1.0.0', // defaultMeta preserved
-        extra: 'data', // New from splat
+        userId: 456,
+        appVersion: '1.0.0',
+        extra: 'data',
       };
 
       expect(actual).toEqual(expected);
@@ -70,7 +70,7 @@ describe('defaultMeta support', () => {
       logger.info('test message', new Error('error1'), new Error('error2'));
 
       const actual = telemetryHandler.telemetry?.trace?.properties;
-      const expected = { userId: 123, appVersion: '1.0.0' }; // Should still get defaultMeta
+      const expected = { userId: 123, appVersion: '1.0.0' };
 
       expect(actual).toEqual(expected);
     });
@@ -85,7 +85,6 @@ describe('defaultMeta support', () => {
       logger.info('test message', 'string-data', { sessionId: 'abc' });
 
       const actual = telemetryHandler.telemetry?.trace?.properties;
-      // Winston ignores primitive first splat, only uses defaultMeta
       const expected = { userId: 123, appVersion: '1.0.0' };
 
       expect(actual).toEqual(expected);
@@ -98,14 +97,13 @@ describe('defaultMeta support', () => {
         transports: [transport],
       });
 
-      // Multiple objects - Winston only merges the first one
       logger.info('test message', { sessionId: 'abc' }, { requestId: 'req-123' });
 
       const actual = telemetryHandler.telemetry?.trace?.properties;
       const expected = {
         userId: 123,
         appVersion: '1.0.0',
-        sessionId: 'abc', // Only first object merged, requestId ignored
+        sessionId: 'abc',
       };
 
       expect(actual).toEqual(expected);
@@ -123,7 +121,6 @@ describe('defaultMeta support', () => {
       logger.info('test message');
 
       const actual = telemetryHandler.telemetry?.trace?.properties;
-      // Winston spreads array as indexed properties
       const expected = { '0': 1, '1': 2, '2': 3 };
 
       expect(actual).toEqual(expected);
@@ -142,8 +139,8 @@ describe('defaultMeta support', () => {
       const expected = {
         '0': 1,
         '1': 2,
-        '2': 3, // From array defaultMeta
-        userId: 123, // From splat
+        '2': 3,
+        userId: 123,
       };
 
       expect(actual).toEqual(expected);
@@ -161,7 +158,7 @@ describe('defaultMeta support', () => {
       const actual = telemetryHandler.telemetry?.trace?.properties;
       const expected = {
         '0': 30,
-        '1': 40, // Splat array overrides defaultMeta indices
+        '1': 40,
       };
 
       expect(actual).toEqual(expected);
@@ -179,7 +176,6 @@ describe('defaultMeta support', () => {
       logger.info('test message');
 
       const actual = telemetryHandler.telemetry?.trace?.properties;
-      // Winston spreads string as character properties
       const expected = { '0': 'a', '1': 'p', '2': 'p' };
 
       expect(actual).toEqual(expected);
@@ -198,8 +194,8 @@ describe('defaultMeta support', () => {
       const expected = {
         '0': 'a',
         '1': 'p',
-        '2': 'p', // From string defaultMeta
-        userId: 123, // From splat
+        '2': 'p',
+        userId: 123,
       };
 
       expect(actual).toEqual(expected);
@@ -217,7 +213,6 @@ describe('defaultMeta support', () => {
       logger.info('test message');
 
       const actual = telemetryHandler.telemetry?.trace?.properties;
-      // Winston ignores primitive defaultMeta
       const expected = {};
 
       expect(actual).toEqual(expected);

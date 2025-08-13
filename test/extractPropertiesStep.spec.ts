@@ -1,16 +1,11 @@
 import { SPLAT } from 'triple-beam';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { extractPropertiesStep } from '../src/extractPropertiesStep';
 import type { WinstonInfo } from '../src/types';
-import type { TelemetryData } from '../src/types';
-import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
 describe('Refactored AzureApplicationInsightsLogger', () => {
-  const telemetryHandler = new SpyTelemetryHandler();
-
   describe('extractPropertiesStep', () => {
-    it('should extract defaultMeta properties from info object', () => {
-      // Simulate what Winston does when defaultMeta is set
+    it('should extract properties from info object', () => {
       const info: WinstonInfo = {
         level: 'info',
         message: 'test message',
@@ -149,7 +144,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = {}; // Winston ignores primitives like Date for property extraction
+      const expected = {};
 
       expect(actual).toEqual(expected);
     });
@@ -170,7 +165,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = {}; // Winston ignores non-plain objects for property extraction
+      const expected = {};
 
       expect(actual).toEqual(expected);
     });
@@ -183,7 +178,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = {}; // Winston ignores primitives for property extraction
+      const expected = {};
 
       expect(actual).toEqual(expected);
     });
@@ -196,7 +191,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = {}; // Winston ignores primitives for property extraction
+      const expected = {};
 
       expect(actual).toEqual(expected);
     });
@@ -209,7 +204,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       };
 
       const actual = extractPropertiesStep(info);
-      const expected = {}; // Winston ignores primitives for property extraction
+      const expected = {};
 
       expect(actual).toEqual(expected);
     });

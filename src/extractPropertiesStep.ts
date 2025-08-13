@@ -33,7 +33,6 @@ export const extractPropertiesStep = (info: WinstonInfo, isError: (obj: unknown)
   }
 
   const nonErrorItems = splat.filter((item) => !isError(item));
-  // const firstObject = nonErrorItems.find(item => isPlainObject(item));
   const firstObject = nonErrorItems[0];
   if (firstObject != null && isPlainObject(firstObject)) {
     return { ...defaultMeta, ...firstObject };
