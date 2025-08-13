@@ -10,7 +10,7 @@ export default defineConfig({
   keepNames: true,
   outDir: 'dist',
   platform: 'node',
-  target: 'node20',
+  target: 'es2024',
   treeshake: true,
   sourcemap: true,
   splitting: true,
