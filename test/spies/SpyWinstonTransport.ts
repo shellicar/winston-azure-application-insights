@@ -11,6 +11,7 @@ export class SpyWinstonTransport extends TransportStream {
 
   constructor() {
     super();
+    this.setMaxListeners(50);
     beforeEach(() => {
       this.clear();
     });
