@@ -1,7 +1,6 @@
 import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { createLogger, format } from 'winston';
-import * as winston from 'winston';
 import type { WinstonInfo } from '../src';
 import { SpyConsoleTransport } from './spies/SpyConsoleTransport';
 import { SpyWinstonTransport } from './spies/SpyWinstonTransport';
@@ -18,24 +17,24 @@ function expectInfoEntries(info: WinstonInfo, expectedObject: object | string) {
   }
 }
 
-class CustomClass {
-  constructor(public prop: string) {}
-}
-
-class CustomClassA {
-  constructor(public propA: string) {}
-}
-
-class CustomClassB {
-  constructor(public propB: string) {}
-}
-
 describe('Winston behavior verification', () => {
+  class CustomClass {
+    constructor(public prop: string) {}
+  }
+
+  class CustomClassA {
+    constructor(public propA: string) {}
+  }
+
+  class CustomClassB {
+    constructor(public propB: string) {}
+  }
+
   const captureTransport = new SpyWinstonTransport();
 
   describe('Splat Processing Logic', () => {
     describe('Raw: basic splat vs defaultMeta conflicts', () => {
-      it('should verify what Winston does with defaultMeta vs splat conflicts', () => {
+      it('should merge splat properties with defaultMeta, with splat taking precedence over conflicts', () => {
         const logger = createLogger({
           defaultMeta: { appVersion: '1.2.3', userId: 123 },
           format: format.json(),
@@ -56,7 +55,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('Raw: multiple splat items (first object wins)', () => {
-      it('should verify Winston behavior with multiple splat items', () => {
+      it('should merge only first splat object properties, ignoring subsequent objects', () => {
         const logger = createLogger({
           defaultMeta: { appVersion: '1.2.3', userId: 123 },
           format: format.json(),
@@ -78,7 +77,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('Raw: primitive first splat parameters', () => {
-      it('should handle number as first splat with object defaultMeta', () => {
+      it('should ignore number primitives as first splat parameter and not extract properties', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -94,7 +93,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['userId', 'level', 'message']);
       });
 
-      it('should handle string as first splat with object defaultMeta', () => {
+      it('should ignore string primitives as first splat parameter and not extract properties', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -110,7 +109,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['userId', 'level', 'message']);
       });
 
-      it('should handle boolean as first splat with object defaultMeta', () => {
+      it('should ignore boolean primitives as first splat parameter and not extract properties', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -126,7 +125,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['userId', 'level', 'message']);
       });
 
-      it('should handle null as first splat with object defaultMeta', () => {
+      it('should ignore null primitives as first splat parameter and not extract properties', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -142,7 +141,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['userId', 'level', 'message']);
       });
 
-      it('should handle Date as first splat with object defaultMeta', () => {
+      it('should ignore Date objects as first splat parameter and not extract properties', () => {
         const testDate = new Date('2025-01-01T00:00:00Z');
         const logger = createLogger({
           defaultMeta: { userId: 123 },
@@ -159,7 +158,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['userId', 'level', 'message']);
       });
 
-      it('should handle array as first splat with object defaultMeta', () => {
+      it('should extract array elements as enumerable properties but ignore subsequent splat objects', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -180,7 +179,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('Raw: custom class property extraction', () => {
-      it('should verify Winston behavior with custom class as splat (with defaultMeta)', () => {
+      it('should extract custom class properties and merge with defaultMeta', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -197,7 +196,7 @@ describe('Winston behavior verification', () => {
         expect(info[SPLAT]).toEqual([new CustomClass('value')]);
       });
 
-      it('should verify Winston behavior with custom class as only splat (no defaultMeta)', () => {
+      it('should extract custom class properties when no defaultMeta is present', () => {
         const logger = createLogger({
           transports: [captureTransport],
         });
@@ -213,7 +212,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['prop', 'level', 'message']);
       });
 
-      it('should verify Winston behavior with multiple custom classes as splat (same property name)', () => {
+      it('should extract properties from first custom class only, ignoring properties from subsequent classes with same property names', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -232,7 +231,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['userId', 'prop', 'level', 'message']);
       });
 
-      it('should verify Winston behavior with multiple custom classes as splat (different property names)', () => {
+      it('should extract properties from first custom class only, ignoring properties from subsequent classes with different property names', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -252,7 +251,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['userId', 'propA', 'level', 'message']);
       });
 
-      it('should verify Winston behavior with custom class mixed with other types', () => {
+      it('should extract properties from first custom class only, ignoring subsequent non-object splat parameters', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -271,7 +270,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['userId', 'prop', 'level', 'message']);
       });
 
-      it('should verify Winston behavior with object + Error as 2nd splat', () => {
+      it('should extract properties from first object and preserve Error in SPLAT, ignoring subsequent objects', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -289,7 +288,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['userId', 'my', 'level', 'message']);
       });
 
-      it('should verify Winston behavior with object + Error + more items', () => {
+      it('should extract properties from first object only, preserving Error and subsequent items in SPLAT', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -310,7 +309,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('Raw: no splat scenarios', () => {
-      it('should verify Winston behavior with no splat', () => {
+      it('should preserve defaultMeta properties and not create SPLAT when no additional parameters provided', () => {
         const logger = createLogger({
           defaultMeta: { appVersion: '1.2.3', userId: 123 },
           format: format.json(),
@@ -329,7 +328,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('Raw: Error preservation in SPLAT', () => {
-      it('should verify Winston behavior with Error as first parameter + primitives', () => {
+      it('should use Error object as message when Error is first parameter, preserving additional parameters in SPLAT', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -347,7 +346,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['userId', 'level', 'message']);
       });
 
-      it('should verify Winston behavior with Error as first parameter + object', () => {
+      it('should use Error object as message when Error is first parameter, ignoring object properties but preserving in SPLAT', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123 },
           transports: [captureTransport],
@@ -369,7 +368,7 @@ describe('Winston behavior verification', () => {
 
   describe('Message Property Handling', () => {
     describe('Raw: defaultMeta.message overrides log message', () => {
-      it('should handle defaultMeta with message property conflict', () => {
+      it('should use defaultMeta.message property instead of log message parameter when both are present', () => {
         const logger = createLogger({
           defaultMeta: { userId: 123, message: 'defaultMeta message' },
           transports: [captureTransport],
@@ -386,7 +385,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('Console: message property conflicts in output', () => {
-      it('should verify console transport uses defaultMeta message over log message', () => {
+      it('should use defaultMeta message property in console JSON output instead of log message parameter when both are present', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({
           defaultMeta: { userId: 123, message: 'defaultMeta message' },
@@ -407,7 +406,7 @@ describe('Winston behavior verification', () => {
 
   describe('Error Object Processing', () => {
     describe('Console: Error as first splat (concatenation + stack)', () => {
-      it('should verify console transport excludes stack when Error is in splat + string', () => {
+      it('should concatenate Error message with log message and include stack property when Error appears in first splat position', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({
           level: 'error',
@@ -428,7 +427,7 @@ describe('Winston behavior verification', () => {
         expect(actual).toEqual(expected);
       });
 
-      it('should verify console transport includes Error message when Error is in splat', () => {
+      it('should concatenate Error message with log message and include stack property when Error and object in splat', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({
           level: 'error',
@@ -451,7 +450,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('Console: Error in later splat (no special handling)', () => {
-      it('should verify console transport excludes stack when Error is 2nd splat parameter', () => {
+      it('should ignore Error object and exclude stack property when Error appears in second splat position', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({
           level: 'error',
@@ -472,7 +471,7 @@ describe('Winston behavior verification', () => {
         expect(actual).toEqual(expected);
       });
 
-      it('should verify console transport only merges first object when Error is in splat', () => {
+      it('should merge only first object properties and ignore Error when Error appears in later splat positions', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({
           level: 'error',
@@ -497,7 +496,7 @@ describe('Winston behavior verification', () => {
 
   describe('DefaultMeta Merging Logic', () => {
     describe('Raw: primitive defaultMeta types', () => {
-      it('should handle number defaultMeta', () => {
+      it('should ignore number defaultMeta and not extract any properties', () => {
         const logger = createLogger({
           defaultMeta: 42,
           transports: [captureTransport],
@@ -511,7 +510,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['message', 'level']);
       });
 
-      it('should handle string defaultMeta', () => {
+      it('should extract string characters as enumerable properties when string used as defaultMeta', () => {
         const expected = 'hello-world';
         const logger = createLogger({
           defaultMeta: expected,
@@ -528,7 +527,7 @@ describe('Winston behavior verification', () => {
         expectInfoEntries(info, expected);
       });
 
-      it('should handle boolean defaultMeta', () => {
+      it('should ignore boolean defaultMeta and not extract any properties', () => {
         const logger = createLogger({
           defaultMeta: true,
           transports: [captureTransport],
@@ -542,7 +541,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['message', 'level']);
       });
 
-      it('should handle null defaultMeta', () => {
+      it('should ignore null defaultMeta and not extract any properties', () => {
         const logger = createLogger({
           defaultMeta: null,
           transports: [captureTransport],
@@ -556,7 +555,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['message', 'level']);
       });
 
-      it('should handle undefined defaultMeta', () => {
+      it('should ignore undefined defaultMeta and not extract any properties', () => {
         const logger = createLogger({
           defaultMeta: undefined,
           transports: [captureTransport],
@@ -570,7 +569,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['message', 'level']);
       });
 
-      it('should handle Date defaultMeta', () => {
+      it('should ignore Date defaultMeta and not extract any properties', () => {
         const testDate = new Date('2025-01-01T00:00:00Z');
         const logger = createLogger({
           defaultMeta: testDate,
@@ -585,7 +584,7 @@ describe('Winston behavior verification', () => {
         expectInfoKeys(info, ['message', 'level']);
       });
 
-      it('should handle array defaultMeta', () => {
+      it('should extract array elements as enumerable properties when array used as defaultMeta', () => {
         const logger = createLogger({
           defaultMeta: [1, 2, 3],
           transports: [captureTransport],
@@ -604,7 +603,7 @@ describe('Winston behavior verification', () => {
 
   describe('Console Transport Formatting', () => {
     describe('Custom class formatting', () => {
-      it('should verify console transport formats custom class properties', () => {
+      it('should extract and format custom class properties in JSON output', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({
           level: 'info',
@@ -626,7 +625,7 @@ describe('Winston behavior verification', () => {
         expect(actual).toEqual(expected);
       });
 
-      it('should verify console transport merges custom class with defaultMeta', () => {
+      it('should merge custom class properties with defaultMeta in console JSON output', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({
           level: 'info',
@@ -653,7 +652,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('Property merging in JSON output', () => {
-      it('should verify console transport only merges first custom class properties', () => {
+      it('should merge only first custom class properties in console JSON output, ignoring subsequent classes', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({
           level: 'info',
@@ -678,7 +677,7 @@ describe('Winston behavior verification', () => {
         expect(actual).toEqual(expected);
       });
 
-      it('should verify console transport merges only first custom class properties', () => {
+      it('should merge only first custom class properties in console JSON output when classes have different property names', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({
           level: 'info',
@@ -705,7 +704,7 @@ describe('Winston behavior verification', () => {
     });
 
     describe('First-object-wins behavior in formatted output', () => {
-      it('should verify console transport only merges first custom class when mixed with primitives', () => {
+      it('should merge only first custom class properties in console JSON output when mixed with primitive splat parameters', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({
           level: 'info',
