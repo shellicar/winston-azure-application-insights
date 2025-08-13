@@ -1,3 +1,4 @@
+import { beforeEach } from 'vitest';
 import TransportStream from 'winston-transport';
 import type { WinstonInfo } from '../../src';
 
@@ -6,6 +7,13 @@ import type { WinstonInfo } from '../../src';
  */
 export class SpyWinstonTransport extends TransportStream {
   public capturedWinstonInfo: WinstonInfo[] = [];
+
+  constructor() {
+    super();
+    beforeEach(() => {
+      this.clear();
+    });
+  }
 
   override log(info: WinstonInfo, next: () => void) {
     this.capturedWinstonInfo.push({ ...info });

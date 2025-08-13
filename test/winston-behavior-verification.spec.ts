@@ -2,7 +2,21 @@ import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { createLogger, format } from 'winston';
 import * as winston from 'winston';
+import type { WinstonInfo } from '../src';
+import { SpyConsoleTransport } from './spies/SpyConsoleTransport';
 import { SpyWinstonTransport } from './spies/SpyWinstonTransport';
+
+function expectInfoKeys(info: WinstonInfo, expectedKeys: string[]) {
+  const actualKeys = Object.keys(info).sort();
+  const sortedExpectedKeys = [...expectedKeys].sort();
+  expect(actualKeys).toEqual(sortedExpectedKeys);
+}
+
+function expectInfoEntries(info: WinstonInfo, expectedObject: object | string) {
+  for (const [key, value] of Object.entries(expectedObject)) {
+    expect(info[key]).toBe(value);
+  }
+}
 
 describe('Winston defaultMeta behavior verification', () => {
   const captureTransport = new SpyWinstonTransport();
@@ -14,21 +28,16 @@ describe('Winston defaultMeta behavior verification', () => {
       transports: [captureTransport],
     });
 
-    // Test case: defaultMeta property conflicts with splat
     logger.info('hello', { appVersion: '2.3.4', sessionId: 'abc' });
-
     const capturedInfo = captureTransport.capturedWinstonInfo[0];
 
-    console.log('=== WINSTON BEHAVIOR VERIFICATION ===');
-    console.log('defaultMeta:', { appVersion: '1.2.3', userId: 123 });
-    console.log('splat item:', { appVersion: '2.3.4', sessionId: 'abc' });
-    console.log('Winston info object:', JSON.stringify(capturedInfo, null, 2));
-    console.log('Info keys:', Object.keys(capturedInfo));
-    console.log('Splat symbol:', capturedInfo[SPLAT]);
-    console.log('==========================================');
-
-    // Log the actual behavior for manual inspection
-    expect(capturedInfo).toBeDefined();
+    // Assert Winston's actual behavior: splat wins conflicts, both defaultMeta and splat properties present
+    expect(capturedInfo.appVersion).toBe('2.3.4'); // splat wins
+    expect(capturedInfo.userId).toBe(123); // defaultMeta preserved
+    expect(capturedInfo.sessionId).toBe('abc'); // splat added
+    expect(capturedInfo.level).toBe('info');
+    expect(capturedInfo.message).toBe('hello');
+    expect(capturedInfo[SPLAT]).toEqual([{ appVersion: '2.3.4', sessionId: 'abc' }]);
   });
 
   it('should verify Winston behavior with multiple splat items', () => {
@@ -38,19 +47,17 @@ describe('Winston defaultMeta behavior verification', () => {
       transports: [captureTransport],
     });
 
-    // Test case: multiple splat items
     logger.info('hello', { sessionId: 'abc' }, { requestId: 'req-123' }, 'extra-data');
     const capturedInfo = captureTransport.capturedWinstonInfo[0];
 
-    console.log('=== WINSTON MULTIPLE SPLAT VERIFICATION ===');
-    console.log('defaultMeta:', { appVersion: '1.2.3', userId: 123 });
-    console.log('splat items:', [{ sessionId: 'abc' }, { requestId: 'req-123' }, 'extra-data']);
-    console.log('Winston info object:', JSON.stringify(capturedInfo, null, 2));
-    console.log('Info keys:', Object.keys(capturedInfo));
-    console.log('Splat symbol:', capturedInfo[SPLAT]);
-    console.log('===========================================');
-
-    expect(capturedInfo).toBeDefined();
+    // Assert Winston's "first object only" behavior
+    expect(capturedInfo.appVersion).toBe('1.2.3');
+    expect(capturedInfo.userId).toBe(123);
+    expect(capturedInfo.sessionId).toBe('abc');
+    expect(capturedInfo.requestId).toBeUndefined();
+    expect(capturedInfo.level).toBe('info');
+    expect(capturedInfo.message).toBe('hello');
+    expect(capturedInfo[SPLAT]).toEqual([{ sessionId: 'abc' }, { requestId: 'req-123' }, 'extra-data']);
   });
 
   it('should verify Winston behavior with no splat', () => {
@@ -60,19 +67,14 @@ describe('Winston defaultMeta behavior verification', () => {
       transports: [captureTransport],
     });
 
-    // Test case: no splat, just message
     logger.info('hello world');
     const capturedInfo = captureTransport.capturedWinstonInfo[0];
 
-    console.log('=== WINSTON NO SPLAT VERIFICATION ===');
-    console.log('defaultMeta:', { appVersion: '1.2.3', userId: 123 });
-    console.log('message only:', 'hello world');
-    console.log('Winston info object:', JSON.stringify(capturedInfo, null, 2));
-    console.log('Info keys:', Object.keys(capturedInfo));
-    console.log('Splat symbol:', capturedInfo[SPLAT]);
-    console.log('=====================================');
-
-    expect(capturedInfo).toBeDefined();
+    expect(capturedInfo.appVersion).toBe('1.2.3');
+    expect(capturedInfo.userId).toBe(123);
+    expect(capturedInfo.level).toBe('info');
+    expect(capturedInfo.message).toBe('hello world');
+    expect(capturedInfo[SPLAT]).toBeUndefined();
   });
 
   // Exhaustive primitive defaultMeta tests
@@ -85,26 +87,27 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test message');
       const info = captureTransport.lastInfo;
 
-      console.log('=== NUMBER DEFAULTMETA ===');
-      console.log('defaultMeta:', 42);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('==========================');
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info[SPLAT]).toBeUndefined();
+      expectInfoKeys(info, ['message', 'level']);
     });
 
     it('should handle string defaultMeta', () => {
+      const expected = 'hello-world';
       const logger = createLogger({
-        defaultMeta: 'hello-world',
+        defaultMeta: expected,
         transports: [captureTransport],
       });
       logger.info('test message');
       const info = captureTransport.lastInfo;
 
-      console.log('=== STRING DEFAULTMETA ===');
-      console.log('defaultMeta:', 'hello-world');
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('===========================');
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info[SPLAT]).toBeUndefined();
+
+      expectInfoKeys(info, ['0', '1', '10', '2', '3', '4', '5', '6', '7', '8', '9', 'message', 'level']);
+      expectInfoEntries(info, expected);
     });
 
     it('should handle boolean defaultMeta', () => {
@@ -115,11 +118,10 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test message');
       const info = captureTransport.lastInfo;
 
-      console.log('=== BOOLEAN DEFAULTMETA ===');
-      console.log('defaultMeta:', true);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('============================');
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info[SPLAT]).toBeUndefined();
+      expectInfoKeys(info, ['message', 'level']);
     });
 
     it('should handle null defaultMeta', () => {
@@ -130,11 +132,10 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test message');
       const info = captureTransport.lastInfo;
 
-      console.log('=== NULL DEFAULTMETA ===');
-      console.log('defaultMeta:', null);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('=========================');
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info[SPLAT]).toBeUndefined();
+      expectInfoKeys(info, ['message', 'level']);
     });
 
     it('should handle undefined defaultMeta', () => {
@@ -145,11 +146,10 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test message');
       const info = captureTransport.lastInfo;
 
-      console.log('=== UNDEFINED DEFAULTMETA ===');
-      console.log('defaultMeta:', undefined);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('==============================');
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info[SPLAT]).toBeUndefined();
+      expectInfoKeys(info, ['message', 'level']);
     });
 
     it('should handle Date defaultMeta', () => {
@@ -161,11 +161,10 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test message');
       const info = captureTransport.lastInfo;
 
-      console.log('=== DATE DEFAULTMETA ===');
-      console.log('defaultMeta:', testDate);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('=========================');
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info[SPLAT]).toBeUndefined();
+      expectInfoKeys(info, ['message', 'level']);
     });
 
     it('should handle array defaultMeta', () => {
@@ -176,11 +175,43 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test message');
       const info = captureTransport.lastInfo;
 
-      console.log('=== ARRAY DEFAULTMETA ===');
-      console.log('defaultMeta:', [1, 2, 3]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('==========================');
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info[SPLAT]).toBeUndefined();
+      expectInfoKeys(info, ['0', '1', '2', 'message', 'level']);
+      expect(info['0']).toBe(1);
+    });
+
+    it('should handle defaultMeta with message property conflict', () => {
+      const logger = createLogger({
+        defaultMeta: { userId: 123, message: 'defaultMeta message' },
+        transports: [captureTransport],
+      });
+      logger.info('actual log message');
+      const info = captureTransport.lastInfo;
+
+      expect(info.userId).toBe(123);
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('defaultMeta message');
+      expect(info[SPLAT]).toBeUndefined();
+      expectInfoKeys(info, ['userId', 'message', 'level']);
+    });
+
+    it('should verify console transport uses defaultMeta message over log message', () => {
+      const spyConsole = new SpyConsoleTransport({ format: format.json() });
+      const logger = createLogger({
+        defaultMeta: { userId: 123, message: 'defaultMeta message' },
+        transports: [spyConsole],
+      });
+      logger.info('actual log message');
+
+      const actual = JSON.parse(spyConsole.lastOutput!);
+      const expected = {
+        level: 'info',
+        message: 'defaultMeta message',
+        userId: 123,
+      };
+      expect(actual).toEqual(expected);
     });
   });
 
@@ -189,64 +220,100 @@ describe('Winston defaultMeta behavior verification', () => {
       constructor(public prop: string) {}
     }
 
-    it('should show what Winston console transport actually prints with custom class (no defaultMeta)', () => {
+    it('should verify console transport formats custom class properties', () => {
+      const spyConsole = new SpyConsoleTransport({ format: format.json() });
       const logger = createLogger({
         level: 'info',
-        format: format.json(),
-        transports: [new winston.transports.Console()],
+        transports: [spyConsole],
       });
 
       const customObject = new CustomClass('value');
-
-      console.log('=== WINSTON CONSOLE OUTPUT (NO DEFAULTMETA) ===');
       logger.info('Custom class test', customObject);
-      console.log('===============================================');
+
+      const output = spyConsole.lastOutput;
+      expect(output).toBeDefined();
+
+      const actual = JSON.parse(output!);
+      const expected = {
+        level: 'info',
+        message: 'Custom class test',
+        prop: 'value',
+      };
+      expect(actual).toEqual(expected);
     });
 
-    it('should show what Winston console transport actually prints with custom class (with defaultMeta)', () => {
+    it('should verify console transport merges custom class with defaultMeta', () => {
+      const spyConsole = new SpyConsoleTransport({ format: format.json() });
       const logger = createLogger({
         level: 'info',
-        format: format.json(),
         defaultMeta: { userId: 123, appName: 'test' },
-        transports: [new winston.transports.Console()],
+        transports: [spyConsole],
       });
 
       const customObject = new CustomClass('value');
-
-      console.log('=== WINSTON CONSOLE OUTPUT (WITH DEFAULTMETA) ===');
       logger.info('Custom class test', customObject);
-      console.log('=================================================');
+
+      const output = spyConsole.lastOutput;
+      expect(output).toBeDefined();
+
+      const actual = JSON.parse(output!);
+      const expected = {
+        level: 'info',
+        message: 'Custom class test',
+        userId: 123,
+        appName: 'test',
+        prop: 'value',
+      };
+      expect(actual).toEqual(expected);
     });
 
-    it('should show what Winston console transport prints with multiple custom classes', () => {
+    it('should verify console transport only merges first custom class properties', () => {
+      const spyConsole = new SpyConsoleTransport({ format: format.json() });
       const logger = createLogger({
         level: 'info',
-        format: format.json(),
         defaultMeta: { userId: 123 },
-        transports: [new winston.transports.Console()],
+        transports: [spyConsole],
       });
 
       const customObject1 = new CustomClass('value1');
       const customObject2 = new CustomClass('value2');
-
-      console.log('=== WINSTON CONSOLE OUTPUT (MULTIPLE CUSTOM CLASSES) ===');
       logger.info('Multiple custom classes', customObject1, customObject2);
-      console.log('========================================================');
+
+      const output = spyConsole.lastOutput;
+      expect(output).toBeDefined();
+
+      const actual = JSON.parse(output!);
+      const expected = {
+        level: 'info',
+        message: 'Multiple custom classes',
+        userId: 123,
+        prop: 'value1',
+      };
+      expect(actual).toEqual(expected);
     });
 
-    it('should show what Winston console transport prints with custom class mixed with primitives', () => {
+    it('should verify console transport only merges first custom class when mixed with primitives', () => {
+      const spyConsole = new SpyConsoleTransport({ format: format.json() });
       const logger = createLogger({
         level: 'info',
-        format: format.json(),
         defaultMeta: { userId: 123 },
-        transports: [new winston.transports.Console()],
+        transports: [spyConsole],
       });
 
       const customObject = new CustomClass('value');
-
-      console.log('=== WINSTON CONSOLE OUTPUT (CUSTOM CLASS + PRIMITIVES) ===');
       logger.info('Mixed types', customObject, 'extra-string', 42, { sessionId: 'abc' });
-      console.log('==========================================================');
+
+      const output = spyConsole.lastOutput;
+      expect(output).toBeDefined();
+
+      const actual = JSON.parse(output!);
+      const expected = {
+        level: 'info',
+        message: 'Mixed types',
+        userId: 123,
+        prop: 'value',
+      };
+      expect(actual).toEqual(expected);
     });
 
     it('should verify Winston behavior with custom class as splat (with defaultMeta)', () => {
@@ -259,13 +326,11 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test message', customObject);
       const info = captureTransport.lastInfo;
 
-      console.log('=== CUSTOM CLASS SPLAT ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', customObject);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('===========================');
+      expect(info.userId).toBe(123);
+      expect(info.prop).toBe('value');
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info[SPLAT]).toEqual([new CustomClass('value')]);
     });
 
     it('should verify Winston behavior with custom class as only splat (no defaultMeta)', () => {
@@ -277,12 +342,11 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test message', customObject);
       const info = captureTransport.lastInfo;
 
-      console.log('=== CUSTOM CLASS ONLY SPLAT ===');
-      console.log('splat:', customObject);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('================================');
+      expect(info.prop).toBe('value');
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info[SPLAT]).toEqual([new CustomClass('value')]);
+      expectInfoKeys(info, ['prop', 'level', 'message']);
     });
 
     it('should verify Winston behavior with multiple custom classes as splat (same property name)', () => {
@@ -296,13 +360,12 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test message', customObject1, customObject2);
       const info = captureTransport.lastInfo;
 
-      console.log('=== MULTIPLE CUSTOM CLASS SPLAT (SAME PROP) ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', [customObject1, customObject2]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('===============================================');
+      expect(info.userId).toBe(123);
+      expect(info.prop).toBe('value1');
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info[SPLAT]).toEqual([customObject1, customObject2]);
+      expectInfoKeys(info, ['userId', 'prop', 'level', 'message']);
     });
 
     it('should verify Winston behavior with multiple custom classes as splat (different property names)', () => {
@@ -323,16 +386,16 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test message', customObjectA, customObjectB);
       const info = captureTransport.lastInfo;
 
-      console.log('=== MULTIPLE CUSTOM CLASS SPLAT (DIFFERENT PROPS) ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', [customObjectA, customObjectB]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('====================================================');
+      expect(info.userId).toBe(123);
+      expect(info.propA).toBe('valueA');
+      expect(info.propB).toBeUndefined();
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info[SPLAT]).toEqual([customObjectA, customObjectB]);
+      expectInfoKeys(info, ['userId', 'propA', 'level', 'message']);
     });
 
-    it('should show what Winston console transport prints with custom classes (different property names)', () => {
+    it('should verify console transport merges only first custom class properties', () => {
       class CustomClassA {
         constructor(public propA: string) {}
       }
@@ -340,19 +403,28 @@ describe('Winston defaultMeta behavior verification', () => {
         constructor(public propB: string) {}
       }
 
+      const spyConsole = new SpyConsoleTransport({ format: format.json() });
       const logger = createLogger({
         level: 'info',
-        format: format.json(),
         defaultMeta: { userId: 123 },
-        transports: [new winston.transports.Console()],
+        transports: [spyConsole],
       });
 
       const customObjectA = new CustomClassA('valueA');
       const customObjectB = new CustomClassB('valueB');
-
-      console.log('=== WINSTON CONSOLE OUTPUT (DIFFERENT PROPERTY NAMES) ===');
       logger.info('Multiple custom classes', customObjectA, customObjectB);
-      console.log('=========================================================');
+
+      const output = spyConsole.lastOutput;
+      expect(output).toBeDefined();
+
+      const actual = JSON.parse(output!);
+      const expected = {
+        level: 'info',
+        message: 'Multiple custom classes',
+        userId: 123,
+        propA: 'valueA',
+      };
+      expect(actual).toEqual(expected);
     });
 
     it('should verify Winston behavior with custom class mixed with other types', () => {
@@ -365,74 +437,99 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test message', customObject, 'extra-string', 42, { sessionId: 'abc' });
       const info = captureTransport.lastInfo;
 
-      console.log('=== CUSTOM CLASS MIXED WITH OTHER TYPES ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', [customObject, 'extra-string', 42, { sessionId: 'abc' }]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
+      expect(info.userId).toBe(123);
+      expect(info.prop).toBe('value');
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test message');
+      expect(info.sessionId).toBeUndefined();
+      expect(info[SPLAT]).toEqual([customObject, 'extra-string', 42, { sessionId: 'abc' }]);
+      expectInfoKeys(info, ['userId', 'prop', 'level', 'message']);
     });
   });
 
   describe('Error in splat parameters behavior', () => {
-    it('should show what Winston console transport prints with Error in splat + string', () => {
+    it('should verify console transport excludes stack when Error is in splat + string', () => {
+      const spyConsole = new SpyConsoleTransport({ format: format.json() });
       const logger = createLogger({
         level: 'error',
-        format: format.json(),
         defaultMeta: { userId: 123 },
-        transports: [new winston.transports.Console()],
+        transports: [spyConsole],
       });
 
       const testError = new Error('Test error message');
-
-      console.log('=== WINSTON CONSOLE OUTPUT (ERROR IN SPLAT + STRING) ===');
       logger.error('hello', testError, 'world');
-      console.log('=======================================================');
+
+      const actual = JSON.parse(spyConsole.lastOutput!);
+      const expected = {
+        level: 'error',
+        message: 'hello Test error message',
+        stack: testError.stack,
+        userId: 123,
+      };
+      expect(actual).toEqual(expected);
     });
 
-    it('should show what Winston console transport prints with Error in splat + object', () => {
+    it('should verify console transport includes Error message when Error is in splat', () => {
+      const spyConsole = new SpyConsoleTransport({ format: format.json() });
       const logger = createLogger({
         level: 'error',
-        format: format.json(),
         defaultMeta: { userId: 123 },
-        transports: [new winston.transports.Console()],
+        transports: [spyConsole],
       });
 
       const testError = new Error('Test error message');
-
-      console.log('=== WINSTON CONSOLE OUTPUT (ERROR IN SPLAT + OBJECT) ===');
       logger.error('hello', testError, { my: 'object' });
-      console.log('========================================================');
+
+      const actual = JSON.parse(spyConsole.lastOutput!);
+      const expected = {
+        level: 'error',
+        message: 'hello Test error message',
+        stack: testError.stack,
+        userId: 123,
+      };
+      expect(actual).toEqual(expected);
     });
 
-    it('should show what Winston console transport prints with object + Error (Error as 2nd splat)', () => {
+    it('should verify console transport excludes stack when Error is 2nd splat parameter', () => {
+      const spyConsole = new SpyConsoleTransport({ format: format.json() });
       const logger = createLogger({
         level: 'error',
-        format: format.json(),
         defaultMeta: { userId: 123 },
-        transports: [new winston.transports.Console()],
+        transports: [spyConsole],
       });
 
       const testError = new Error('Test error message');
-
-      console.log('=== WINSTON CONSOLE OUTPUT (OBJECT + ERROR AS 2ND SPLAT) ===');
       logger.error('hello', { my: 'object' }, testError);
-      console.log('============================================================');
+
+      const actual = JSON.parse(spyConsole.lastOutput!);
+      const expected = {
+        level: 'error',
+        message: 'hello',
+        userId: 123,
+        my: 'object',
+      };
+      expect(actual).toEqual(expected);
     });
 
-    it('should show what Winston console transport prints with object + Error + more items', () => {
+    it('should verify console transport only merges first object when Error is in splat', () => {
+      const spyConsole = new SpyConsoleTransport({ format: format.json() });
       const logger = createLogger({
         level: 'error',
-        format: format.json(),
         defaultMeta: { userId: 123 },
-        transports: [new winston.transports.Console()],
+        transports: [spyConsole],
       });
 
       const testError = new Error('Test error message');
-
-      console.log('=== WINSTON CONSOLE OUTPUT (OBJECT + ERROR + MORE) ===');
       logger.error('hello', { my: 'object' }, testError, { another: 'object' }, 'extra');
-      console.log('======================================================');
+
+      const actual = JSON.parse(spyConsole.lastOutput!);
+      const expected = {
+        level: 'error',
+        message: 'hello',
+        userId: 123,
+        my: 'object',
+      };
+      expect(actual).toEqual(expected);
     });
 
     it('should verify Winston behavior with object + Error as 2nd splat', () => {
@@ -445,13 +542,12 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.error('hello', { my: 'object' }, testError);
       const info = captureTransport.lastInfo;
 
-      console.log('=== OBJECT + ERROR AS 2ND SPLAT ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', [{ my: 'object' }, testError]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('===================================');
+      expect(info.userId).toBe(123);
+      expect(info.my).toBe('object');
+      expect(info.level).toBe('error');
+      expect(info.message).toBe('hello');
+      expect(info[SPLAT]).toEqual([{ my: 'object' }, testError]);
+      expectInfoKeys(info, ['userId', 'my', 'level', 'message']);
     });
 
     it('should verify Winston behavior with object + Error + more items', () => {
@@ -464,13 +560,13 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.error('hello', { my: 'object' }, testError, { another: 'object' }, 'extra');
       const info = captureTransport.lastInfo;
 
-      console.log('=== OBJECT + ERROR + MORE ITEMS ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', [{ my: 'object' }, testError, { another: 'object' }, 'extra']);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('===================================');
+      expect(info.userId).toBe(123);
+      expect(info.my).toBe('object');
+      expect(info.level).toBe('error');
+      expect(info.message).toBe('hello');
+      expect(info.another).toBeUndefined();
+      expect(info[SPLAT]).toEqual([{ my: 'object' }, testError, { another: 'object' }, 'extra']);
+      expectInfoKeys(info, ['userId', 'my', 'level', 'message']);
     });
 
     it('should verify Winston behavior with Error as first parameter + primitives', () => {
@@ -483,14 +579,12 @@ describe('Winston defaultMeta behavior verification', () => {
       (logger as any).error(testError, 'hello', 'world');
       const info = captureTransport.lastInfo;
 
-      console.log('=== ERROR + PRIMITIVES SPLAT ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('first param (Error):', testError);
-      console.log('splat:', ['hello', 'world']);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('================================');
+      expect(info.userId).toBe(123);
+      expect(info.level).toBe('error');
+      expect(info.message).toBe(testError);
+      expect(info.stack).toBeUndefined();
+      expect(info[SPLAT]).toEqual(['hello', 'world']);
+      expectInfoKeys(info, ['userId', 'level', 'message']);
     });
 
     it('should verify Winston behavior with Error as first parameter + object', () => {
@@ -503,14 +597,12 @@ describe('Winston defaultMeta behavior verification', () => {
       (logger as any).error(testError, 'hello', { my: 'object' });
       const info = captureTransport.lastInfo;
 
-      console.log('=== ERROR + OBJECT SPLAT ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('first param (Error):', testError);
-      console.log('splat:', ['hello', { my: 'object' }]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('=============================');
+      expect(info.userId).toBe(123);
+      expect(info.level).toBe('error');
+      expect(info.message).toBe(testError);
+      expect(info.my).toBeUndefined();
+      expect(info[SPLAT]).toEqual(['hello', { my: 'object' }]);
+      expectInfoKeys(info, ['userId', 'level', 'message']);
     });
   });
 
@@ -524,13 +616,12 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test', 42, { sessionId: 'abc' });
       const info = captureTransport.lastInfo;
 
-      console.log('=== NUMBER FIRST SPLAT ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', [42, { sessionId: 'abc' }]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('===========================');
+      expect(info.userId).toBe(123);
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test');
+      expect(info.sessionId).toBeUndefined();
+      expect(info[SPLAT]).toEqual([42, { sessionId: 'abc' }]);
+      expectInfoKeys(info, ['userId', 'level', 'message']);
     });
 
     it('should handle string as first splat with object defaultMeta', () => {
@@ -541,13 +632,12 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test', 'hello', { sessionId: 'abc' });
       const info = captureTransport.lastInfo;
 
-      console.log('=== STRING FIRST SPLAT ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', ['hello', { sessionId: 'abc' }]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('===========================');
+      expect(info.userId).toBe(123);
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test');
+      expect(info.sessionId).toBeUndefined();
+      expect(info[SPLAT]).toEqual(['hello', { sessionId: 'abc' }]);
+      expectInfoKeys(info, ['userId', 'level', 'message']);
     });
 
     it('should handle boolean as first splat with object defaultMeta', () => {
@@ -558,13 +648,12 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test', true, { sessionId: 'abc' });
       const info = captureTransport.lastInfo;
 
-      console.log('=== BOOLEAN FIRST SPLAT ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', [true, { sessionId: 'abc' }]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('============================');
+      expect(info.userId).toBe(123);
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test');
+      expect(info.sessionId).toBeUndefined();
+      expect(info[SPLAT]).toEqual([true, { sessionId: 'abc' }]);
+      expectInfoKeys(info, ['userId', 'level', 'message']);
     });
 
     it('should handle null as first splat with object defaultMeta', () => {
@@ -575,13 +664,12 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test', null, { sessionId: 'abc' });
       const info = captureTransport.lastInfo;
 
-      console.log('=== NULL FIRST SPLAT ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', [null, { sessionId: 'abc' }]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('=========================');
+      expect(info.userId).toBe(123);
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test');
+      expect(info.sessionId).toBeUndefined();
+      expect(info[SPLAT]).toEqual([null, { sessionId: 'abc' }]);
+      expectInfoKeys(info, ['userId', 'level', 'message']);
     });
 
     it('should handle Date as first splat with object defaultMeta', () => {
@@ -593,13 +681,12 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test', testDate, { sessionId: 'abc' });
       const info = captureTransport.lastInfo;
 
-      console.log('=== DATE FIRST SPLAT ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', [testDate, { sessionId: 'abc' }]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('=========================');
+      expect(info.userId).toBe(123);
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test');
+      expect(info.sessionId).toBeUndefined();
+      expect(info[SPLAT]).toEqual([testDate, { sessionId: 'abc' }]);
+      expectInfoKeys(info, ['userId', 'level', 'message']);
     });
 
     it('should handle array as first splat with object defaultMeta', () => {
@@ -610,13 +697,15 @@ describe('Winston defaultMeta behavior verification', () => {
       logger.info('test', [1, 2, 3], { sessionId: 'abc' });
       const info = captureTransport.lastInfo;
 
-      console.log('=== ARRAY FIRST SPLAT ===');
-      console.log('defaultMeta:', { userId: 123 });
-      console.log('splat:', [[1, 2, 3], { sessionId: 'abc' }]);
-      console.log('Winston info:', JSON.stringify(info, null, 2));
-      console.log('Info keys:', Object.keys(info));
-      console.log('Splat symbol:', info[SPLAT]);
-      console.log('==========================');
+      expect(info.userId).toBe(123);
+      expect(info.level).toBe('info');
+      expect(info.message).toBe('test');
+      expect(info['0']).toBe(1);
+      expect(info['1']).toBe(2);
+      expect(info['2']).toBe(3);
+      expect(info.sessionId).toBeUndefined();
+      expect(info[SPLAT]).toEqual([[1, 2, 3], { sessionId: 'abc' }]);
+      expectInfoKeys(info, ['userId', 'level', 'message', '0', '1', '2']);
     });
   });
 });
