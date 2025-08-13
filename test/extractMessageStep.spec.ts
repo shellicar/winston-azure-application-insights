@@ -1,10 +1,11 @@
 import { SPLAT } from 'triple-beam';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { createLogger } from 'winston';
 import { ApplicationInsightsTransport } from '../src/ApplicationInsightsTransport';
 import { extractMessageStep } from '../src/extractMessageStep';
 import type { WinstonInfo } from '../src/types';
-import type { TelemetryData } from '../src/types';
+import { createWinstonInfoFromErrorOnly } from './createWinstonInfoFromErrorOnly';
+import { createWinstonInfo } from './createWinstonInfoWithErrorInSplat';
 import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
 describe('extractMessageStep', () => {
@@ -19,8 +20,7 @@ describe('extractMessageStep', () => {
       [SPLAT]: [{ message: 'world' }],
     };
 
-    const result = extractMessageStep(info);
-    const actual = result.message;
+    const actual = extractMessageStep(info);
 
     expect(actual).toBe(expected);
   });
@@ -32,8 +32,7 @@ describe('extractMessageStep', () => {
       [SPLAT]: [{ message: 'universe' }],
     };
 
-    const result = extractMessageStep(info);
-    const actual = result.message;
+    const actual = extractMessageStep(info);
     const expected = 'goodbye';
 
     expect(actual).toBe(expected);
@@ -48,8 +47,7 @@ describe('extractMessageStep', () => {
       [SPLAT]: [{ message: { x: '5' } }],
     };
 
-    const result = extractMessageStep(info);
-    const actual = result.message;
+    const actual = extractMessageStep(info);
 
     expect(actual).toBe(expected);
   });
@@ -63,8 +61,7 @@ describe('extractMessageStep', () => {
       [SPLAT]: [{ message: 50 }],
     };
 
-    const result = extractMessageStep(info);
-    const actual = result.message;
+    const actual = extractMessageStep(info);
 
     expect(actual).toBe(expected);
   });
@@ -78,8 +75,7 @@ describe('extractMessageStep', () => {
       [SPLAT]: [{ message: null }],
     };
 
-    const result = extractMessageStep(info);
-    const actual = result.message;
+    const actual = extractMessageStep(info);
 
     expect(actual).toBe(expected);
   });
@@ -105,8 +101,7 @@ describe('extractMessageStep', () => {
       [SPLAT]: [meta],
     };
 
-    const result = extractMessageStep(info);
-    const actual = result.message;
+    const actual = extractMessageStep(info);
 
     expect(actual).toBe(expected);
   });
@@ -119,8 +114,7 @@ describe('extractMessageStep', () => {
       message: 'hello world',
     };
 
-    const result = extractMessageStep(info);
-    const actual = result.message;
+    const actual = extractMessageStep(info);
 
     expect(actual).toBe(expected);
   });
@@ -145,99 +139,128 @@ describe('extractMessageStep', () => {
       [SPLAT]: [new Error('2'), new Error('3')],
     };
 
-    const result = extractMessageStep(info);
-    const actual = result.message;
+    const actual = extractMessageStep(info);
 
     expect(actual).toBe(expected);
   });
 
-  it('should handle Error as first parameter in splat', () => {
-    const error = new Error('Database error');
+  it('should handle Error object as message when info is Error instance (from winston behavior)', () => {
+    const expected = 'Database connection failed';
 
-    const info: WinstonInfo = {
-      level: 'error',
-      message: 'Error: Database error', // What Winston might generate
-      [SPLAT]: [error],
-    };
+    const testError = new Error('Database connection failed');
+    const info = createWinstonInfoFromErrorOnly(testError);
 
-    const result = extractMessageStep(info);
-    const actual = result.message;
+    const actual = extractMessageStep(info);
 
-    // TODO: Determine what the expected behavior should be
-    console.log('Extract message result when Error is first param:', actual);
+    expect(actual).toBeTypeOf('string');
+    expect(actual).toBe(expected);
+  });
+
+  it('should extract original message when Error is in first splat position (from winston behavior)', () => {
+    const expected = 'Connection failed';
+
+    const testError = new Error('Database error');
+    const info = createWinstonInfo({ message: 'Connection failed', level: 'error' }, testError);
+
+    const actual = extractMessageStep(info);
+
+    expect(actual).toBe(expected);
+  });
+
+  it('should extract original message when Error is in first splat position with extra data (from winston behavior)', () => {
+    const expected = 'Connection failed';
+
+    const testError = new Error('Database error');
+    const info = createWinstonInfo({ message: 'Connection failed', level: 'error', [SPLAT]: ['extra data'] }, testError);
+
+    const actual = extractMessageStep(info);
+
+    expect(actual).toBe(expected);
   });
 
   describe('Edge cases with non-string message', () => {
     it('should convert number to string', () => {
+      const expected = '42';
+
       const info: WinstonInfo = {
         level: 'error',
-        message: 42 as any,
+        message: 42,
         [SPLAT]: [],
       };
 
-      const result = extractMessageStep(info);
+      const actual = extractMessageStep(info);
 
-      expect(result.message).toBe('42');
+      expect(actual).toBe(expected);
     });
 
     it('should convert null to string', () => {
+      const expected = 'null';
+
       const info: WinstonInfo = {
         level: 'error',
-        message: null as any,
+        message: null,
         [SPLAT]: [],
       };
 
-      const result = extractMessageStep(info);
+      const actual = extractMessageStep(info);
 
-      expect(result.message).toBe('null');
+      expect(actual).toBe(expected);
     });
 
     it('should convert undefined to string', () => {
+      const expected = 'undefined';
+
       const info: WinstonInfo = {
         level: 'error',
-        message: undefined as any,
+        message: undefined,
         [SPLAT]: [],
       };
 
-      const result = extractMessageStep(info);
+      const actual = extractMessageStep(info);
 
-      expect(result.message).toBe('undefined');
+      expect(actual).toBe(expected);
     });
 
     it('should convert object to string', () => {
+      const expected = '[object Object]';
+
       const info: WinstonInfo = {
         level: 'error',
-        message: { foo: 'bar', baz: 123 } as any,
+        message: { foo: 'bar', baz: 123 },
         [SPLAT]: [],
       };
 
-      const result = extractMessageStep(info);
+      const actual = extractMessageStep(info);
 
-      expect(result.message).toBe('[object Object]');
+      expect(actual).toBe(expected);
     });
 
     it('should convert array to string', () => {
+      const expected = '1,2,3';
+
       const info: WinstonInfo = {
         level: 'error',
-        message: [1, 2, 3] as any,
+        message: [1, 2, 3],
         [SPLAT]: [],
       };
 
-      const result = extractMessageStep(info);
+      const actual = extractMessageStep(info);
 
-      expect(result.message).toBe('1,2,3');
+      expect(actual).toBe(expected);
     });
 
     it('should convert boolean to string', () => {
+      const expected = 'true';
+
       const info: WinstonInfo = {
         level: 'error',
-        message: true as any,
+        message: true,
         [SPLAT]: [],
       };
 
-      const result = extractMessageStep(info);
+      const actual = extractMessageStep(info);
 
-      expect(result.message).toBe('true');
+      expect(actual).toBe(expected);
     });
   });
 });

@@ -61,20 +61,16 @@ type MakeNever<T> = {
   [K in keyof T]?: never;
 };
 
-interface BaseWinstonInfo {
+export interface BaseWinstonInfo {
   level: string;
   [SPLAT]?: unknown[];
   [key: string]: unknown;
 }
 
-// For regular Winston info (most common case)
-interface RegularWinstonInfo extends BaseWinstonInfo, MakeNever<Omit<Error, 'message'>> {
-  message: string;
+export interface RegularWinstonInfo extends BaseWinstonInfo, MakeNever<Omit<Error, 'message'>> {
+  message: unknown;
 }
-
-interface ErrorWinstonInfo extends BaseWinstonInfo, Error {}
-
-// WinstonInfo can be either case
+export interface ErrorWinstonInfo extends BaseWinstonInfo, Error {}
 export type WinstonInfo = RegularWinstonInfo | ErrorWinstonInfo;
 
 export interface SeverityMapping {

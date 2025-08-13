@@ -61,13 +61,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [SPLAT]: ['string', 42, properties1, error, null, properties2, true],
       };
 
-      it('should return defaultMeta when first splat item is primitive', () => {
-        const result = extractPropertiesStep(info);
-        const expected = {};
-        expect(result).toEqual(expected);
-      });
-
-      it('should return defaultMeta when first splat item is primitive ignoring later objects', () => {
+      it('should return empty object when first splat item is primitive, ignoring later objects', () => {
         const result = extractPropertiesStep(info);
         const expected = {};
         expect(result).toEqual(expected);

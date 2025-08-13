@@ -1,3 +1,4 @@
+import { inspect } from 'node:util';
 import { beforeEach } from 'vitest';
 import TransportStream from 'winston-transport';
 import type { WinstonInfo } from '../../src';
@@ -16,7 +17,8 @@ export class SpyWinstonTransport extends TransportStream {
   }
 
   override log(info: WinstonInfo, next: () => void) {
-    this.capturedWinstonInfo.push({ ...info });
+    console.log('SpyWinstonTransport log called with info:', inspect(info, { depth: null, colors: true }));
+    this.capturedWinstonInfo.push(info);
     next();
   }
 

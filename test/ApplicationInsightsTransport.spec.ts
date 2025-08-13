@@ -133,7 +133,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       transports: [transport],
     });
 
-    it('should work as a winston transport', () => {
+    it('should successfully initialize and accept log calls without throwing', () => {
       const actual = () => logger.info('test message');
 
       expect(actual).not.toThrow();

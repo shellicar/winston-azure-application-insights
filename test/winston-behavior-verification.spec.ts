@@ -2,6 +2,8 @@ import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { createLogger, format } from 'winston';
 import type { WinstonInfo } from '../src';
+import { createWinstonInfoFromErrorOnly } from './createWinstonInfoFromErrorOnly';
+import { createWinstonInfo } from './createWinstonInfoWithErrorInSplat';
 import { SpyConsoleTransport } from './spies/SpyConsoleTransport';
 import { SpyWinstonTransport } from './spies/SpyWinstonTransport';
 
@@ -11,8 +13,14 @@ function expectInfoKeys(info: WinstonInfo, expectedKeys: string[]) {
   expect(actualKeys).toEqual(sortedExpectedKeys);
 }
 
-function expectInfoEntries(info: WinstonInfo, expectedObject: object | string) {
+function expectInfoEntries(info: WinstonInfo, expectedObject: WinstonInfo) {
+  const expectedSplat = expectedObject[SPLAT];
+  const actualSplat = info[SPLAT];
+
+  expect(actualSplat).toEqual(expectedSplat);
+
   for (const [key, value] of Object.entries(expectedObject)) {
+    console.log('Expecting key:', key, 'to have value:', value);
     expect(info[key]).toBe(value);
   }
 }
@@ -335,7 +343,8 @@ describe('Winston behavior verification', () => {
         });
 
         const testError = new Error('Test error message');
-        (logger as any).error(testError, 'hello', 'world');
+        // @ts-expect-error - Argument of type 'Error' is not assignable to parameter of type 'string'.
+        logger.error(testError, 'hello', 'world');
         const info = captureTransport.lastInfo;
 
         expect(info.userId).toBe(123);
@@ -353,7 +362,8 @@ describe('Winston behavior verification', () => {
         });
 
         const testError = new Error('Test error message');
-        (logger as any).error(testError, 'hello', { my: 'object' });
+        // @ts-expect-error - Argument of type 'Error' is not assignable to parameter of type 'string'.
+        logger.error(testError, 'hello', { my: 'object' });
         const info = captureTransport.lastInfo;
 
         expect(info.userId).toBe(123);
@@ -362,6 +372,113 @@ describe('Winston behavior verification', () => {
         expect(info.my).toBeUndefined();
         expect(info[SPLAT]).toEqual(['hello', { my: 'object' }]);
         expectInfoKeys(info, ['userId', 'level', 'message']);
+      });
+
+      it('should use Error object as message when Error is only parameter', () => {
+        const logger = createLogger({
+          defaultMeta: { userId: 123 },
+          transports: [captureTransport],
+        });
+
+        const testError = new Error('Database connection failed');
+        logger.error(testError);
+        const actual = captureTransport.lastInfo;
+
+        const expected = createWinstonInfoFromErrorOnly(testError, {
+          level: 'error',
+          userId: 123,
+        });
+
+        expect(actual.message).toBeTypeOf('string');
+        expect(actual).toBeInstanceOf(Error);
+        expect(actual).toBeTypeOf('object');
+
+        expectInfoEntries(actual, expected);
+      });
+
+      it('should preserve string message and put Error in first SPLAT position when string message comes first, with only Error in splat', () => {
+        const logger = createLogger({
+          defaultMeta: { userId: 123 },
+          transports: [captureTransport],
+        });
+
+        const testError = new Error('Database connection failed');
+        logger.error('Connection failed', testError);
+        const actual = captureTransport.lastInfo;
+
+        const expected = createWinstonInfo(
+          {
+            userId: 123,
+            level: 'error',
+            message: 'Connection failed',
+          },
+          testError,
+        );
+
+        expect(actual.message).toBeTypeOf('string');
+        expect(actual).not.toBeInstanceOf(Error);
+        expect(actual).toBeTypeOf('object');
+
+        expectInfoEntries(actual, expected);
+      });
+
+      it('new test #1', () => {
+        const logger = createLogger({
+          defaultMeta: { userId: 123 },
+          transports: [captureTransport],
+        });
+
+        const testError = new Error('Database connection failed');
+        logger.error('Connection failed', testError, 'extra data');
+        const actual = captureTransport.lastInfo;
+
+        const expected = createWinstonInfo(
+          {
+            userId: 123,
+            level: 'error',
+            message: 'Connection failed',
+            [SPLAT]: ['extra data'],
+          },
+          testError,
+        );
+        // const expected = {
+        //   userId: 123,
+        //   level: 'error',
+        //   message: 'Connection failed Database connection failed',
+        //   [SPLAT]: [testError, 'extra data'],
+        // } satisfies WinstonInfo;
+
+        console.log('Actual splat:', actual[SPLAT]);
+
+        expect(actual.message).toBeTypeOf('string');
+        expect(actual).not.toBeInstanceOf(Error);
+        expect(actual).toBeTypeOf('object');
+
+        expectInfoEntries(actual, expected);
+      });
+
+      it('new test #2', () => {
+        const logger = createLogger({
+          defaultMeta: { userId: 123 },
+          transports: [captureTransport],
+        });
+
+        const testError = new Error('Database connection failed');
+        logger.error('Connection failed', 'extra data', testError);
+        const actual = captureTransport.lastInfo;
+
+        const expected = {
+          level: 'error',
+          message: 'Connection failed',
+          userId: 123,
+          [SPLAT]: ['extra data', testError],
+        } satisfies WinstonInfo;
+
+        expect(actual.message).toBeTypeOf('string');
+        expect(actual).not.toBeInstanceOf(Error);
+        expect(actual).toBeTypeOf('object');
+
+        expectInfoEntries(actual, expected);
       });
     });
   });
@@ -380,6 +497,7 @@ describe('Winston behavior verification', () => {
         expect(info.level).toBe('info');
         expect(info.message).toBe('defaultMeta message');
         expect(info[SPLAT]).toBeUndefined();
+
         expectInfoKeys(info, ['userId', 'message', 'level']);
       });
     });
@@ -524,7 +642,7 @@ describe('Winston behavior verification', () => {
         expect(info[SPLAT]).toBeUndefined();
 
         expectInfoKeys(info, ['0', '1', '10', '2', '3', '4', '5', '6', '7', '8', '9', 'message', 'level']);
-        expectInfoEntries(info, expected);
+        expectInfoEntries(info, expected as unknown as WinstonInfo);
       });
 
       it('should ignore boolean defaultMeta and not extract any properties', () => {

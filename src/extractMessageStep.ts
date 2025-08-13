@@ -1,7 +1,7 @@
 import { SPLAT } from 'triple-beam';
 import type { WinstonInfo } from './types';
 
-export const extractMessageStep = (info: WinstonInfo): WinstonInfo => {
+export const extractMessageStep = (info: WinstonInfo): string => {
   const messageAsString = String(info.message);
 
   const splat = info[SPLAT];
@@ -11,15 +11,9 @@ export const extractMessageStep = (info: WinstonInfo): WinstonInfo => {
     const expectedSuffix = ` ${meta.message}`;
 
     if (messageAsString.endsWith(expectedSuffix)) {
-      return {
-        ...info,
-        message: messageAsString.slice(0, -expectedSuffix.length),
-      };
+      return messageAsString.slice(0, -expectedSuffix.length);
     }
   }
 
-  return {
-    ...info,
-    message: messageAsString,
-  };
+  return messageAsString;
 };

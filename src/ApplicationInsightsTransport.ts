@@ -47,7 +47,7 @@ export class ApplicationInsightsTransport extends TransportStream {
     const severity = extractSeverityStep(info, this.options.severityMapping, this.levels);
 
     return {
-      message: message.message,
+      message: message,
       properties,
       severity,
     };
