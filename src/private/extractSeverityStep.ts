@@ -1,5 +1,6 @@
-import { TelemetrySeverity } from './enums';
-import type { SeverityMapping, WinstonInfo, WinstonLevels } from './types';
+import { TelemetrySeverity } from '../public/enums';
+import type { SeverityMapping, WinstonLevels } from '../public/types';
+import type { WinstonInfo } from './types';
 
 export const extractSeverityStep = (info: WinstonInfo, severityMapping: SeverityMapping, levels?: WinstonLevels): TelemetrySeverity => {
   const directMapping = severityMapping[info.level];

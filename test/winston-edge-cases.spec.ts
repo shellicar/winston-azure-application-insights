@@ -1,7 +1,7 @@
 import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { createLogger } from 'winston';
-import { ApplicationInsightsTransport } from '../src/ApplicationInsightsTransport';
+import { ApplicationInsightsTransport } from '../src/private/ApplicationInsightsTransport';
 import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
 describe('ApplicationInsightsTransport edge case handling', () => {

@@ -1,4 +1,4 @@
-import { ApplicationInsightsTransport } from './ApplicationInsightsTransport';
+import { ApplicationInsightsTransport } from '../private/ApplicationInsightsTransport';
 import { createTelemetryHandler } from './createTelemetryHandler';
 import type { CreateApplicationInsightsTransportOptions } from './types';
 

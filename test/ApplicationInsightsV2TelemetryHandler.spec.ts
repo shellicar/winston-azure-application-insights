@@ -1,8 +1,8 @@
 import { type ExceptionTelemetry, SeverityLevel, type TraceTelemetry } from 'applicationinsightsv2/out/Declarations/Contracts';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { ApplicationInsightsV2TelemetryHandler } from '../src/ApplicationInsightsV2TelemetryHandler';
-import { TelemetrySeverity } from '../src/enums';
-import type { TelemetryDataException } from '../src/types';
+import { ApplicationInsightsV2TelemetryHandler } from '../src/private/ApplicationInsightsV2TelemetryHandler';
+import { TelemetrySeverity } from '../src/public/enums';
+import type { TelemetryDataException } from '../src/public/types';
 import { SpyTelemetryClientV2 } from './spies/SpyTelemetryClientV2';
 
 describe('ApplicationInsightsV2TelemetryHandler', () => {
@@ -274,100 +274,5 @@ describe('ApplicationInsightsV2TelemetryHandler', () => {
 
       expect(actual).toEqual(expected);
     });
-  });
-
-  it('should not send trace when trace filter returns false', () => {
-    const client = new SpyTelemetryClientV2();
-    const handler = new ApplicationInsightsV2TelemetryHandler({
-      client,
-      traceFilter: () => false,
-    });
-
-    handler.handleTelemetry({
-      exceptions: [],
-      trace: {
-        message: 'test',
-        properties: {},
-        severity: TelemetrySeverity.Information,
-      },
-    });
-
-    const actual = client.traces.length;
-    const expected = 0;
-    expect(actual).toBe(expected);
-  });
-
-  it('should pass correct trace telemetry to trace filter', () => {
-    const client = new SpyTelemetryClientV2();
-    let capturedTraceTelemetry: TraceTelemetry | undefined;
-
-    const handler = new ApplicationInsightsV2TelemetryHandler({
-      client,
-      traceFilter: (trace) => {
-        capturedTraceTelemetry = trace;
-        return true;
-      },
-    });
-
-    handler.handleTelemetry({
-      exceptions: [],
-      trace: {
-        message: 'test message',
-        properties: { userId: 123 },
-        severity: TelemetrySeverity.Information,
-      },
-    });
-
-    const actual = capturedTraceTelemetry?.message;
-    const expected = 'test message';
-    expect(actual).toBe(expected);
-  });
-
-  it('should not send exception when exception filter returns false', () => {
-    const client = new SpyTelemetryClientV2();
-    const handler = new ApplicationInsightsV2TelemetryHandler({
-      client,
-      exceptionFilter: () => false,
-    });
-
-    const error = new Error('test error');
-    handler.handleTelemetry({
-      exceptions: [{ exception: error, properties: {} }],
-      trace: {
-        message: 'test',
-        properties: {},
-        severity: TelemetrySeverity.Error,
-      },
-    });
-
-    const actual = client.exceptions.length;
-    const expected = 0;
-    expect(actual).toBe(expected);
-  });
-
-  it('should pass correct exception telemetry to exception filter', () => {
-    const client = new SpyTelemetryClientV2();
-    let capturedExceptionTelemetry: ExceptionTelemetry | undefined;
-
-    const handler = new ApplicationInsightsV2TelemetryHandler({
-      client,
-      exceptionFilter: (exception) => {
-        capturedExceptionTelemetry = exception;
-        return true;
-      },
-    });
-
-    const error = new Error('test error');
-    handler.handleTelemetry({
-      exceptions: [{ exception: error, properties: {} }],
-      trace: {
-        message: 'test message',
-        properties: { userId: 123 },
-        severity: TelemetrySeverity.Error,
-      },
-    });
-
-    const actual = capturedExceptionTelemetry?.exception;
-    expect(actual).toBe(error);
   });
 });

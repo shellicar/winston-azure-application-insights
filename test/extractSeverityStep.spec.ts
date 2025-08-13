@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { config, createLogger } from 'winston';
-import { ApplicationInsightsTransport } from '../src/ApplicationInsightsTransport';
-import { defaultSeverityMapping } from '../src/consts';
-import { TelemetrySeverity } from '../src/enums';
-import { extractSeverityStep } from '../src/extractSeverityStep';
-import type { SeverityMapping, TelemetryData, WinstonInfo, WinstonLevels } from '../src/types';
+import { ApplicationInsightsTransport } from '../src/private/ApplicationInsightsTransport';
+import { defaultSeverityMapping } from '../src/private/consts';
+import { extractSeverityStep } from '../src/private/extractSeverityStep';
+import { TelemetrySeverity } from '../src/public/enums';
+import type { SeverityMapping } from '../src/public/types';
 import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
 describe('extractSeverityStep', () => {

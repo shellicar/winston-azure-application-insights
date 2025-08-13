@@ -1,5 +1,5 @@
-import { ApplicationInsightsV2TelemetryHandler } from './ApplicationInsightsV2TelemetryHandler';
-import { ApplicationInsightsV3TelemetryHandler } from './ApplicationInsightsV3TelemetryHandler';
+import { ApplicationInsightsV2TelemetryHandler } from '../private/ApplicationInsightsV2TelemetryHandler';
+import { ApplicationInsightsV3TelemetryHandler } from '../private/ApplicationInsightsV3TelemetryHandler';
 import type { CreateTelemetryHandlerOptions, TelemetryHandler } from './types';
 
 export const createTelemetryHandler = (options: CreateTelemetryHandlerOptions): TelemetryHandler => {
@@ -7,15 +7,11 @@ export const createTelemetryHandler = (options: CreateTelemetryHandlerOptions): 
     case 2: {
       return new ApplicationInsightsV2TelemetryHandler({
         client: options.client,
-        traceFilter: options.traceFilter,
-        exceptionFilter: options.exceptionFilter,
       });
     }
     case 3: {
       return new ApplicationInsightsV3TelemetryHandler({
         client: options.client,
-        traceFilter: options.traceFilter,
-        exceptionFilter: options.exceptionFilter,
       });
     }
   }

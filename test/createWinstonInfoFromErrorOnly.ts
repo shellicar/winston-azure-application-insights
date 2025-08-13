@@ -1,5 +1,5 @@
 import type { WinstonInfo } from '../src';
-import type { BaseWinstonInfo } from '../src/types';
+import type { BaseWinstonInfo } from '../src/private/types';
 
 /**
  * Creates a WinstonInfo object that matches Winston's behaviour when logging an Error as the only parameter.

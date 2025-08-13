@@ -1,5 +1,5 @@
-import { TelemetrySeverity } from './enums';
-import type { SeverityMapping } from './types';
+import { TelemetrySeverity } from '../public/enums';
+import type { SeverityMapping } from '../public/types';
 
 export const defaultSeverityMapping: SeverityMapping = {
   error: TelemetrySeverity.Error,

@@ -1,9 +1,9 @@
 import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { createLogger } from 'winston';
-import { ApplicationInsightsTransport } from '../src/ApplicationInsightsTransport';
-import { extractMessageStep } from '../src/extractMessageStep';
-import type { WinstonInfo } from '../src/types';
+import { ApplicationInsightsTransport } from '../src/private/ApplicationInsightsTransport';
+import { extractMessageStep } from '../src/private/extractMessageStep';
+import type { WinstonInfo } from '../src/private/types';
 import { createWinstonInfoFromErrorOnly } from './createWinstonInfoFromErrorOnly';
 import { createWinstonInfo } from './createWinstonInfoWithErrorInSplat';
 import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';

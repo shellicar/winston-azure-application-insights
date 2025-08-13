@@ -1,45 +1,13 @@
-import type { TelemetryClient as TelemetryClientV2 } from 'applicationinsightsv2';
-import type { ExceptionTelemetry as ExceptionTelemetryV2, TraceTelemetry as TraceTelemetryV2 } from 'applicationinsightsv2/out/Declarations/Contracts';
-import type { ExceptionTelemetry as ExceptionTelemetryV3, TelemetryClient as TelemetryClientV3, TraceTelemetry as TraceTelemetryV3 } from 'applicationinsightsv3';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createLogger } from 'winston';
-import { ApplicationInsightsTransport } from '../src/ApplicationInsightsTransport';
-import { ApplicationInsightsV2TelemetryHandler } from '../src/ApplicationInsightsV2TelemetryHandler';
-import { ApplicationInsightsV3TelemetryHandler } from '../src/ApplicationInsightsV3TelemetryHandler';
-import type { TelemetryHandler } from '../src/types';
+import { ApplicationInsightsTransport } from '../src/private/ApplicationInsightsTransport';
+import { ApplicationInsightsV2TelemetryHandler } from '../src/private/ApplicationInsightsV2TelemetryHandler';
+import { ApplicationInsightsV3TelemetryHandler } from '../src/private/ApplicationInsightsV3TelemetryHandler';
+import { createTelemetryHandler } from '../src/public/createTelemetryHandler';
+import type { IExceptionTelemetryFilter, ITraceTelemetryFilter, TelemetryDataException, TelemetryDataTrace } from '../src/public/types';
 import { SpyTelemetryClientV2 } from './spies/SpyTelemetryClientV2';
 import { SpyTelemetryClientV3 } from './spies/SpyTelemetryClientV3';
 import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
-
-type TelemetryHandlerConfig =
-  | {
-      version: 2;
-      client: TelemetryClientV2;
-      traceFilter?: (trace: TraceTelemetryV2) => boolean;
-      exceptionFilter?: (exception: ExceptionTelemetryV2) => boolean;
-    }
-  | {
-      version: 3;
-      client: TelemetryClientV3;
-      traceFilter?: (trace: TraceTelemetryV3) => boolean;
-      exceptionFilter?: (exception: ExceptionTelemetryV3) => boolean;
-    };
-
-function createTelemetryHandler(config: TelemetryHandlerConfig): TelemetryHandler {
-  if (config.version === 2) {
-    return new ApplicationInsightsV2TelemetryHandler({
-      client: config.client,
-      traceFilter: config.traceFilter,
-      exceptionFilter: config.exceptionFilter,
-    });
-  }
-
-  return new ApplicationInsightsV3TelemetryHandler({
-    client: config.client,
-    traceFilter: config.traceFilter,
-    exceptionFilter: config.exceptionFilter,
-  });
-}
 
 describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK', () => {
   describe('V2 Integration', () => {
@@ -78,9 +46,8 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
       client = new SpyTelemetryClientV2();
       handler = new ApplicationInsightsV2TelemetryHandler({
         client,
-        traceFilter: (trace) => trace.message !== 'filtered',
       });
-      transport = new ApplicationInsightsTransport({ telemetryHandler: handler });
+      transport = new ApplicationInsightsTransport({ telemetryHandler: handler, traceFilter: (trace) => trace.message !== 'filtered' });
       logger = createLogger({ transports: [transport] });
 
       logger.info('allowed');
@@ -109,7 +76,7 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
       logger.info('Hello from V3');
 
       expect(client.traces).toHaveLength(1);
-      expect(client.traces[0].message).toBe('Hello from V3');
+      expect(client.traces[0]?.message).toBe('Hello from V3');
       expect(client.exceptions).toHaveLength(0);
     });
 
@@ -118,18 +85,15 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
       logger.error('Error occurred', error);
 
       expect(client.traces).toHaveLength(1);
-      expect(client.traces[0].message).toBe('Error occurred');
+      expect(client.traces[0]?.message).toBe('Error occurred');
       expect(client.exceptions).toHaveLength(1);
-      expect(client.exceptions[0].exception).toBe(error);
+      expect(client.exceptions[0]?.exception).toBe(error);
     });
 
     it('should apply exception filter in full pipeline', () => {
       client = new SpyTelemetryClientV3();
-      handler = new ApplicationInsightsV3TelemetryHandler({
-        client,
-        exceptionFilter: (exception) => exception.exception.message !== 'filtered error',
-      });
-      transport = new ApplicationInsightsTransport({ telemetryHandler: handler });
+      handler = new ApplicationInsightsV3TelemetryHandler({ client });
+      transport = new ApplicationInsightsTransport({ telemetryHandler: handler, exceptionFilter: (exception) => exception.exception.message !== 'filtered error' });
       logger = createLogger({ transports: [transport] });
 
       const allowedError = new Error('allowed error');
@@ -138,8 +102,10 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
       logger.error('First error', allowedError);
       logger.error('Second error', filteredError);
 
+      console.log('Exceptions:', client.exceptions);
+
       expect(client.exceptions).toHaveLength(1);
-      expect(client.exceptions[0].exception).toBe(allowedError);
+      expect(client.exceptions[0]?.exception).toBe(allowedError);
     });
   });
 
@@ -171,16 +137,16 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
     it('should call trace filter when logging through factory-created V2 handler', () => {
       const client = new SpyTelemetryClientV2();
       let filterCalled = false;
-      let capturedTrace: TraceTelemetryV2 | undefined;
+      let capturedTrace: TelemetryDataTrace | undefined;
 
-      const traceFilter = (trace: TraceTelemetryV2) => {
+      const traceFilter: ITraceTelemetryFilter = (trace: TelemetryDataTrace) => {
         filterCalled = true;
         capturedTrace = trace;
         return true;
       };
 
-      const handler = createTelemetryHandler({ version: 2, client, traceFilter });
-      const transport = new ApplicationInsightsTransport({ telemetryHandler: handler });
+      const handler = createTelemetryHandler({ version: 2, client });
+      const transport = new ApplicationInsightsTransport({ telemetryHandler: handler, traceFilter });
       const logger = createLogger({ transports: [transport] });
 
       logger.warn('Filter test message');
@@ -193,16 +159,16 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
     it('should call exception filter when logging error through factory-created V3 handler', () => {
       const client = new SpyTelemetryClientV3();
       let filterCalled = false;
-      let capturedException: ExceptionTelemetryV3 | undefined;
+      let capturedException: TelemetryDataException | undefined;
 
-      const exceptionFilter = (exception: ExceptionTelemetryV3) => {
+      const exceptionFilter: IExceptionTelemetryFilter = (exception: TelemetryDataException) => {
         filterCalled = true;
         capturedException = exception;
         return true;
       };
 
-      const handler = createTelemetryHandler({ version: 3, client, exceptionFilter });
-      const transport = new ApplicationInsightsTransport({ telemetryHandler: handler });
+      const handler = createTelemetryHandler({ version: 3, client });
+      const transport = new ApplicationInsightsTransport({ telemetryHandler: handler, exceptionFilter });
       const logger = createLogger({ transports: [transport] });
 
       const testError = new Error('Test exception');

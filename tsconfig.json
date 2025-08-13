@@ -10,7 +10,8 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "noUncheckedIndexedAccess": false
   },
   "exclude": ["dist/", "node_modules"],
   "include": ["**/*.ts", "test/**/*.spec.ts"]

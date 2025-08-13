@@ -60,6 +60,14 @@ const logger = createWinstonLogger({
 - **Changed**: `levels` option renamed to `severityMapping`
 - **Changed**: Filter functions now use separate `traceFilter`/`exceptionFilter` options
 
+#### Extensibility Features
+
+- **Custom Error Detection**: Implement your own `isError` function to define what counts as an error
+- **Severity Mapping**: Override default Winston level to Application Insights severity mappings
+- **Telemetry Filtering**: Apply custom filters to traces and exceptions before sending
+- **Custom Telemetry Handlers**: Implement your own telemetry processing logic
+- **Pluggable Architecture**: Mix and match components for custom logging solutions
+
 ### Added
 
 - Factory functions for simpler setup
@@ -69,6 +77,10 @@ const logger = createWinstonLogger({
 - Object.create(null) support for GraphQL/Apollo compatibility
 - Enhanced property extraction from splat parameters and defaultMeta
 - Comprehensive test suite (215 tests)
+- Extensible error detection with custom `isError` functions
+- Customizable severity mapping for Winston levels
+- Flexible trace and exception filtering
+- Support for custom telemetry handlers
 
 ### Changed
 

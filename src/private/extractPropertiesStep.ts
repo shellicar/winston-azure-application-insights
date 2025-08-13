@@ -1,7 +1,8 @@
 import { SPLAT } from 'triple-beam';
+import type { IsError, TelemetryDataProperties } from '../public/types';
 import { convertNullPrototypeToRegularObject } from './convertNullPrototypeToRegularObject';
 import { isPlainObject } from './isPlainObject';
-import type { IsError, TelemetryDataProperties, WinstonInfo } from './types';
+import type { WinstonInfo } from './types';
 
 const extractNonSymbolProps = (obj: Record<string | symbol, unknown>): Record<string, unknown> | null => {
   const entries = Object.entries(obj);

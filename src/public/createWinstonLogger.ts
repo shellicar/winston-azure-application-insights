@@ -1,6 +1,6 @@
 import { config, createLogger, format, transports } from 'winston';
 import type TransportStream from 'winston-transport';
-import { ApplicationInsightsTransport } from './ApplicationInsightsTransport';
+import { ApplicationInsightsTransport } from '../private/ApplicationInsightsTransport';
 import { createTelemetryHandler } from './createTelemetryHandler';
 import { isRunningLocally } from './isRunningLocally';
 import type { CreateWinstonLoggerOptions } from './types';

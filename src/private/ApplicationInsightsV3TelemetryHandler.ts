@@ -1,12 +1,10 @@
 import type { ExceptionTelemetry, TelemetryClient, TraceTelemetry } from 'applicationinsightsv3';
 import { KnownSeverityLevel } from 'applicationinsightsv3';
-import { TelemetrySeverity } from './enums';
-import type { TelemetryData, TelemetryHandler } from './types';
+import { TelemetrySeverity } from '../public/enums';
+import type { TelemetryData, TelemetryHandler } from '../public/types';
 
 export interface ApplicationInsightsV3TelemetryHandlerOptions {
   client: TelemetryClient;
-  traceFilter?: (telemetry: TraceTelemetry) => boolean;
-  exceptionFilter?: (exception: ExceptionTelemetry) => boolean;
 }
 
 export class ApplicationInsightsV3TelemetryHandler implements TelemetryHandler {
@@ -18,13 +16,9 @@ export class ApplicationInsightsV3TelemetryHandler implements TelemetryHandler {
     [TelemetrySeverity.Error]: KnownSeverityLevel.Error,
     [TelemetrySeverity.Critical]: KnownSeverityLevel.Critical,
   };
-  private readonly traceFilter?: (telemetry: TraceTelemetry) => boolean;
-  private readonly exceptionFilter?: (exception: ExceptionTelemetry) => boolean;
 
   constructor(options: ApplicationInsightsV3TelemetryHandlerOptions) {
     this.client = options.client;
-    this.traceFilter = options.traceFilter;
-    this.exceptionFilter = options.exceptionFilter;
   }
 
   public handleTelemetry(telemetry: TelemetryData): void {
@@ -34,9 +28,7 @@ export class ApplicationInsightsV3TelemetryHandler implements TelemetryHandler {
         severity: this.mapSeverity(telemetry.trace.severity),
         properties: telemetry.trace.properties,
       };
-      if (this.traceFilter?.(trace) !== false) {
-        this.client.trackTrace(trace);
-      }
+      this.client.trackTrace(trace);
     }
 
     for (const error of telemetry.exceptions) {
@@ -45,9 +37,7 @@ export class ApplicationInsightsV3TelemetryHandler implements TelemetryHandler {
         properties: error.properties,
       } satisfies ExceptionTelemetry;
 
-      if (this.exceptionFilter?.(exceptionTelemetry) !== false) {
-        this.client.trackException(exceptionTelemetry);
-      }
+      this.client.trackException(exceptionTelemetry);
     }
   }
 

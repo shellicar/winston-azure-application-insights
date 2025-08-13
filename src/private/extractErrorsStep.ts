@@ -1,6 +1,7 @@
 import { SPLAT } from 'triple-beam';
+import type { IsError, TelemetryDataException } from '../public/types';
 import { convertNullPrototypeToRegularObject } from './convertNullPrototypeToRegularObject';
-import type { IsError, TelemetryDataException, WinstonInfo } from './types';
+import type { WinstonInfo } from './types';
 
 const extractErrorProperties = (error: Error, ...additionalIgnore: string[]): Record<string, unknown> => {
   const ignore = ['message', 'name', 'stack', ...additionalIgnore];

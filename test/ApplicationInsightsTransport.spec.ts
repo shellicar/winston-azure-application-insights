@@ -1,9 +1,9 @@
 import { SPLAT } from 'triple-beam';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { config, createLogger } from 'winston';
-import { ApplicationInsightsTransport } from '../src/ApplicationInsightsTransport';
-import { TelemetrySeverity } from '../src/enums';
-import type { SeverityMapping, TelemetryDataException } from '../src/types';
+import { ApplicationInsightsTransport } from '../src/private/ApplicationInsightsTransport';
+import { TelemetrySeverity } from '../src/public/enums';
+import type { ITraceTelemetryFilter, SeverityMapping, TelemetryDataException, TelemetryDataTrace } from '../src/public/types';
 import { SpyPropertiesTransport } from './spies/SpyPropertiesTransport';
 import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
@@ -194,6 +194,103 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       const actual = telemetryHandler.telemetry?.trace?.message;
       expect(actual).toBe(expected);
+    });
+  });
+
+  describe('Filtering', () => {
+    it('should not send trace when trace filter returns false', () => {
+      const transport = new ApplicationInsightsTransport({
+        telemetryHandler,
+        traceFilter: () => false,
+      });
+
+      transport.log(
+        {
+          level: 'info',
+          message: 'test message',
+        },
+        () => {},
+      );
+
+      const actual = telemetryHandler.telemetry?.trace;
+      const expected = null;
+      expect(actual).toBe(expected);
+    });
+
+    it('should pass correct trace telemetry to trace filter', () => {
+      let capturedTraceTelemetry: TelemetryDataTrace | undefined;
+      const traceFilter: ITraceTelemetryFilter = (trace) => {
+        capturedTraceTelemetry = trace;
+        return true;
+      };
+
+      const transport = new ApplicationInsightsTransport({
+        telemetryHandler,
+        traceFilter,
+      });
+
+      transport.log(
+        {
+          level: 'info',
+          message: 'test message',
+        },
+        () => {},
+      );
+
+      const actual = telemetryHandler.telemetry?.trace;
+      const expected = {
+        message: 'test message',
+        properties: {},
+        severity: TelemetrySeverity.Information,
+      } satisfies TelemetryDataTrace;
+      expect(actual).toEqual(expected);
+    });
+
+    it('should not send exception when exception filter returns false', () => {
+      const transport = new ApplicationInsightsTransport({
+        telemetryHandler,
+        exceptionFilter: () => false,
+      });
+
+      const error = new Error('test error');
+
+      transport.log(
+        {
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: [error],
+        },
+        () => {},
+      );
+
+      const actual = telemetryHandler.telemetry?.exceptions[0];
+      expect(actual).toBeUndefined();
+    });
+
+    it('should pass correct exception telemetry to exception filter', () => {
+      let capturedExceptionTelemetry: TelemetryDataException | undefined;
+
+      const transport = new ApplicationInsightsTransport({
+        telemetryHandler,
+        exceptionFilter: (telemetry) => {
+          capturedExceptionTelemetry = telemetry;
+          return true;
+        },
+      });
+
+      const error = new Error('test error');
+
+      transport.log(
+        {
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: [error],
+        },
+        () => {},
+      );
+
+      const actual = capturedExceptionTelemetry?.exception;
+      expect(actual).toBe(error);
     });
   });
 
