@@ -127,5 +127,19 @@ describe('extractSeverityStep', () => {
 
       expect(actual).toBe(expected);
     });
+
+    it('should fall back to Verbose when level not in levels map', () => {
+      const info = { level: 'nonexistent', message: 'test' };
+      const levels = {
+        error: 0,
+        warn: 1,
+        info: 2,
+      };
+
+      const actual = extractSeverityStep(info, defaultSeverityMapping, levels);
+      const expected = TelemetrySeverity.Verbose;
+
+      expect(actual).toBe(expected);
+    });
   });
 });

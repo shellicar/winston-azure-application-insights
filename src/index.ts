@@ -4,7 +4,7 @@ import { createWinstonLogger } from './public/createWinstonLogger';
 import { TelemetrySeverity } from './public/enums';
 import { isRunningInAzure } from './public/isRunningInAzure';
 import { isRunningLocally } from './public/isRunningLocally';
-import type { AzureApplicationInsightsLoggerOptions, CreateApplicationInsightsTransportOptions, CreateTelemetryHandlerOptions, CreateWinstonLoggerOptions, ITelemetryFilterV2, ITelemetryFilterV3, TelemetryHandler, WinstonInfo } from './public/types';
+import type { AzureApplicationInsightsLoggerOptions, CreateApplicationInsightsTransportOptions, CreateTelemetryHandlerOptions, CreateWinstonLoggerOptions, IExceptionTelemetryFilter, ITraceTelemetryFilter, TelemetryHandler } from './public/types';
 
 export { createApplicationInsightsTransport, createTelemetryHandler, createWinstonLogger, TelemetrySeverity, isRunningInAzure, isRunningLocally };
-export type { ITelemetryFilterV2, ITelemetryFilterV3, TelemetryHandler, WinstonInfo, AzureApplicationInsightsLoggerOptions, CreateApplicationInsightsTransportOptions, CreateTelemetryHandlerOptions, CreateWinstonLoggerOptions };
+export type { ITraceTelemetryFilter, IExceptionTelemetryFilter, TelemetryHandler, AzureApplicationInsightsLoggerOptions, CreateApplicationInsightsTransportOptions, CreateTelemetryHandlerOptions, CreateWinstonLoggerOptions };

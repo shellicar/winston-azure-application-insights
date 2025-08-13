@@ -1,8 +1,8 @@
 import { beforeEach } from 'vitest';
 import TransportStream from 'winston-transport';
-import type { WinstonInfo } from '../../src';
 import { extractErrorsStep } from '../../src/private/extractErrorsStep';
 import { isError } from '../../src/private/isError';
+import type { WinstonInfo } from '../../src/private/types';
 import type { TelemetryDataException } from '../../src/public/types';
 
 export class SpyErrorTransport extends TransportStream {

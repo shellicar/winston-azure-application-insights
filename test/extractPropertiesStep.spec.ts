@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { extractPropertiesStep } from '../src/private/extractPropertiesStep';
 import type { WinstonInfo } from '../src/private/types';
 import { GraphQLError } from './GraphQLError';
+import { createWinstonInfoFromErrorOnly } from './createWinstonInfoFromErrorOnly';
 
 describe('Refactored AzureApplicationInsightsLogger', () => {
   describe('extractPropertiesStep', () => {
@@ -329,6 +330,32 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       const actual = extractPropertiesStep(info);
       const expected = {};
+
+      expect(actual).toEqual(expected);
+    });
+
+    it('should extract properties from Error object when Error is the info object', () => {
+      class CustomError extends Error {
+        public readonly errorCode: string;
+        public readonly userId: number;
+
+        constructor(message: string, errorCode: string, userId: number) {
+          super(message);
+          this.errorCode = errorCode;
+          this.userId = userId;
+        }
+      }
+
+      const error = new CustomError('Database connection failed', 'DB_CONN_ERR', 123);
+      const info = createWinstonInfoFromErrorOnly(error, {
+        level: 'error',
+      });
+
+      const actual = extractPropertiesStep(info);
+      const expected = {
+        errorCode: 'DB_CONN_ERR',
+        userId: 123,
+      };
 
       expect(actual).toEqual(expected);
     });

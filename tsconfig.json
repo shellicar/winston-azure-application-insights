@@ -11,7 +11,7 @@
     "allowSyntheticDefaultImports": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
-    "noUncheckedIndexedAccess": false
+    "noUncheckedIndexedAccess": true
   },
   "exclude": ["dist/", "node_modules"],
   "include": ["**/*.ts", "test/**/*.spec.ts"]

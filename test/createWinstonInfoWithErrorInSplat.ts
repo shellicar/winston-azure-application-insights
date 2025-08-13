@@ -1,5 +1,5 @@
 import { SPLAT } from 'triple-beam';
-import type { WinstonInfo } from '../src';
+import type { WinstonInfo } from '../src/private/types';
 
 /**
  * Creates a WinstonInfo object that matches Winston's behaviour when logging a string message with Error in splat.

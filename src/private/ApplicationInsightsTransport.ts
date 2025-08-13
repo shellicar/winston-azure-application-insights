@@ -28,7 +28,6 @@ export class ApplicationInsightsTransport extends TransportStream {
 
   public override log(info: WinstonInfo, next: () => void) {
     const exceptions = extractErrorsStep(info, this.options.isError).filter((x) => this.options.exceptionFilter(x));
-    console.log('Extracted exceptions:', exceptions);
     const trace = [this.getTrace(info, exceptions)].filter((x) => x != null).filter((x) => this.options.traceFilter(x))[0] ?? null;
 
     this.telemetryHandler.handleTelemetry({

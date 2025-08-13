@@ -21,8 +21,8 @@ describe('extractErrorsStep', () => {
 
     const actual = transport.exceptions[0];
 
-    expect(actual.exception).toBe(expected);
-    expect(actual.properties).toEqual({});
+    expect(actual?.exception).toBe(expected);
+    expect(actual?.properties).toEqual({});
   });
 
   it('should return empty array when no errors', () => {
@@ -91,8 +91,8 @@ describe('extractErrorsStep', () => {
       const result = extractErrorsStep(info, isError);
       const actual = result[0];
 
-      expect(actual.exception).toBe(expected);
-      expect(actual.properties).toEqual({});
+      expect(actual?.exception).toBe(expected);
+      expect(actual?.properties).toEqual({});
     });
 
     it('passes second error', () => {
@@ -101,8 +101,8 @@ describe('extractErrorsStep', () => {
       const result = extractErrorsStep(info, isError);
       const actual = result[1];
 
-      expect(actual.exception).toBe(expected);
-      expect(actual.properties).toEqual({});
+      expect(actual?.exception).toBe(expected);
+      expect(actual?.properties).toEqual({});
     });
   });
 
@@ -117,8 +117,8 @@ describe('extractErrorsStep', () => {
 
     const actual = extractErrorsStep(info, isError)[0];
 
-    expect(actual.exception).toBe(expected);
-    expect(actual.properties).toEqual({});
+    expect(actual?.exception).toBe(expected);
+    expect(actual?.properties).toEqual({});
   });
 
   describe('Error property extraction', () => {
@@ -146,8 +146,8 @@ describe('extractErrorsStep', () => {
       const result = extractErrorsStep(info, isError);
 
       expect(result).toHaveLength(1);
-      expect(result[0].exception).toBe(customError);
-      expect(result[0].properties).toEqual({
+      expect(result[0]?.exception).toBe(customError);
+      expect(result[0]?.properties).toEqual({
         errorCode: 'E001',
         metadata: { userId: 123, operation: 'checkout' },
       });
@@ -179,8 +179,8 @@ describe('extractErrorsStep', () => {
       const result = extractErrorsStep(info, isError);
 
       expect(result).toHaveLength(1);
-      expect(result[0].exception).toBe(graphqlError);
-      expect(result[0].properties).toEqual({
+      expect(result[0]?.exception).toBe(graphqlError);
+      expect(result[0]?.properties).toEqual({
         extensions,
       });
     });
@@ -203,14 +203,14 @@ describe('extractErrorsStep', () => {
       const result = extractErrorsStep(customError as any, isError);
 
       expect(result).toHaveLength(1);
-      expect(result[0].exception).toBe(customError);
-      expect(result[0].properties).toEqual({
+      expect(result[0]?.exception).toBe(customError);
+      expect(result[0]?.properties).toEqual({
         errorCode: 'E001',
       });
-      expect(result[0].properties).not.toHaveProperty('level');
-      expect(result[0].properties).not.toHaveProperty('name');
-      expect(result[0].properties).not.toHaveProperty('message');
-      expect(result[0].properties).not.toHaveProperty('stack');
+      expect(result[0]?.properties).not.toHaveProperty('level');
+      expect(result[0]?.properties).not.toHaveProperty('name');
+      expect(result[0]?.properties).not.toHaveProperty('message');
+      expect(result[0]?.properties).not.toHaveProperty('stack');
     });
 
     it('should handle standard Error with no custom properties', () => {
@@ -225,8 +225,8 @@ describe('extractErrorsStep', () => {
       const result = extractErrorsStep(info, isError);
 
       expect(result).toHaveLength(1);
-      expect(result[0].exception).toBe(standardError);
-      expect(result[0].properties).toEqual({});
+      expect(result[0]?.exception).toBe(standardError);
+      expect(result[0]?.properties).toEqual({});
     });
 
     it('should not extract winston properties from Error objects', () => {
@@ -278,11 +278,11 @@ describe('extractErrorsStep', () => {
       const result = extractErrorsStep(info, isError);
 
       expect(result).toHaveLength(1);
-      expect(result[0].exception).toBe(error);
-      expect(result[0].properties).toEqual({
+      expect(result[0]?.exception).toBe(error);
+      expect(result[0]?.properties).toEqual({
         customProp: 'test',
       });
-      expect(result[0].properties).not.toHaveProperty('cause');
+      expect(result[0]?.properties).not.toHaveProperty('cause');
     });
 
     it('should convert Object.create(null) properties to regular objects', () => {
@@ -311,12 +311,12 @@ describe('extractErrorsStep', () => {
       const result = extractErrorsStep(info, isError);
 
       expect(result).toHaveLength(1);
-      expect(result[0].exception).toBe(error);
-      expect(result[0].properties.extensions).toEqual({
+      expect(result[0]?.exception).toBe(error);
+      expect(result[0]?.properties.extensions).toEqual({
         code: 'GRAPHQL_ERROR',
         field: 'userInput',
       });
-      expect(Object.getPrototypeOf(result[0].properties.extensions)).toBe(Object.prototype);
+      expect(Object.getPrototypeOf(result[0]?.properties.extensions)).toBe(Object.prototype);
     });
   });
 });

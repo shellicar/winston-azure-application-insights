@@ -1,4 +1,4 @@
-import type { WinstonInfo } from '../src';
+import type { WinstonInfo } from '../src/private/types';
 import type { BaseWinstonInfo } from '../src/private/types';
 
 /**

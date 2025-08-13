@@ -1,7 +1,7 @@
 import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { createLogger, format } from 'winston';
-import type { WinstonInfo } from '../src';
+import type { WinstonInfo } from '../src/private/types';
 import { GraphQLError } from './GraphQLError';
 import { createWinstonInfoFromErrorOnly } from './createWinstonInfoFromErrorOnly';
 import { createWinstonInfo } from './createWinstonInfoWithErrorInSplat';
@@ -665,7 +665,7 @@ describe('Winston behaviour verification', () => {
             userId: 123,
           });
 
-          expect(actual.message).toBeTypeOf('string');
+          expect(actual?.message).toBeTypeOf('string');
           expect(actual).toBeInstanceOf(Error);
           expect(actual).toBeTypeOf('object');
 
@@ -692,7 +692,7 @@ describe('Winston behaviour verification', () => {
           );
           expected.stack = testError.stack;
 
-          expect(actual.message).toBeTypeOf('string');
+          expect(actual?.message).toBeTypeOf('string');
           expect(actual).not.toBeInstanceOf(Error);
           expect(actual).toBeTypeOf('object');
 
@@ -720,7 +720,7 @@ describe('Winston behaviour verification', () => {
           );
           expected.stack = testError.stack;
 
-          expect(actual.message).toBeTypeOf('string');
+          expect(actual?.message).toBeTypeOf('string');
           expect(actual).not.toBeInstanceOf(Error);
           expect(actual).toBeTypeOf('object');
 
@@ -744,7 +744,7 @@ describe('Winston behaviour verification', () => {
             [SPLAT]: ['extra data', testError],
           } satisfies WinstonInfo;
 
-          expect(actual.message).toBeTypeOf('string');
+          expect(actual?.message).toBeTypeOf('string');
           expect(actual).not.toBeInstanceOf(Error);
           expect(actual).toBeTypeOf('object');
 
@@ -996,7 +996,7 @@ describe('Winston behaviour verification', () => {
       });
     });
 
-    describe('First-object-wins behaviour in formatted output', () => {
+    describe('First-object-wins behavior in formatted output', () => {
       it('should merge only first custom class properties in console JSON output when mixed with primitive splat parameters', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({

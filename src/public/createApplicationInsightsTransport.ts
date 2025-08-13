@@ -8,6 +8,9 @@ export const createApplicationInsightsTransport = (options: CreateApplicationIns
   const transport = new ApplicationInsightsTransport({
     telemetryHandler,
     severityMapping: options.severityMapping,
+    exceptionFilter: options.exceptionFilter,
+    traceFilter: options.traceFilter,
+    isError: options.isError,
   });
 
   return transport;

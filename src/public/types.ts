@@ -58,6 +58,7 @@ export type CreateApplicationInsightsTransportOptions = {
   severityMapping?: SeverityMapping;
   traceFilter?: ITraceTelemetryFilter;
   exceptionFilter?: IExceptionTelemetryFilter;
+  isError?: IsError;
 } & CreateTelemetryHandlerOptions;
 
 export interface WinstonLevels {
@@ -71,7 +72,7 @@ export type CreateWinstonLoggerOptions = {
     defaultMeta?: Record<string, unknown>;
     level?: string;
     levels?: WinstonLevels;
-    options: Omit<LoggerOptions, 'format' | 'defaultMeta' | 'level' | 'levels'>;
+    options?: Omit<LoggerOptions, 'format' | 'defaultMeta' | 'level' | 'levels'>;
   };
   insights: {
     severityMapping?: SeverityMapping;

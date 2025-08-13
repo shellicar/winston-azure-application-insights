@@ -1,7 +1,7 @@
 import { inspect } from 'node:util';
 import { beforeEach } from 'vitest';
 import TransportStream from 'winston-transport';
-import type { WinstonInfo } from '../../src';
+import type { WinstonInfo } from '../../src/private/types';
 
 /**
  * Spy Winston Transport for testing raw Winston behaviour

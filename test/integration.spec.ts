@@ -28,7 +28,7 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
       logger.info('Hello from V2');
 
       expect(client.traces).toHaveLength(1);
-      expect(client.traces[0].message).toBe('Hello from V2');
+      expect(client.traces[0]?.message).toBe('Hello from V2');
       expect(client.exceptions).toHaveLength(0);
     });
 
@@ -37,9 +37,9 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
       logger.error('Error occurred', error);
 
       expect(client.traces).toHaveLength(1);
-      expect(client.traces[0].message).toBe('Error occurred');
+      expect(client.traces[0]?.message).toBe('Error occurred');
       expect(client.exceptions).toHaveLength(1);
-      expect(client.exceptions[0].exception).toBe(error);
+      expect(client.exceptions[0]?.exception).toBe(error);
     });
 
     it('should apply trace filter in full pipeline', () => {
@@ -54,7 +54,7 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
       logger.info('filtered');
 
       expect(client.traces).toHaveLength(1);
-      expect(client.traces[0].message).toBe('allowed');
+      expect(client.traces[0]?.message).toBe('allowed');
     });
   });
 
@@ -119,7 +119,7 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
       logger.info('Factory V2 test');
 
       expect(client.traces).toHaveLength(1);
-      expect(client.traces[0].message).toBe('Factory V2 test');
+      expect(client.traces[0]?.message).toBe('Factory V2 test');
     });
 
     it('should call trackTrace on V3 client when logging through factory-created handler', () => {
@@ -131,7 +131,7 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
       logger.info('Factory V3 test');
 
       expect(client.traces).toHaveLength(1);
-      expect(client.traces[0].message).toBe('Factory V3 test');
+      expect(client.traces[0]?.message).toBe('Factory V3 test');
     });
 
     it('should call trace filter when logging through factory-created V2 handler', () => {

@@ -1,8 +1,13 @@
 import { SPLAT } from 'triple-beam';
 import { expect } from 'vitest';
-import type { WinstonInfo } from '../src';
+import type { WinstonInfo } from '../src/private/types';
 
-export const expectInfo = (actual: WinstonInfo, expected: WinstonInfo) => {
+export const expectInfo = (actual: WinstonInfo | undefined, expected: WinstonInfo) => {
+  expect(actual).toBeDefined();
+  if (actual == null) {
+    return;
+  }
+
   const expectedSplat = expected[SPLAT];
   const actualSplat = actual[SPLAT];
 
