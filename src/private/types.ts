@@ -28,3 +28,11 @@ interface RegularWinstonInfo extends BaseWinstonInfo, MakeNever<Omit<Error, 'mes
 }
 interface ErrorWinstonInfo extends BaseWinstonInfo, Optional<Error, 'name'> {}
 export type WinstonInfo = RegularWinstonInfo | ErrorWinstonInfo;
+
+export interface ApplicationInsightsTransportOptions {
+  telemetryHandler: TelemetryHandler;
+  severityMapping?: SeverityMapping;
+  traceFilter?: ITraceTelemetryFilter;
+  exceptionFilter?: IExceptionTelemetryFilter;
+  isError?: IsError;
+}

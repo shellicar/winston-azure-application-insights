@@ -1,12 +1,12 @@
 import TransportStream from 'winston-transport';
-import type { AzureApplicationInsightsLoggerOptions, TelemetryDataException, TelemetryHandler, WinstonLevels } from '../public/types';
+import type { TelemetryDataException, TelemetryHandler, WinstonLevels } from '../public/types';
 import { defaultSeverityMapping } from './consts';
 import { extractErrorsStep } from './extractErrorsStep';
 import { extractMessageStep } from './extractMessageStep';
 import { extractPropertiesStep } from './extractPropertiesStep';
 import { extractSeverityStep } from './extractSeverityStep';
 import { isError } from './isError';
-import type { RequiredOptions, WinstonInfo } from './types';
+import type { ApplicationInsightsTransportOptions, RequiredOptions, WinstonInfo } from './types';
 
 export class ApplicationInsightsTransport extends TransportStream {
   private readonly telemetryHandler: TelemetryHandler;
@@ -14,7 +14,7 @@ export class ApplicationInsightsTransport extends TransportStream {
 
   public levels?: WinstonLevels;
 
-  constructor(options: AzureApplicationInsightsLoggerOptions) {
+  constructor(options: ApplicationInsightsTransportOptions) {
     super();
     this.options = {
       telemetryHandler: options.telemetryHandler,

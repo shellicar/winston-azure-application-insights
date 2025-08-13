@@ -33,14 +33,6 @@ export interface SeverityMapping {
 
 export type IsError = (obj: unknown) => obj is Error;
 
-export interface AzureApplicationInsightsLoggerOptions {
-  telemetryHandler: TelemetryHandler;
-  severityMapping?: SeverityMapping;
-  traceFilter?: ITraceTelemetryFilter;
-  exceptionFilter?: IExceptionTelemetryFilter;
-  isError?: IsError;
-}
-
 export type ITraceTelemetryFilter = (trace: TelemetryDataTrace) => boolean;
 export type IExceptionTelemetryFilter = (exception: TelemetryDataException) => boolean;
 
