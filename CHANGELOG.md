@@ -1,6 +1,6 @@
 # Changelog
 
-## [6.0.0] - 2025-01-XX
+## [6.0.0] - 2025-08-13
 
 ### Breaking Changes
 
@@ -68,7 +68,7 @@ const logger = createWinstonLogger({
 - Multiple Error object support in single log call
 - Object.create(null) support for GraphQL/Apollo compatibility
 - Enhanced property extraction from splat parameters and defaultMeta
-- Comprehensive test suite (199 tests)
+- Comprehensive test suite (215 tests)
 
 ### Changed
 
@@ -169,6 +169,7 @@ const logger = createWinstonLogger({
 - Replace `treatErrorsAsExceptions` with `sendErrorsAsExceptions` following feedback from AI core team w/r best practice error tracking
 - Package install size drastically reduced
 
+[6.0.0]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.0
 [5.1.0]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.1.0
 [5.0.7]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.7
 [5.0.6]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.6

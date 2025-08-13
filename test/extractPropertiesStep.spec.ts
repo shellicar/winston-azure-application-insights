@@ -210,6 +210,42 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       expect(actual).toEqual(expected);
     });
 
+    it('handles null prototype objects', () => {
+      class MyError extends Error {
+        public extensions: Record<string, any>;
+        constructor(
+          message: string,
+          public readonly options: Record<string, any>,
+        ) {
+          super(message);
+          this.extensions = options.extensions;
+        }
+      }
+
+      const err = new MyError('test', {
+        extensions: Object.create(null),
+      });
+
+      const info: WinstonInfo = {
+        level: 'error',
+        message: 'hello world test',
+        extensions: err.extensions,
+        options: err.options,
+        [SPLAT]: [err],
+      };
+
+      const actual = extractPropertiesStep(info);
+      const expected = {
+        extensions: {},
+        options: {
+          extensions: {},
+        },
+      };
+
+      expect(actual).toEqual(expected);
+      expect((actual.extensions as any).constructor).toBeDefined();
+    });
+
     it('should extract Object.create(null) properties', () => {
       const nullProtoObject = Object.create(null);
       nullProtoObject.errorCode = 'APOLLO_ERROR';

@@ -1,6 +1,7 @@
 import { SPLAT } from 'triple-beam';
+import { convertNullPrototypeToRegularObject } from './convertNullPrototypeToRegularObject';
 import { isPlainObject } from './isPlainObject';
-import type { ExtractedProperties, WinstonInfo } from './types';
+import type { IsError, TelemetryDataProperties, WinstonInfo } from './types';
 
 const extractNonSymbolProps = (obj: Record<string | symbol, unknown>): Record<string, unknown> | null => {
   const entries = Object.entries(obj);
@@ -10,12 +11,12 @@ const extractNonSymbolProps = (obj: Record<string | symbol, unknown>): Record<st
 
   const result: Record<string, unknown> = {};
   for (const [key, value] of entries) {
-    result[key] = value;
+    result[key] = convertNullPrototypeToRegularObject(value);
   }
   return result;
 };
 
-const extractDefaultMeta = (info: WinstonInfo, isError: (obj: unknown) => boolean): Record<string, unknown> | null => {
+const extractDefaultMeta = (info: WinstonInfo, isError: IsError): Record<string, unknown> | null => {
   if (isError(info)) {
     const { level, message, ...rest } = info;
     return extractNonSymbolProps(rest);
@@ -24,7 +25,7 @@ const extractDefaultMeta = (info: WinstonInfo, isError: (obj: unknown) => boolea
   return extractNonSymbolProps(rest);
 };
 
-export const extractPropertiesStep = (info: WinstonInfo, isError: (obj: unknown) => boolean = (x) => x instanceof Error): ExtractedProperties => {
+export const extractPropertiesStep = (info: WinstonInfo, isError: IsError = (x) => x instanceof Error): TelemetryDataProperties => {
   const defaultMeta = extractDefaultMeta(info, isError);
 
   const splat = info[SPLAT];

@@ -5,7 +5,7 @@ import { extractMessageStep } from './extractMessageStep';
 import { extractPropertiesStep } from './extractPropertiesStep';
 import { extractSeverityStep } from './extractSeverityStep';
 import { isError } from './isError';
-import type { AzureApplicationInsightsLoggerOptions, RequiredOptions, TelemetryHandler, WinstonInfo, WinstonLevels } from './types';
+import type { AzureApplicationInsightsLoggerOptions, RequiredOptions, TelemetryDataException, TelemetryHandler, WinstonInfo, WinstonLevels } from './types';
 
 export class ApplicationInsightsTransport extends TransportStream {
   private readonly telemetryHandler: TelemetryHandler;
@@ -24,18 +24,18 @@ export class ApplicationInsightsTransport extends TransportStream {
   }
 
   public override log(info: WinstonInfo, next: () => void) {
-    const errors = extractErrorsStep(info, this.options.isError);
-    const trace = this.getTrace(info, errors);
+    const exceptions = extractErrorsStep(info, this.options.isError);
+    const trace = this.getTrace(info, exceptions);
 
     this.telemetryHandler.handleTelemetry({
       trace,
-      errors,
+      exceptions,
     });
 
     next();
   }
 
-  private getTrace(info: WinstonInfo, errors: Error[]) {
+  private getTrace(info: WinstonInfo, errors: TelemetryDataException[]) {
     const shouldSendOnlyException = errors.length > 0 && this.options.isError(info);
 
     if (shouldSendOnlyException) {

@@ -39,9 +39,10 @@ export class ApplicationInsightsV2TelemetryHandler implements TelemetryHandler {
       }
     }
 
-    for (const error of telemetry.errors) {
+    for (const error of telemetry.exceptions) {
       const exceptionTelemetry = {
-        exception: error,
+        exception: error.exception,
+        properties: error.properties,
       } satisfies ExceptionTelemetry;
 
       if (this.exceptionFilter?.(exceptionTelemetry) !== false) {

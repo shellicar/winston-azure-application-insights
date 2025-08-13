@@ -6,21 +6,30 @@ import { SPLAT } from 'triple-beam';
 import type { LoggerOptions } from 'winston';
 import type { TelemetrySeverity } from './enums';
 
+export type IsError = (obj: unknown) => obj is Error;
+
 export interface RequiredOptions {
   telemetryHandler: TelemetryHandler;
   severityMapping: SeverityMapping;
-  isError: (obj: unknown) => boolean;
+  isError: IsError;
 }
+
+export type TelemetryDataProperties = Record<string, unknown>;
 
 export interface TelemetryDataTrace {
   message: string;
-  properties: ExtractedProperties;
+  properties: TelemetryDataProperties;
   severity: TelemetrySeverity;
+}
+
+export interface TelemetryDataException {
+  exception: Error;
+  properties: TelemetryDataProperties;
 }
 
 export interface TelemetryData {
   trace: TelemetryDataTrace | null;
-  errors: Error[];
+  exceptions: TelemetryDataException[];
 }
 
 export type ITelemetryFilterV2 = (telemetry: TraceTelemetryV2) => boolean;
@@ -84,7 +93,7 @@ export interface SeverityMapping {
 export interface AzureApplicationInsightsLoggerOptions {
   telemetryHandler: TelemetryHandler;
   severityMapping?: SeverityMapping;
-  isError?: (obj: unknown) => boolean;
+  isError?: IsError;
 }
 
 export type CreateWinstonLoggerOptions = {
@@ -104,4 +113,3 @@ export type CreateWinstonLoggerOptions = {
 export interface WinstonLevels {
   [levelName: string]: number;
 }
-export type ExtractedProperties = Record<string, unknown> | unknown[];

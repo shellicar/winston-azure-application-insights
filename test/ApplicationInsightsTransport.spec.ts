@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { config, createLogger } from 'winston';
 import { ApplicationInsightsTransport } from '../src/ApplicationInsightsTransport';
 import { TelemetrySeverity } from '../src/enums';
-import type { SeverityMapping } from '../src/types';
+import type { SeverityMapping, TelemetryDataException } from '../src/types';
 import { SpyPropertiesTransport } from './spies/SpyPropertiesTransport';
 import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
@@ -17,14 +17,19 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
       });
 
       it('should send errors as exceptions', () => {
-        const expected = new Error('test error');
+        const err = new Error('test error');
 
-        transport.log({ message: 'test message', level: 'info', [SPLAT]: [expected] }, () => {});
+        transport.log({ message: 'test message', level: 'info', [SPLAT]: [err] }, () => {});
 
         const result = telemetryHandler.telemetry;
 
-        const actual = result?.errors[0];
-        expect(actual).toBe(expected);
+        const actual = result?.exceptions[0];
+        const expected = {
+          exception: err,
+          properties: {},
+        } satisfies TelemetryDataException;
+
+        expect(actual).toEqual(expected);
       });
 
       it('should filter errors from properties', () => {
@@ -50,13 +55,18 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
 
       describe('Error as first parameter', () => {
         it('should extract error when Error passed as first parameter', () => {
-          const expected = new Error('Database error');
+          const err = new Error('Database error');
           const logger = createLogger({ transports: [transport] });
 
-          logger.error(expected);
+          logger.error(err);
 
-          const actual = telemetryHandler.telemetry?.errors[0];
-          expect(actual).toBe(expected);
+          const actual = telemetryHandler.telemetry?.exceptions[0];
+          const expected = {
+            exception: err,
+            properties: {},
+          } satisfies TelemetryDataException;
+
+          expect(actual).toEqual(expected);
         });
 
         it('should have empty properties when Error passed as first parameter', () => {

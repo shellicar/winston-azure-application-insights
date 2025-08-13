@@ -3,19 +3,20 @@ import TransportStream from 'winston-transport';
 import type { WinstonInfo } from '../../src';
 import { extractErrorsStep } from '../../src/extractErrorsStep';
 import { isError } from '../../src/isError';
+import type { TelemetryDataException } from '../../src/types';
 
 export class SpyErrorTransport extends TransportStream {
-  public errors: Error[] = [];
+  public exceptions: TelemetryDataException[] = [];
 
   constructor() {
     super();
     beforeEach(() => {
-      this.errors = [];
+      this.exceptions = [];
     });
   }
 
   override log(info: WinstonInfo, next: () => void) {
-    this.errors = extractErrorsStep(info, isError);
+    this.exceptions = extractErrorsStep(info, isError);
     next();
   }
 }
