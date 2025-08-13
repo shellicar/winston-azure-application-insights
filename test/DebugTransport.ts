@@ -14,9 +14,17 @@ export class DebugTransport extends TransportStream {
     console.log('Message constructor:', info.message?.constructor?.name);
     console.log('Info instanceof Error:', info instanceof Error);
 
-    if ((info.message as any) instanceof Error) {
-      const errorMessage = info.message as unknown as Error;
+    if (info.message instanceof Error) {
+      const errorMessage = info.message;
       console.log('Message is Error:', {
+        message: errorMessage.message,
+        stack: errorMessage.stack,
+      });
+    }
+
+    if (info instanceof Error) {
+      const errorMessage = info;
+      console.log('Info is Error:', {
         message: errorMessage.message,
         stack: errorMessage.stack,
       });

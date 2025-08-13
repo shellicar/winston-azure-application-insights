@@ -1,30 +1,18 @@
 import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
-import { createLogger, format, transports } from 'winston';
+import { createLogger, format } from 'winston';
 import type { WinstonInfo } from '../src';
-import { DebugTransport } from './DebugTransport';
 import { createWinstonInfoFromErrorOnly } from './createWinstonInfoFromErrorOnly';
 import { createWinstonInfo } from './createWinstonInfoWithErrorInSplat';
+import { expectInfo } from './expectInfoEntries';
+import { expectInfoKeys } from './expectInfoKeys';
 import { SpyConsoleTransport } from './spies/SpyConsoleTransport';
 import { SpyWinstonTransport } from './spies/SpyWinstonTransport';
 
-function expectInfoKeys(info: WinstonInfo, expectedKeys: string[]) {
-  const actualKeys = Object.keys(info).sort();
-  const sortedExpectedKeys = [...expectedKeys].sort();
-  expect(actualKeys).toEqual(sortedExpectedKeys);
-}
-
-function expectInfoEntries(info: WinstonInfo, expectedObject: WinstonInfo) {
-  const expectedSplat = expectedObject[SPLAT];
-  const actualSplat = info[SPLAT];
-
-  expect(actualSplat).toEqual(expectedSplat);
-
-  for (const [key, value] of Object.entries(expectedObject)) {
-    console.log('Expecting key:', key, 'to have value:', value);
-    expect(info[key]).toBe(value);
-  }
-}
+// biome-ignore lint/complexity/noBannedTypes: this is intended
+const objectionise = (arg: {}) => {
+  return Object.fromEntries(Object.entries(arg));
+};
 
 describe('Winston behavior verification', () => {
   class CustomClass {
@@ -51,15 +39,17 @@ describe('Winston behavior verification', () => {
         });
 
         logger.info('hello', { appVersion: '2.3.4', sessionId: 'abc' });
-        const capturedInfo = captureTransport.capturedWinstonInfo[0];
+        const actual = captureTransport.capturedWinstonInfo[0];
 
-        // Assert Winston's actual behavior: splat wins conflicts, both defaultMeta and splat properties present
-        expect(capturedInfo.appVersion).toBe('2.3.4'); // splat wins
-        expect(capturedInfo.userId).toBe(123); // defaultMeta preserved
-        expect(capturedInfo.sessionId).toBe('abc'); // splat added
-        expect(capturedInfo.level).toBe('info');
-        expect(capturedInfo.message).toBe('hello');
-        expect(capturedInfo[SPLAT]).toEqual([{ appVersion: '2.3.4', sessionId: 'abc' }]);
+        const expected = {
+          appVersion: '2.3.4',
+          userId: 123,
+          sessionId: 'abc',
+          level: 'info',
+          message: 'hello',
+          [SPLAT]: [{ appVersion: '2.3.4', sessionId: 'abc' }],
+        };
+        expectInfo(actual, expected);
       });
     });
 
@@ -72,16 +62,17 @@ describe('Winston behavior verification', () => {
         });
 
         logger.info('hello', { sessionId: 'abc' }, { requestId: 'req-123' }, 'extra-data');
-        const capturedInfo = captureTransport.capturedWinstonInfo[0];
+        const actual = captureTransport.capturedWinstonInfo[0];
 
-        // Assert Winston's "first object only" behavior
-        expect(capturedInfo.appVersion).toBe('1.2.3');
-        expect(capturedInfo.userId).toBe(123);
-        expect(capturedInfo.sessionId).toBe('abc');
-        expect(capturedInfo.requestId).toBeUndefined();
-        expect(capturedInfo.level).toBe('info');
-        expect(capturedInfo.message).toBe('hello');
-        expect(capturedInfo[SPLAT]).toEqual([{ sessionId: 'abc' }, { requestId: 'req-123' }, 'extra-data']);
+        const expected = {
+          appVersion: '1.2.3',
+          userId: 123,
+          sessionId: 'abc',
+          level: 'info',
+          message: 'hello',
+          [SPLAT]: [{ sessionId: 'abc' }, { requestId: 'req-123' }, 'extra-data'],
+        };
+        expectInfo(actual, expected);
       });
     });
 
@@ -92,14 +83,15 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test', 42, { sessionId: 'abc' });
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test');
-        expect(info.sessionId).toBeUndefined();
-        expect(info[SPLAT]).toEqual([42, { sessionId: 'abc' }]);
-        expectInfoKeys(info, ['userId', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          level: 'info',
+          message: 'test',
+          [SPLAT]: [42, { sessionId: 'abc' }],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should ignore string primitives as first splat parameter and not extract properties', () => {
@@ -108,14 +100,15 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test', 'hello', { sessionId: 'abc' });
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test');
-        expect(info.sessionId).toBeUndefined();
-        expect(info[SPLAT]).toEqual(['hello', { sessionId: 'abc' }]);
-        expectInfoKeys(info, ['userId', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          level: 'info',
+          message: 'test',
+          [SPLAT]: ['hello', { sessionId: 'abc' }],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should ignore boolean primitives as first splat parameter and not extract properties', () => {
@@ -124,14 +117,15 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test', true, { sessionId: 'abc' });
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test');
-        expect(info.sessionId).toBeUndefined();
-        expect(info[SPLAT]).toEqual([true, { sessionId: 'abc' }]);
-        expectInfoKeys(info, ['userId', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          level: 'info',
+          message: 'test',
+          [SPLAT]: [true, { sessionId: 'abc' }],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should ignore null primitives as first splat parameter and not extract properties', () => {
@@ -140,14 +134,15 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test', null, { sessionId: 'abc' });
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test');
-        expect(info.sessionId).toBeUndefined();
-        expect(info[SPLAT]).toEqual([null, { sessionId: 'abc' }]);
-        expectInfoKeys(info, ['userId', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          level: 'info',
+          message: 'test',
+          [SPLAT]: [null, { sessionId: 'abc' }],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should ignore Date objects as first splat parameter and not extract properties', () => {
@@ -157,14 +152,15 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test', testDate, { sessionId: 'abc' });
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test');
-        expect(info.sessionId).toBeUndefined();
-        expect(info[SPLAT]).toEqual([testDate, { sessionId: 'abc' }]);
-        expectInfoKeys(info, ['userId', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          level: 'info',
+          message: 'test',
+          [SPLAT]: [testDate, { sessionId: 'abc' }],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should extract array elements as enumerable properties but ignore subsequent splat objects', () => {
@@ -173,17 +169,54 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test', [1, 2, 3], { sessionId: 'abc' });
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test');
-        expect(info['0']).toBe(1);
-        expect(info['1']).toBe(2);
-        expect(info['2']).toBe(3);
-        expect(info.sessionId).toBeUndefined();
-        expect(info[SPLAT]).toEqual([[1, 2, 3], { sessionId: 'abc' }]);
-        expectInfoKeys(info, ['userId', 'level', 'message', '0', '1', '2']);
+        const expected = {
+          userId: 123,
+          level: 'info',
+          message: 'test',
+          '0': 1,
+          '1': 2,
+          '2': 3,
+          [SPLAT]: [[1, 2, 3], { sessionId: 'abc' }],
+        };
+        expectInfo(actual, expected);
+      });
+
+      it('should ignore function primitives as first splat parameter and not extract properties', () => {
+        const logger = createLogger({
+          defaultMeta: { userId: 123 },
+          transports: [captureTransport],
+        });
+        const testFunction = () => 'test';
+        logger.info('test', testFunction, { sessionId: 'abc' });
+        const actual = captureTransport.lastInfo;
+
+        const expected = {
+          userId: 123,
+          level: 'info',
+          message: 'test',
+          [SPLAT]: [testFunction, { sessionId: 'abc' }],
+        };
+        expectInfo(actual, expected);
+      });
+
+      it('should ignore bigint primitives as first splat parameter and not extract properties', () => {
+        const logger = createLogger({
+          defaultMeta: { userId: 123 },
+          transports: [captureTransport],
+        });
+        const testBigInt = 123n;
+        logger.info('test', testBigInt, { sessionId: 'abc' });
+        const actual = captureTransport.lastInfo;
+
+        const expected = {
+          userId: 123,
+          level: 'info',
+          message: 'test',
+          [SPLAT]: [testBigInt, { sessionId: 'abc' }],
+        };
+        expectInfo(actual, expected);
       });
     });
 
@@ -196,13 +229,16 @@ describe('Winston behavior verification', () => {
 
         const customObject = new CustomClass('value');
         logger.info('test message', customObject);
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.prop).toBe('value');
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info[SPLAT]).toEqual([new CustomClass('value')]);
+        const expected = {
+          userId: 123,
+          prop: 'value',
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: [new CustomClass('value')],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should extract custom class properties when no defaultMeta is present', () => {
@@ -212,13 +248,15 @@ describe('Winston behavior verification', () => {
 
         const customObject = new CustomClass('value');
         logger.info('test message', customObject);
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.prop).toBe('value');
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info[SPLAT]).toEqual([new CustomClass('value')]);
-        expectInfoKeys(info, ['prop', 'level', 'message']);
+        const expected = {
+          prop: 'value',
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: [new CustomClass('value')],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should extract properties from first custom class only, ignoring properties from subsequent classes with same property names', () => {
@@ -230,14 +268,16 @@ describe('Winston behavior verification', () => {
         const customObject1 = new CustomClass('value1');
         const customObject2 = new CustomClass('value2');
         logger.info('test message', customObject1, customObject2);
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.prop).toBe('value1');
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info[SPLAT]).toEqual([customObject1, customObject2]);
-        expectInfoKeys(info, ['userId', 'prop', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          prop: 'value1',
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: [customObject1, customObject2],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should extract properties from first custom class only, ignoring properties from subsequent classes with different property names', () => {
@@ -249,15 +289,16 @@ describe('Winston behavior verification', () => {
         const customObjectA = new CustomClassA('valueA');
         const customObjectB = new CustomClassB('valueB');
         logger.info('test message', customObjectA, customObjectB);
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.propA).toBe('valueA');
-        expect(info.propB).toBeUndefined();
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info[SPLAT]).toEqual([customObjectA, customObjectB]);
-        expectInfoKeys(info, ['userId', 'propA', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          propA: 'valueA',
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: [customObjectA, customObjectB],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should extract properties from first custom class only, ignoring subsequent non-object splat parameters', () => {
@@ -268,15 +309,16 @@ describe('Winston behavior verification', () => {
 
         const customObject = new CustomClass('value');
         logger.info('test message', customObject, 'extra-string', 42, { sessionId: 'abc' });
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.prop).toBe('value');
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info.sessionId).toBeUndefined();
-        expect(info[SPLAT]).toEqual([customObject, 'extra-string', 42, { sessionId: 'abc' }]);
-        expectInfoKeys(info, ['userId', 'prop', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          prop: 'value',
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: [customObject, 'extra-string', 42, { sessionId: 'abc' }],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should extract properties from first object and preserve Error in SPLAT, ignoring subsequent objects', () => {
@@ -287,14 +329,16 @@ describe('Winston behavior verification', () => {
 
         const testError = new Error('Test error message');
         logger.error('hello', { my: 'object' }, testError);
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.my).toBe('object');
-        expect(info.level).toBe('error');
-        expect(info.message).toBe('hello');
-        expect(info[SPLAT]).toEqual([{ my: 'object' }, testError]);
-        expectInfoKeys(info, ['userId', 'my', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          my: 'object',
+          level: 'error',
+          message: 'hello',
+          [SPLAT]: [{ my: 'object' }, testError],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should extract properties from first object only, preserving Error and subsequent items in SPLAT', () => {
@@ -305,15 +349,16 @@ describe('Winston behavior verification', () => {
 
         const testError = new Error('Test error message');
         logger.error('hello', { my: 'object' }, testError, { another: 'object' }, 'extra');
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.my).toBe('object');
-        expect(info.level).toBe('error');
-        expect(info.message).toBe('hello');
-        expect(info.another).toBeUndefined();
-        expect(info[SPLAT]).toEqual([{ my: 'object' }, testError, { another: 'object' }, 'extra']);
-        expectInfoKeys(info, ['userId', 'my', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          my: 'object',
+          level: 'error',
+          message: 'hello',
+          [SPLAT]: [{ my: 'object' }, testError, { another: 'object' }, 'extra'],
+        };
+        expectInfo(actual, expected);
       });
     });
 
@@ -326,13 +371,16 @@ describe('Winston behavior verification', () => {
         });
 
         logger.info('hello world');
-        const capturedInfo = captureTransport.capturedWinstonInfo[0];
+        const actual = captureTransport.capturedWinstonInfo[0];
 
-        expect(capturedInfo.appVersion).toBe('1.2.3');
-        expect(capturedInfo.userId).toBe(123);
-        expect(capturedInfo.level).toBe('info');
-        expect(capturedInfo.message).toBe('hello world');
-        expect(capturedInfo[SPLAT]).toBeUndefined();
+        const expected = {
+          appVersion: '1.2.3',
+          userId: 123,
+          level: 'info',
+          message: 'hello world',
+          [SPLAT]: undefined,
+        };
+        expectInfo(actual, expected);
       });
     });
 
@@ -346,14 +394,15 @@ describe('Winston behavior verification', () => {
         const testError = new Error('Test error message');
         // @ts-expect-error - Argument of type 'Error' is not assignable to parameter of type 'string'.
         logger.error(testError, 'hello', 'world');
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.level).toBe('error');
-        expect(info.message).toBe(testError);
-        expect(info.stack).toBeUndefined();
-        expect(info[SPLAT]).toEqual(['hello', 'world']);
-        expectInfoKeys(info, ['userId', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          level: 'error',
+          message: testError,
+          [SPLAT]: ['hello', 'world'],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should use Error object as message when Error is first parameter, ignoring object properties but preserving in SPLAT', () => {
@@ -365,14 +414,15 @@ describe('Winston behavior verification', () => {
         const testError = new Error('Test error message');
         // @ts-expect-error - Argument of type 'Error' is not assignable to parameter of type 'string'.
         logger.error(testError, 'hello', { my: 'object' });
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.level).toBe('error');
-        expect(info.message).toBe(testError);
-        expect(info.my).toBeUndefined();
-        expect(info[SPLAT]).toEqual(['hello', { my: 'object' }]);
-        expectInfoKeys(info, ['userId', 'level', 'message']);
+        const expected = {
+          userId: 123,
+          level: 'error',
+          message: testError,
+          [SPLAT]: ['hello', { my: 'object' }],
+        };
+        expectInfo(actual, expected);
       });
 
       it('should use Error object as message when Error is only parameter', () => {
@@ -394,7 +444,7 @@ describe('Winston behavior verification', () => {
         expect(actual).toBeInstanceOf(Error);
         expect(actual).toBeTypeOf('object');
 
-        expectInfoEntries(actual, expected);
+        expectInfo(actual, expected);
       });
 
       it('should preserve string message and put Error in first SPLAT position when string message comes first, with only Error in splat', () => {
@@ -415,12 +465,13 @@ describe('Winston behavior verification', () => {
           },
           testError,
         );
+        expected.stack = testError.stack;
 
         expect(actual.message).toBeTypeOf('string');
         expect(actual).not.toBeInstanceOf(Error);
         expect(actual).toBeTypeOf('object');
 
-        expectInfoEntries(actual, expected);
+        expectInfo(actual, expected);
       });
 
       it('should preserve string message and put Error in first SPLAT position when string message comes first, with extra data', () => {
@@ -442,6 +493,7 @@ describe('Winston behavior verification', () => {
           },
           testError,
         );
+        expected.stack = testError.stack;
 
         console.log('Actual splat:', actual[SPLAT]);
 
@@ -449,7 +501,7 @@ describe('Winston behavior verification', () => {
         expect(actual).not.toBeInstanceOf(Error);
         expect(actual).toBeTypeOf('object');
 
-        expectInfoEntries(actual, expected);
+        expectInfo(actual, expected);
       });
 
       it('should preserve string message when Error is in later splat position', () => {
@@ -473,7 +525,7 @@ describe('Winston behavior verification', () => {
         expect(actual).not.toBeInstanceOf(Error);
         expect(actual).toBeTypeOf('object');
 
-        expectInfoEntries(actual, expected);
+        expectInfo(actual, expected);
       });
     });
   });
@@ -486,14 +538,15 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('actual log message');
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.userId).toBe(123);
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('defaultMeta message');
-        expect(info[SPLAT]).toBeUndefined();
-
-        expectInfoKeys(info, ['userId', 'message', 'level']);
+        const expected = {
+          userId: 123,
+          level: 'info',
+          message: 'defaultMeta message',
+          [SPLAT]: undefined,
+        };
+        expectInfo(actual, expected);
       });
     });
 
@@ -615,29 +668,33 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test message');
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info[SPLAT]).toBeUndefined();
-        expectInfoKeys(info, ['message', 'level']);
+        const expected = {
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: undefined,
+        };
+        expectInfo(actual, expected);
       });
 
       it('should extract string characters as enumerable properties when string used as defaultMeta', () => {
-        const expected = 'hello-world';
+        const defaultMetaString = 'hello-world';
         const logger = createLogger({
-          defaultMeta: expected,
+          defaultMeta: defaultMetaString,
           transports: [captureTransport],
         });
         logger.info('test message');
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info[SPLAT]).toBeUndefined();
+        const expected = {
+          ...objectionise(defaultMetaString),
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: undefined,
+        };
 
-        expectInfoKeys(info, ['0', '1', '10', '2', '3', '4', '5', '6', '7', '8', '9', 'message', 'level']);
-        expectInfoEntries(info, expected as unknown as WinstonInfo);
+        expectInfo(actual, expected);
       });
 
       it('should ignore boolean defaultMeta and not extract any properties', () => {
@@ -646,12 +703,14 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test message');
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info[SPLAT]).toBeUndefined();
-        expectInfoKeys(info, ['message', 'level']);
+        const expected = {
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: undefined,
+        };
+        expectInfo(actual, expected);
       });
 
       it('should ignore null defaultMeta and not extract any properties', () => {
@@ -660,12 +719,14 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test message');
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info[SPLAT]).toBeUndefined();
-        expectInfoKeys(info, ['message', 'level']);
+        const expected = {
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: undefined,
+        };
+        expectInfo(actual, expected);
       });
 
       it('should ignore undefined defaultMeta and not extract any properties', () => {
@@ -674,12 +735,14 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test message');
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info[SPLAT]).toBeUndefined();
-        expectInfoKeys(info, ['message', 'level']);
+        const expected = {
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: undefined,
+        };
+        expectInfo(actual, expected);
       });
 
       it('should ignore Date defaultMeta and not extract any properties', () => {
@@ -689,12 +752,14 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test message');
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info[SPLAT]).toBeUndefined();
-        expectInfoKeys(info, ['message', 'level']);
+        const expected = {
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: undefined,
+        };
+        expectInfo(actual, expected);
       });
 
       it('should extract array elements as enumerable properties when array used as defaultMeta', () => {
@@ -703,13 +768,15 @@ describe('Winston behavior verification', () => {
           transports: [captureTransport],
         });
         logger.info('test message');
-        const info = captureTransport.lastInfo;
+        const actual = captureTransport.lastInfo;
 
-        expect(info.level).toBe('info');
-        expect(info.message).toBe('test message');
-        expect(info[SPLAT]).toBeUndefined();
-        expectInfoKeys(info, ['0', '1', '2', 'message', 'level']);
-        expect(info['0']).toBe(1);
+        const expected = {
+          ...objectionise([1, 2, 3]),
+          level: 'info',
+          message: 'test message',
+          [SPLAT]: undefined,
+        };
+        expectInfo(actual, expected);
       });
     });
   });
@@ -844,77 +911,120 @@ describe('Winston behavior verification', () => {
   });
 });
 
-describe('Winston Message Behavior', () => {
-  it('should demonstrate winston behavior with json format', () => {
+describe('Console Output Format Verification', () => {
+  it('should handle message property conflicts in JSON format console output', () => {
+    const spyConsole = new SpyConsoleTransport({ format: format.combine(format.json()) });
     const logger = createLogger({
-      format: format.combine(format.json()),
-      transports: [new transports.Console({ silent: false })],
+      transports: [spyConsole],
     });
 
-    console.log('=== Testing with JSON format ===');
     logger.info('Hello', { message: 'World', userId: 123 });
-    logger.info('Hello world');
-    logger.info('Hello', { userId: 123, context: 'test' });
+
+    const actual = JSON.parse(spyConsole.lastOutput!);
+    const expected = {
+      level: 'info',
+      message: 'Hello World',
+      userId: 123,
+    };
+    expect(actual).toEqual(expected);
   });
 
-  it('should demonstrate winston behavior without json format', () => {
+  it('should format properties correctly in JSON console output without message conflicts #1', () => {
+    const spyConsole = new SpyConsoleTransport({ format: format.combine(format.json()) });
     const logger = createLogger({
-      transports: [new transports.Console({ silent: false })],
+      transports: [spyConsole],
     });
 
-    console.log('=== Testing without JSON format ===');
-    logger.info('Hello', { message: 'World', userId: 123 });
     logger.info('Hello world');
-    logger.info('Hello', { userId: 123, context: 'test' });
+
+    const actual = JSON.parse(spyConsole.lastOutput!);
+    const expected = {
+      level: 'info',
+      message: 'Hello world',
+    };
+    expect(actual).toEqual(expected);
   });
 
-  it('should demonstrate winston behavior with simple format', () => {
+  it('should format properties correctly in JSON console output without message conflicts #2', () => {
+    const spyConsole = new SpyConsoleTransport({ format: format.combine(format.json()) });
     const logger = createLogger({
-      format: format.simple(),
-      transports: [new transports.Console({ silent: false })],
+      transports: [spyConsole],
     });
 
-    console.log('=== Testing with simple format ===');
-    logger.info('Hello', { message: 'World', userId: 123 });
     logger.info('Hello world');
-    logger.info('Hello', { userId: 123, context: 'test' });
+
+    const actual = JSON.parse(spyConsole.lastOutput!);
+    const expected = {
+      level: 'info',
+      message: 'Hello world',
+    };
+
+    expect(actual).toEqual(expected);
+  });
+
+  it('should format properties correctly in simple format console output', () => {
+    const spyConsole = new SpyConsoleTransport({ format: format.simple() });
+    const logger = createLogger({
+      transports: [spyConsole],
+    });
+
+    logger.info('Hello', { message: 'World', userId: 123 });
+
+    const actual = spyConsole.lastOutput!;
+    const expected = 'info: Hello World {"userId":123}';
+    expect(actual).toBe(expected);
   });
 
   describe('Edge case behaviors', () => {
+    const spyConsole = new SpyConsoleTransport({ format: format.simple() });
     const logger = createLogger({
       format: format.simple(),
-      transports: [new transports.Console({ silent: false })],
+      transports: [spyConsole],
     });
 
     it('should demonstrate winston behavior with functions', () => {
-      console.log('=== Testing with functions ===');
       const testFunction = () => 'test';
       logger.info('Function test', testFunction);
+
+      const actual = spyConsole.lastOutput!;
+      const expected = 'info: Function test';
+      expect(actual).toBe(expected);
     });
 
     it('should demonstrate winston behavior with function as property', () => {
-      console.log('=== Testing with function as property ===');
       const callback = () => console.log('callback executed');
       logger.info('Function property test', { userId: 123, callback: callback });
+
+      const actual = spyConsole.lastOutput!;
+      const expected = 'info: Function property test {"userId":123}';
+      expect(actual).toBe(expected);
     });
 
     it('should demonstrate winston behavior with arrays', () => {
-      console.log('=== Testing with arrays ===');
       logger.info('Array test', [1, 2, 3]);
+
+      const actual = spyConsole.lastOutput!;
+      const expected = 'info: Array test {"0":1,"1":2,"2":3}';
+      expect(actual).toBe(expected);
     });
 
     it('should demonstrate winston behavior with dates', () => {
-      console.log('=== Testing with dates ===');
       logger.info('Date test', new Date('2025-01-01'));
+
+      const actual = spyConsole.lastOutput!;
+      const expected = 'info: Date test';
+      expect(actual).toBe(expected);
     });
 
     it('should demonstrate winston behavior with regex', () => {
-      console.log('=== Testing with regex ===');
       logger.info('Regex test', /hello/g);
+
+      const actual = spyConsole.lastOutput!;
+      const expected = 'info: Regex test';
+      expect(actual).toBe(expected);
     });
 
     it('should demonstrate winston behavior with custom classes', () => {
-      console.log('=== Testing with custom classes ===');
       class CustomClass {
         prop = 'value';
         toString() {
@@ -923,45 +1033,247 @@ describe('Winston Message Behavior', () => {
       }
 
       logger.info('Custom class test', new CustomClass());
+
+      const actual = spyConsole.lastOutput!;
+      const expected = 'info: Custom class test {"prop":"value"}';
+      expect(actual).toBe(expected);
     });
   });
 
   describe('Splat inspection', () => {
-    it('should show what Winston puts in the splat for each type', () => {
-      const debugTransport = new DebugTransport();
+    const spyTransport = new SpyWinstonTransport();
+    const logger = createLogger({
+      transports: [spyTransport],
+    });
 
-      const logger = createLogger({
-        transports: [debugTransport],
-      });
-
-      console.log('--- Function directly ---');
-      const testFunction = () => 'test';
-      logger.info('Function test', testFunction);
-
-      console.log('--- Function as property ---');
+    it('should show what Winston puts in the splat for function as property', () => {
       const callback = () => console.log('callback executed');
       logger.info('Function property test', { userId: 123, callback: callback });
 
-      console.log('--- Array ---');
-      logger.info('Array test', [1, 2, 3]);
+      const actual = spyTransport.lastInfo;
 
-      console.log('--- Date ---');
-      logger.info('Date test', new Date('2025-01-01'));
+      const expected = {
+        callback: callback,
+        userId: 123,
+        level: 'info',
+        message: 'Function property test',
+        [SPLAT]: [{ userId: 123, callback: callback }],
+      };
+      expectInfo(actual, expected);
+    });
 
-      console.log('--- Custom class ---');
-      class CustomClass {
-        prop = 'value';
-        toString() {
-          return 'CustomClass instance';
-        }
+    it('should show what Winston does when function is used as message property value', () => {
+      const callback = () => console.log('callback executed');
+      logger.info('Hello', { message: callback });
+
+      const actual = spyTransport.lastInfo;
+
+      const expected = {
+        level: 'info',
+        message: `Hello ${callback}`,
+        [SPLAT]: [{ message: callback }],
+      };
+      expectInfo(actual, expected);
+    });
+
+    it('should show what Winston does when string is used as message property value', () => {
+      logger.info('Hello', { message: 'World' });
+
+      const actual = spyTransport.lastInfo;
+
+      const expected = {
+        level: 'info',
+        message: 'Hello World',
+        [SPLAT]: [{ message: 'World' }],
+      };
+      expectInfo(actual, expected);
+    });
+
+    it('should show what Winston does when number is used as message property value', () => {
+      logger.info('Hello', { message: 42 });
+
+      const actual = spyTransport.lastInfo;
+
+      const expected = {
+        level: 'info',
+        message: 'Hello 42',
+        [SPLAT]: [{ message: 42 }],
+      };
+      expectInfo(actual, expected);
+    });
+
+    it('should show what Winston does when zero is used as message property value', () => {
+      logger.info('Hello', { message: 0 });
+
+      const actual = spyTransport.lastInfo;
+
+      const expected = {
+        level: 'info',
+        message: 'Hello',
+        [SPLAT]: [{ message: 0 }],
+      };
+      expectInfo(actual, expected);
+    });
+
+    it('should show what Winston does when boolean true is used as message property value', () => {
+      logger.info('Hello', { message: true });
+
+      const actual = spyTransport.lastInfo;
+
+      const expected = {
+        level: 'info',
+        message: 'Hello true',
+        [SPLAT]: [{ message: true }],
+      };
+      expectInfo(actual, expected);
+    });
+
+    it('should show what Winston does when boolean false is used as message property value', () => {
+      logger.info('Hello', { message: false });
+
+      const actual = spyTransport.lastInfo;
+
+      const expected = {
+        level: 'info',
+        message: 'Hello',
+        [SPLAT]: [{ message: false }],
+      };
+      expectInfo(actual, expected);
+    });
+
+    it('should show what Winston does when bigint is used as message property value', () => {
+      logger.info('Hello', { message: 123n });
+
+      const actual = spyTransport.lastInfo;
+
+      const expected = {
+        level: 'info',
+        message: 'Hello 123',
+        [SPLAT]: [{ message: 123n }],
+      };
+      expectInfo(actual, expected);
+    });
+
+    it('should show what Winston does when bigint zero is used as message property value', () => {
+      logger.info('Hello', { message: 0n });
+
+      const actual = spyTransport.lastInfo;
+
+      const expected = {
+        level: 'info',
+        message: 'Hello',
+        [SPLAT]: [{ message: 0n }],
+      };
+      expectInfo(actual, expected);
+    });
+
+    it('should show what Winston does when null is used as message property value', () => {
+      logger.info('Hello', { message: null });
+
+      const actual = spyTransport.lastInfo;
+
+      const expected = {
+        level: 'info',
+        message: 'Hello',
+        [SPLAT]: [{ message: null }],
+      };
+      expectInfo(actual, expected);
+    });
+
+    it('should show what Winston does when undefined is used as message property value', () => {
+      logger.info('Hello', { message: undefined });
+
+      const actual = spyTransport.lastInfo;
+
+      const expected = {
+        level: 'info',
+        message: 'Hello',
+        [SPLAT]: [{ message: undefined }],
+      };
+      expectInfo(actual, expected);
+    });
+
+    it('should show what Winston does when object is used as message property value', () => {
+      logger.info('Hello', { message: { nested: 'value' } });
+
+      const actual = spyTransport.lastInfo;
+
+      const expected = {
+        level: 'info',
+        message: 'Hello [object Object]',
+        [SPLAT]: [{ message: { nested: 'value' } }],
+      };
+      expectInfo(actual, expected);
+    });
+
+    it('should show what Winston does when empty object is used as message property value', () => {
+      logger.info('Hello', { message: {} });
+
+      const info = spyTransport.lastInfo;
+
+      const expected = 'Hello [object Object]';
+      const actual = info.message;
+
+      expect(actual).toBe(expected);
+      expect(info.level).toBe('info');
+      expect(info[SPLAT]).toEqual([{ message: {} }]);
+    });
+
+    it('should show what Winston does when custom class is used as message property value', () => {
+      class TestClass {
+        constructor(public prop: string) {}
       }
-      logger.info('Custom class test', new CustomClass());
+      const customObject = new TestClass('test');
+      logger.info('Hello', { message: customObject });
 
-      console.log('--- Error object ---');
-      logger.error(new Error('Database error'));
+      const info = spyTransport.lastInfo;
 
-      console.log('--- Error with message ---');
-      logger.error('Custom message', new Error('Database error'));
+      const expected = 'Hello [object Object]';
+      const actual = info.message;
+
+      expect(actual).toBe(expected);
+      expect(info.level).toBe('info');
+      expect(info[SPLAT]).toEqual([{ message: customObject }]);
+    });
+
+    it('should show what Winston does when array is used as message property value', () => {
+      logger.info('Hello', { message: [1, 2, 3] });
+
+      const info = spyTransport.lastInfo;
+
+      const expected = 'Hello 1,2,3';
+      const actual = info.message;
+
+      expect(actual).toBe(expected);
+      expect(info.level).toBe('info');
+      expect(info[SPLAT]).toEqual([{ message: [1, 2, 3] }]);
+    });
+
+    it('should show what Winston does when empty array is used as message property value', () => {
+      logger.info('Hello', { message: [] });
+
+      const info = spyTransport.lastInfo;
+
+      const expected = 'Hello ';
+      const actual = info.message;
+
+      expect(actual).toBe(expected);
+      expect(info.level).toBe('info');
+      expect(info[SPLAT]).toEqual([{ message: [] }]);
+    });
+
+    it('should show what Winston does when Date is used as message property value', () => {
+      const testDate = new Date('2025-01-01T00:00:00Z');
+      logger.info('Hello', { message: testDate });
+
+      const info = spyTransport.lastInfo;
+
+      const expected = `Hello ${testDate.toString()}`;
+      const actual = info.message;
+
+      expect(actual).toBe(expected);
+      expect(info.level).toBe('info');
+      expect(info[SPLAT]).toEqual([{ message: testDate }]);
     });
   });
 });
