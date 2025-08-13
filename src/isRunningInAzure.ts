@@ -1,3 +1,5 @@
+import { env } from 'node:process';
+
 export const isRunningInAzure = () => {
-  return process.env.WEBSITE_INSTANCE_ID !== undefined;
+  return env.WEBSITE_INSTANCE_ID !== undefined;
 };

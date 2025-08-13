@@ -1,8 +1,9 @@
+import { env } from 'node:process';
 import { defaultClient, setup } from 'applicationinsights';
 import winston from 'winston';
 import { createApplicationInsightsTransport } from '../../src';
 
-const shouldPushToAppInsights = 'APPLICATIONINSIGHTS_CONNECTION_STRING' in process.env;
+const shouldPushToAppInsights = 'APPLICATIONINSIGHTS_CONNECTION_STRING' in env;
 
 if (shouldPushToAppInsights) {
   setup().start();
@@ -54,3 +55,11 @@ const err = new MyError('test', {
 });
 winston.info('hello world', err);
 winston.info(err);
+
+const err2 = new MyError('test-with-extensions', {
+  extensions: {
+    ext: Object.create(null),
+    code: 'APOLLO_ERROR',
+  },
+});
+winston.error(err2);

@@ -11,7 +11,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
   const telemetryHandler = new SpyTelemetryHandler();
 
   describe('Configuration', () => {
-    describe('Error handling behavior', () => {
+    describe('Error handling behaviour', () => {
       const transport = new ApplicationInsightsTransport({
         telemetryHandler,
       });
@@ -210,7 +210,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     describe('Message + Single Primitive', () => {
-      it('should ignore single string primitive (Winston behavior)', () => {
+      it('should ignore single string primitive (Winston behaviour)', () => {
         logger.info('Single primitive', 'important-value');
 
         const actual = propertiesTransport.properties;
@@ -219,7 +219,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         expect(actual).toEqual(expected);
       });
 
-      it('should ignore single number primitive (Winston behavior)', () => {
+      it('should ignore single number primitive (Winston behaviour)', () => {
         logger.info('Single number', 42);
 
         const actual = propertiesTransport.properties;
@@ -228,7 +228,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         expect(actual).toEqual(expected);
       });
 
-      it('should ignore single boolean primitive (Winston behavior)', () => {
+      it('should ignore single boolean primitive (Winston behaviour)', () => {
         logger.info('Single boolean', true);
 
         const actual = propertiesTransport.properties;
@@ -271,7 +271,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     describe('Message + Multiple Objects', () => {
-      it('should merge defaultMeta with first object only (Winston behavior)', () => {
+      it('should merge defaultMeta with first object only (Winston behaviour)', () => {
         const meta1 = { userId: 123 };
         const meta2 = { sessionId: 'abc' };
         const expected = meta1;
@@ -284,7 +284,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     describe('Message + Multiple Primitives', () => {
-      it('should ignore multiple primitives (Winston behavior)', () => {
+      it('should ignore multiple primitives (Winston behaviour)', () => {
         const expected = {};
 
         logger.info('Multiple primitives', 'user123', 42, true);
@@ -295,7 +295,7 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     describe('Message + Mixed Types (Objects + Primitives)', () => {
-      it('should return first object only (Winston behavior)', () => {
+      it('should return first object only (Winston behaviour)', () => {
         const expected = { userId: 123 };
         logger.info('Mixed types', { userId: 123 }, 'session-abc', 42, { contextId: 'ctx-123' });
 

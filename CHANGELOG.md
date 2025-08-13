@@ -1,5 +1,84 @@
 # Changelog
 
+## [6.0.0] - 2025-01-XX
+
+### Breaking Changes
+
+Complete ground-up rewrite of the library with new architecture, API, and approach to logging.
+
+#### New Factory-Based API
+
+**Before (v5.x):**
+
+```typescript
+import { AzureApplicationInsightsLogger } from '@shellicar/winston-azure-application-insights';
+
+const logger = winston.createLogger({
+  transports: [
+    new AzureApplicationInsightsLogger({
+      version: 3,
+      client: defaultClient,
+      sendErrorsAsExceptions: true,
+    })
+  ]
+});
+```
+
+**After (v6.x):**
+
+```typescript
+import { createApplicationInsightsTransport, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+
+// Option 1: Transport factory
+const transport = createApplicationInsightsTransport({
+  version: 3,
+  client: defaultClient,
+});
+
+// Option 2: Complete logger factory
+const logger = createWinstonLogger({
+  winston: { console: true },
+  insights: { version: 3, client: defaultClient },
+});
+```
+
+#### Architecture Changes
+
+- Replaced monolithic class with modular step-based processing pipeline
+- Separate SDK-specific telemetry handlers for v2/v3 Application Insights
+- Clean separation between Winston transport and Application Insights logic
+
+#### API Changes
+
+- **Removed**: `AzureApplicationInsightsLogger` class
+- **Removed**: `sendErrorsAsExceptions` option (now automatic and smarter)
+- **Removed**: `defaultLevel` option (use Winston's native configuration)
+- **Removed**: `filters` array (replaced with separate filter functions)
+- **Removed**: `silent` option (use Winston's native transport configuration)
+- **Added**: `createApplicationInsightsTransport()` factory function
+- **Added**: `createWinstonLogger()` factory function
+- **Changed**: `levels` option renamed to `severityMapping`
+- **Changed**: Filter functions now use separate `traceFilter`/`exceptionFilter` options
+
+### Added
+
+- Factory functions for simpler setup
+- Automatic Error object detection and extraction
+- Smart error handling (Error as first parameter sends only exception)
+- Multiple Error object support in single log call
+- Object.create(null) support for GraphQL/Apollo compatibility
+- Enhanced property extraction from splat parameters and defaultMeta
+- Comprehensive test suite (199 tests)
+
+### Changed
+
+- Complete rewrite
+- Improved Winston behaviour compatibility
+- Better error message handling
+- Enhanced property extraction logic
+
+---
+
 ## [5.1.0] - 2025-08-03
 
 ### Changes

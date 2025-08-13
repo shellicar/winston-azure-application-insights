@@ -996,7 +996,7 @@ describe('Winston behaviour verification', () => {
       });
     });
 
-    describe('First-object-wins behavior in formatted output', () => {
+    describe('First-object-wins behaviour in formatted output', () => {
       it('should merge only first custom class properties in console JSON output when mixed with primitive splat parameters', () => {
         const spyConsole = new SpyConsoleTransport({ format: format.json() });
         const logger = createLogger({

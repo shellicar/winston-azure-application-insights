@@ -4,7 +4,7 @@ import TransportStream from 'winston-transport';
 import type { WinstonInfo } from '../../src';
 
 /**
- * Spy Winston Transport for testing raw Winston behavior
+ * Spy Winston Transport for testing raw Winston behaviour
  */
 export class SpyWinstonTransport extends TransportStream {
   public capturedWinstonInfo: WinstonInfo[] = [];

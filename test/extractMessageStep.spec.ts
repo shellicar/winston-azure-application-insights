@@ -144,7 +144,7 @@ describe('extractMessageStep', () => {
     expect(actual).toBe(expected);
   });
 
-  it('should handle Error object as message when info is Error instance (from winston behavior)', () => {
+  it('should handle Error object as message when info is Error instance (from winston behaviour)', () => {
     const expected = 'Database connection failed';
 
     const testError = new Error('Database connection failed');
@@ -156,7 +156,7 @@ describe('extractMessageStep', () => {
     expect(actual).toBe(expected);
   });
 
-  it('should extract original message when Error is in first splat position (from winston behavior)', () => {
+  it('should extract original message when Error is in first splat position (from winston behaviour)', () => {
     const expected = 'Connection failed';
 
     const testError = new Error('Database error');
@@ -167,7 +167,7 @@ describe('extractMessageStep', () => {
     expect(actual).toBe(expected);
   });
 
-  it('should extract original message when Error is in first splat position with extra data (from winston behavior)', () => {
+  it('should extract original message when Error is in first splat position with extra data (from winston behaviour)', () => {
     const expected = 'Connection failed';
 
     const testError = new Error('Database error');

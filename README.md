@@ -81,7 +81,7 @@ I forked the original library to add support for Application Insights v3, which 
 
 See [examples](./examples) for example source code.
 
-* **Factory Functions** - Simple setup with clean API.
+- **Factory Functions** - Simple setup with clean API.
 
 ```typescript
 import { setup, defaultClient } from 'applicationinsights';
@@ -95,7 +95,7 @@ const transport = createApplicationInsightsTransport({
 });
 ```
 
-* **Complete Logger Setup** - Create a Winston logger with both console and Application Insights.
+- **Complete Logger Setup** - Create a Winston logger with both console and Application Insights.
 
 ```typescript
 import { createWinstonLogger } from '@shellicar/winston-azure-application-insights';
@@ -114,7 +114,7 @@ const logger = createWinstonLogger({
 logger.info('Application started');
 ```
 
-* **Error Extraction** - Automatically detects Error objects and sends them as exceptions.
+- **Error Extraction** - Automatically detects Error objects and sends them as exceptions.
 
 ```typescript
 // Creates trace only
@@ -132,7 +132,7 @@ logger.error('Multiple failures', new Error('DB error'), new Error('Cache error'
 
 **Key Behavior:** When you log an Error as the first parameter (`logger.error(new Error())`), it sends **only the exception** to Application Insights, not a trace. This avoids duplicate telemetry.
 
-* **Properties Extraction** - Winston splat parameters become telemetry properties.
+- **Properties Extraction** - Winston splat parameters become telemetry properties.
 
 ```typescript
 // Simple properties
@@ -146,7 +146,7 @@ logger.error('Complex operation failed',
 );
 ```
 
-* **Severity Mapping** - Winston levels map to Application Insights severity with priority fallback.
+- **Severity Mapping** - Winston levels map to Application Insights severity with priority fallback.
 
 ```typescript
 logger.error('Critical issue');   // → Error (3)
@@ -158,7 +158,7 @@ logger.verbose('Debug info');     // → Verbose (0)
 logger.log('audit', 'Audit event'); // → Falls back based on level priority
 ```
 
-* **Custom Severity Mapping** - Override default level mappings.
+- **Custom Severity Mapping** - Override default level mappings.
 
 ```typescript
 const transport = createApplicationInsightsTransport({
@@ -176,7 +176,7 @@ const transport = createApplicationInsightsTransport({
 });
 ```
 
-* **Dual SDK Support** - Works with both Application Insights v2 and v3.
+- **Dual SDK Support** - Works with both Application Insights v2 and v3.
 
 ```typescript
 // Application Insights v2
@@ -194,7 +194,7 @@ const transport = createApplicationInsightsTransport({
 });
 ```
 
-* **Filtering** - Optional filters for traces and exceptions.
+- **Filtering** - Optional filters for traces and exceptions.
 
 ```typescript
 const transport = createApplicationInsightsTransport({
@@ -207,7 +207,7 @@ const transport = createApplicationInsightsTransport({
 });
 ```
 
-* **Disable Exception Tracking** - Customize error detection logic.
+- **Disable Exception Tracking** - Customize error detection logic.
 
 ```typescript
 const transport = createApplicationInsightsTransport({
@@ -262,26 +262,26 @@ setup('InstrumentationKey=your-key-here').start();
 
 ### Configuration Options
 
-* **version**: `2` or `3` - Application Insights SDK version (required)
-* **client**: Application Insights client instance (required)
-* **isError**: Custom function to determine what counts as an error (default: detects Error instances)
-* **severityMapping**: Custom Winston level to Application Insights severity mapping
-* **traceFilter**: Optional function to filter traces before sending
-* **exceptionFilter**: Optional function to filter exceptions before sending
+- **version**: `2` or `3` - Application Insights SDK version (required)
+- **client**: Application Insights client instance (required)
+- **isError**: Custom function to determine what counts as an error (default: detects Error instances)
+- **severityMapping**: Custom Winston level to Application Insights severity mapping
+- **traceFilter**: Optional function to filter traces before sending
+- **exceptionFilter**: Optional function to filter exceptions before sending
 
 ### Troubleshooting
 
-**Missing Connection String**
+#### Missing Connection String
 
-```
+```txt
 No instrumentation key or connection string was provided
 ```
 
 Set the connection string via environment variable or setup parameter.
 
-**Duplicate API Registration** 
+#### Duplicate API Registration
 
-```
+```txt
 Attempted duplicate registration of API: context
 ```
 
@@ -295,7 +295,7 @@ const transport = createApplicationInsightsTransport({
 });
 ```
 
-**Multiple/Duplicate Traces**
+#### Multiple/Duplicate Traces
 
 Application Insights auto-collects from console and Winston. Disable auto-collection:
 

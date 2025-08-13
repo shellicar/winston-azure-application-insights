@@ -3,6 +3,7 @@ import type { ExceptionTelemetry as ExceptionTelemetryV2, TraceTelemetry as Trac
 import type { ExceptionTelemetry as ExceptionTelemetryV3, TelemetryClient as TelemetryClientV3, TraceTelemetry as TraceTelemetryV3 } from 'applicationinsightsv3';
 import type { Format } from 'logform';
 import { SPLAT } from 'triple-beam';
+import type { LoggerOptions } from 'winston';
 import type { TelemetrySeverity } from './enums';
 
 export interface RequiredOptions {
@@ -27,11 +28,11 @@ export type ITelemetryFilterV3 = (telemetry: TraceTelemetryV3) => boolean;
 export type IExceptionFilterV2 = (exception: ExceptionTelemetryV2) => boolean;
 export type IExceptionFilterV3 = (exception: ExceptionTelemetryV3) => boolean;
 
-export type TelemetryHandlerFactoryBaseOptions = {
+export type CreateApplicationInsightsTransportOptions = {
   severityMapping?: SeverityMapping;
-} & TelemetryHandlerFactoryOptions;
+} & CreateTelemetryHandlerOptions;
 
-export type TelemetryHandlerFactoryOptions =
+export type CreateTelemetryHandlerOptions =
   | {
       client: TelemetryClientV2;
       version: 2;
@@ -45,7 +46,7 @@ export type TelemetryHandlerFactoryOptions =
       exceptionFilter?: IExceptionFilterV3;
     };
 
-export type TelemetryHandlerFactory = (options: TelemetryHandlerFactoryOptions) => TelemetryHandler;
+export type TelemetryHandlerFactory = (options: CreateTelemetryHandlerOptions) => TelemetryHandler;
 
 export interface TelemetryHandler {
   handleTelemetry: (telemetry: TelemetryData) => void;
@@ -88,15 +89,16 @@ export interface AzureApplicationInsightsLoggerOptions {
 
 export type CreateWinstonLoggerOptions = {
   winston: {
-    console: boolean;
+    console?: boolean;
     format?: Format[];
     defaultMeta?: Record<string, unknown>;
     level?: string;
     levels?: WinstonLevels;
+    options: Omit<LoggerOptions, 'format' | 'defaultMeta' | 'level' | 'levels'>;
   };
   insights: {
     severityMapping?: SeverityMapping;
-  } & TelemetryHandlerFactoryOptions;
+  } & CreateTelemetryHandlerOptions;
 };
 
 export interface WinstonLevels {

@@ -1,44 +1,11 @@
 import { config, createLogger, format, transports } from 'winston';
 import type TransportStream from 'winston-transport';
 import { ApplicationInsightsTransport } from './ApplicationInsightsTransport';
-import { ApplicationInsightsV2TelemetryHandler } from './ApplicationInsightsV2TelemetryHandler';
-import { ApplicationInsightsV3TelemetryHandler } from './ApplicationInsightsV3TelemetryHandler';
-import type { CreateWinstonLoggerOptions, TelemetryHandler, TelemetryHandlerFactoryBaseOptions, TelemetryHandlerFactoryOptions } from './types';
-
-export const createTelemetryHandler = (options: TelemetryHandlerFactoryOptions): TelemetryHandler => {
-  switch (options.version) {
-    case 2: {
-      return new ApplicationInsightsV2TelemetryHandler({
-        client: options.client,
-        traceFilter: options.traceFilter,
-        exceptionFilter: options.exceptionFilter,
-      });
-    }
-    case 3: {
-      return new ApplicationInsightsV3TelemetryHandler({
-        client: options.client,
-        traceFilter: options.traceFilter,
-        exceptionFilter: options.exceptionFilter,
-      });
-    }
-  }
-};
-
-export const createApplicationInsightsTransport = (options: TelemetryHandlerFactoryBaseOptions) => {
-  const telemetryHandler = createTelemetryHandler(options);
-
-  const transport = new ApplicationInsightsTransport({
-    telemetryHandler,
-    severityMapping: options.severityMapping,
-  });
-
-  return transport;
-};
+import { createTelemetryHandler } from './createTelemetryHandler';
+import { isRunningLocally } from './isRunningLocally';
+import type { CreateWinstonLoggerOptions } from './types';
 
 export const createWinstonLogger = (options: CreateWinstonLoggerOptions) => {
-  const level = options.winston.level ?? 'info';
-  const levels = options.winston.levels ?? config.npm.levels;
-
   const telemetryHandler = createTelemetryHandler(options.insights);
 
   const transport = new ApplicationInsightsTransport({
@@ -48,7 +15,9 @@ export const createWinstonLogger = (options: CreateWinstonLoggerOptions) => {
 
   const _transports: TransportStream[] = [transport];
 
-  if (options.winston.console) {
+  const console = options.winston.console ?? isRunningLocally();
+
+  if (console) {
     _transports.push(
       new transports.Console({
         format: format.json(),
@@ -58,9 +27,13 @@ export const createWinstonLogger = (options: CreateWinstonLoggerOptions) => {
     );
   }
 
-  const _format = format.combine(...(options.winston.format ?? []), format.json());
+  const level = options.winston.level ?? 'info';
+  const levels = options.winston.levels ?? config.npm.levels;
+  const fmt = options.winston.format ?? [];
+  const _format = format.combine(...fmt, format.json());
 
   return createLogger({
+    ...options.winston.options,
     level,
     levels,
     format: _format,

@@ -6,7 +6,7 @@ import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 describe('defaultMeta support', () => {
   const telemetryHandler = new SpyTelemetryHandler();
 
-  describe('Object defaultMeta behavior', () => {
+  describe('Object defaultMeta behaviour', () => {
     it('should include defaultMeta in properties when no splat', () => {
       const transport = new ApplicationInsightsTransport({ telemetryHandler });
       const logger = createLogger({
@@ -75,7 +75,7 @@ describe('defaultMeta support', () => {
       expect(actual).toEqual(expected);
     });
 
-    it('should return defaultMeta when first splat is primitive (Winston behavior)', () => {
+    it('should return defaultMeta when first splat is primitive (Winston behaviour)', () => {
       const transport = new ApplicationInsightsTransport({ telemetryHandler });
       const logger = createLogger({
         defaultMeta: { userId: 123, appVersion: '1.0.0' },
@@ -110,7 +110,7 @@ describe('defaultMeta support', () => {
     });
   });
 
-  describe('Array defaultMeta behavior', () => {
+  describe('Array defaultMeta behaviour', () => {
     it('should spread array defaultMeta as indexed properties', () => {
       const transport = new ApplicationInsightsTransport({ telemetryHandler });
       const logger = createLogger({
@@ -165,7 +165,7 @@ describe('defaultMeta support', () => {
     });
   });
 
-  describe('String defaultMeta behavior', () => {
+  describe('String defaultMeta behaviour', () => {
     it('should spread string defaultMeta as character properties', () => {
       const transport = new ApplicationInsightsTransport({ telemetryHandler });
       const logger = createLogger({
@@ -202,7 +202,7 @@ describe('defaultMeta support', () => {
     });
   });
 
-  describe('Primitive defaultMeta behavior', () => {
+  describe('Primitive defaultMeta behaviour', () => {
     it('should ignore number defaultMeta', () => {
       const transport = new ApplicationInsightsTransport({ telemetryHandler });
       const logger = createLogger({
