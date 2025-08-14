@@ -27,7 +27,6 @@ transport1.log(
   {
     level: 'info',
     message: 'Hello transport1',
-    properties: {},
   },
   () => {},
 );
@@ -39,7 +38,6 @@ transport2.log(
   {
     level: 'info',
     message: 'Hello transport2',
-    properties: {},
   },
   () => {},
 );
