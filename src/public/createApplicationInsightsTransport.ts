@@ -1,8 +1,9 @@
+import type TransportStream from 'winston-transport';
 import { ApplicationInsightsTransport } from '../private/ApplicationInsightsTransport';
 import { createTelemetryHandler } from './createTelemetryHandler';
 import type { CreateApplicationInsightsTransportOptions } from './types';
 
-export const createApplicationInsightsTransport = (options: CreateApplicationInsightsTransportOptions) => {
+export const createApplicationInsightsTransport = (options: CreateApplicationInsightsTransportOptions): TransportStream => {
   const telemetryHandler = createTelemetryHandler(options);
 
   const transport = new ApplicationInsightsTransport({

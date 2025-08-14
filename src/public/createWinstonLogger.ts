@@ -1,43 +1,69 @@
-import { config, createLogger, format, transports } from 'winston';
+import winston from 'winston';
 import type TransportStream from 'winston-transport';
 import { ApplicationInsightsTransport } from '../private/ApplicationInsightsTransport';
+import { type CreateWinstonFormatOptions, createWinstonFormat } from '../private/createWinstonFormat';
 import { createTelemetryHandler } from './createTelemetryHandler';
 import { isRunningLocally } from './isRunningLocally';
 import type { CreateWinstonLoggerOptions } from './types';
 
-export const createWinstonLogger = (options: CreateWinstonLoggerOptions) => {
-  const telemetryHandler = createTelemetryHandler(options.insights);
+export const createWinstonLogger = (options: CreateWinstonLoggerOptions): winston.Logger => {
+  const { severityMapping, exceptionFilter, traceFilter, isError, ...rest } = options.insights;
 
-  const transport = new ApplicationInsightsTransport({
-    telemetryHandler,
-    severityMapping: options.insights.severityMapping,
-  });
+  const telemetryHandler = createTelemetryHandler(rest);
 
-  const _transports: TransportStream[] = [transport];
+  const transports: TransportStream[] = [];
 
-  const console = options.winston.console ?? isRunningLocally();
+  const consoleEnabled = options.winston?.console?.enabled ?? isRunningLocally();
+  if (consoleEnabled) {
+    let consoleFormatConfig: CreateWinstonFormatOptions | undefined;
 
-  if (console) {
-    _transports.push(
-      new transports.Console({
-        format: format.json(),
+    if (Array.isArray(options.winston?.console?.format)) {
+      consoleFormatConfig = options.winston.console.format;
+    } else {
+      const userFormat = options.winston?.console?.format ?? {};
+      consoleFormatConfig = {
+        output: userFormat.output ?? 'json',
+        timestamp: userFormat.timestamp ?? true,
+        errors: userFormat.errors ?? true,
+        colorize: userFormat.colorize ?? true,
+      };
+    }
+
+    const consoleFormat = createWinstonFormat(consoleFormatConfig);
+
+    transports.push(
+      new winston.transports.Console({
+        format: consoleFormat,
+        level: options.winston?.console?.level,
         stderrLevels: ['error', 'crit', 'alert', 'emerg'],
         consoleWarnLevels: ['warn', 'warning'],
       }),
     );
   }
 
-  const level = options.winston.level ?? 'info';
-  const levels = options.winston.levels ?? config.npm.levels;
-  const fmt = options.winston.format ?? [];
-  const _format = format.combine(...fmt, format.json());
+  // Insights transport
+  const insightsEnabled = options.winston?.insights?.enabled ?? true;
+  if (insightsEnabled) {
+    const transport = new ApplicationInsightsTransport({
+      telemetryHandler,
+      severityMapping,
+      exceptionFilter,
+      traceFilter,
+      isError,
+    });
+    transports.push(transport);
+  }
 
-  return createLogger({
-    ...options.winston.options,
+  // Merge defaults with logger-level options
+  const level = options.winston?.defaults?.level ?? 'info';
+  const levels = options.winston?.levels ?? winston.config.npm.levels;
+
+  // Default format for main logger (applied to all transports)
+  return winston.createLogger({
+    ...options.winston?.options,
     level,
     levels,
-    format: _format,
-    transports: _transports,
-    defaultMeta: options.winston.defaultMeta,
+    transports,
+    defaultMeta: options.winston?.defaults?.defaultMeta,
   });
 };

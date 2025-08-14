@@ -2,9 +2,12 @@ import { createWinstonLogger } from '@shellicar/winston-azure-application-insigh
 import applicationinsights from 'applicationinsights';
 
 applicationinsights.setup().start();
+
 const logger = createWinstonLogger({
   winston: {
-    console: true,
+    console: true, // Enable console logging
+    level: 'info',
+    defaultMeta: { service: 'my-app' },
   },
   insights: {
     version: 3,
@@ -12,4 +15,5 @@ const logger = createWinstonLogger({
   },
 });
 
-logger.info('Hello World');
+logger.info('Hello from Winston + Application Insights!');
+logger.error('Something went wrong', new Error('Oops!'));

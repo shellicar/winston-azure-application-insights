@@ -7,11 +7,11 @@
 
 ## Features
 
-• 🔄 **Dual SDK Support** - Works with both Application Insights v2 and v3 SDKs
-• 🚀 **Simple Factory Functions** - Easy setup with `createApplicationInsightsTransport()` and `createWinstonLogger()`  
+• � **Dual SDK Support** - Works with both Application Insights v2 and v3 SDKs
+• � **Simple Factory Functions** - Easy setup with `createApplicationInsightsTransport()` and `createWinstonLogger()`  
 • 🔍 **Automatic Error Detection** - Extracts Error objects from logs and sends them as Application Insights exceptions
 • 📊 **Trace + Exception Logging** - Sends logs as traces while also tracking errors as detailed exceptions
-• 🎯 **Flexible Filtering** - Optional trace and exception filters for fine-grained control
+• � **Flexible Filtering** - Optional trace and exception filters for fine-grained control
 • 🔧 **Custom Severity Mapping** - Map Winston levels to Application Insights severity levels
 • 🏠 **Local Development** - Log to console locally while sending to Application Insights in production
 
@@ -21,24 +21,88 @@
 pnpm add @shellicar/winston-azure-application-insights
 ```
 
+### All-in-One Logger Creation
+
+The simplest way to get started - creates a complete Winston logger with Application Insights transport:
+
 ```typescript
-import { setup, defaultClient } from 'applicationinsights';
-import { createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
-import { createLogger } from 'winston';
+import { createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import applicationinsights from 'applicationinsights';
 
-setup().start();
+applicationinsights.setup().start();
 
-const transport = createApplicationInsightsTransport({
-  version: 3,
-  client: defaultClient,
+const logger = createWinstonLogger({
+  winston: {
+    console: true, // Enable console logging
+    level: 'info',
+    defaultMeta: { service: 'my-app' }
+  },
+  insights: {
+    version: 3,
+    client: applicationinsights.defaultClient,
+  },
 });
 
+logger.info('Hello from Winston + Application Insights!');
+logger.error('Something went wrong', new Error('Oops!'));
+```
+
+### Creating Transport Separately
+
+When you need more control over Winston configuration:
+
+```typescript
+import { createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
+import applicationinsights from 'applicationinsights';
+import { createLogger } from 'winston';
+
+applicationinsights.setup().start();
+
+// Create the Application Insights transport
+const transport = createApplicationInsightsTransport({
+  version: 3,
+  client: applicationinsights.defaultClient,
+});
+
+// Create Winston logger with your custom configuration
 const logger = createLogger({
   transports: [transport],
 });
+```
 
-logger.info('Hello Application Insights!');
-logger.error('Something failed', new Error('Connection timeout'));
+### Using Custom Telemetry Handler
+
+For maximum flexibility, create or provide your own telemetry handler:
+
+```typescript
+import { createWinstonLogger, TelemetryHandler } from '@shellicar/winston-azure-application-insights';
+import type { TelemetryData } from '@shellicar/winston-azure-application-insights';
+
+class CustomTelemetryHandler implements TelemetryHandler {
+  handleTelemetry(telemetry: TelemetryData) {
+    console.log('Custom Telemetry Handler:', telemetry);
+    
+    // Your custom logic here - send to multiple services, transform data, etc.
+    if (telemetry.trace) {
+      console.log('Trace:', telemetry.trace.message);
+    }
+    
+    for (const exception of telemetry.exceptions) {
+      console.log('Exception:', exception.exception.message);
+    }
+  }
+}
+
+const handler = new CustomTelemetryHandler();
+
+const logger = createWinstonLogger({
+  insights: {
+    handler,
+  },
+});
+
+logger.info('Hello world');
+logger.error('Something failed', new Error('Custom error'));
 ```
 
 <!-- BEGIN_ECOSYSTEM -->

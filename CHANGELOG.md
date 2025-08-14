@@ -1,6 +1,6 @@
 # Changelog
 
-## [6.0.0] - 2025-08-13
+## [6.0.0] - 2025-08-14
 
 ### Breaking Changes
 
@@ -40,6 +40,13 @@ const logger = createWinstonLogger({
   winston: { console: true },
   insights: { version: 3, client: defaultClient },
 });
+
+// Option 3: Telemetry handler
+const handler = createTelemetryHandler({
+  version: 3,
+  client: defaultClient,
+});
+const transport
 ```
 
 #### Architecture Changes

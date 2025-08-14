@@ -1,8 +1,9 @@
 import type { TelemetryClient as TelemetryClientV2 } from 'applicationinsightsv2';
 import type { TelemetryClient as TelemetryClientV3 } from 'applicationinsightsv3';
-import type { Format } from 'logform';
+import type { ColorizeOptions, Format, TimestampOptions } from 'logform';
 import type { LoggerOptions } from 'winston';
 import type { TelemetrySeverity } from './enums';
+import { isRunningLocally } from './isRunningLocally';
 
 // public
 export type TelemetryDataProperties = Record<string, unknown>;
@@ -61,16 +62,32 @@ export interface WinstonLevels {
   [levelName: string]: number;
 }
 
+export interface WinstonColors {
+  [colorName: string]: string;
+}
+
+export interface WinstonTransportOptions {
+  enabled?: boolean;
+  format?:
+    | Format[]
+    | {
+        output?: 'json' | 'simple';
+        errors?: boolean | { stack?: boolean };
+        timestamp?: boolean | TimestampOptions;
+        colorize?: boolean | ColorizeOptions;
+      };
+  level?: string;
+  defaultMeta?: Record<string, unknown>;
+}
+
 export type CreateWinstonLoggerOptions = {
-  winston: {
-    console?: boolean;
-    format?: Format[];
-    defaultMeta?: Record<string, unknown>;
-    level?: string;
+  winston?: {
     levels?: WinstonLevels;
+    colors?: WinstonColors;
     options?: Omit<LoggerOptions, 'format' | 'defaultMeta' | 'level' | 'levels'>;
+    defaults?: Omit<WinstonTransportOptions, 'enabled' | 'format'>;
+    console?: WinstonTransportOptions;
+    insights?: Omit<WinstonTransportOptions, 'format'>;
   };
-  insights: {
-    severityMapping?: SeverityMapping;
-  } & CreateTelemetryHandlerOptions;
+  insights: CreateApplicationInsightsTransportOptions;
 };

@@ -23,7 +23,7 @@ describe('createApplicationInsightsTransport', () => {
       client,
     });
 
-    transport.log({ level: 'info', message: 'Test V2' }, () => {});
+    transport.log?.({ level: 'info', message: 'Test V2' }, () => {});
 
     expect(client.traces).toHaveLength(1);
     expect(client.traces[0]?.message).toBe('Test V2');
@@ -36,7 +36,7 @@ describe('createApplicationInsightsTransport', () => {
       client,
     });
 
-    transport.log({ level: 'info', message: 'Test V3' }, () => {});
+    transport.log?.({ level: 'info', message: 'Test V3' }, () => {});
 
     expect(client.traces).toHaveLength(1);
     expect(client.traces[0]?.message).toBe('Test V3');
@@ -52,7 +52,7 @@ describe('createApplicationInsightsTransport', () => {
       },
     });
 
-    transport.log({ level: 'custom', message: 'Custom level' }, () => {});
+    transport.log?.({ level: 'custom', message: 'Custom level' }, () => {});
 
     expect(client.traces).toHaveLength(1);
     expect(client.traces[0]?.severity).toBe('Critical');
@@ -66,8 +66,8 @@ describe('createApplicationInsightsTransport', () => {
       traceFilter: (trace) => trace.message !== 'filtered',
     });
 
-    transport.log({ level: 'info', message: 'allowed' }, () => {});
-    transport.log({ level: 'info', message: 'filtered' }, () => {});
+    transport.log?.({ level: 'info', message: 'allowed' }, () => {});
+    transport.log?.({ level: 'info', message: 'filtered' }, () => {});
 
     expect(client.traces).toHaveLength(1);
     expect(client.traces[0]?.message).toBe('allowed');
@@ -84,8 +84,8 @@ describe('createApplicationInsightsTransport', () => {
     const allowedError = new Error('allowed error');
     const filteredError = new Error('filtered error');
 
-    transport.log({ level: 'error', message: 'Test', [Symbol.for('splat')]: [allowedError] }, () => {});
-    transport.log({ level: 'error', message: 'Test', [Symbol.for('splat')]: [filteredError] }, () => {});
+    transport.log?.({ level: 'error', message: 'Test', [Symbol.for('splat')]: [allowedError] }, () => {});
+    transport.log?.({ level: 'error', message: 'Test', [Symbol.for('splat')]: [filteredError] }, () => {});
 
     expect(client.exceptions).toHaveLength(1);
     expect(client.exceptions[0]?.exception).toBe(allowedError);
@@ -105,8 +105,8 @@ describe('createApplicationInsightsTransport', () => {
     const customError = new CustomError('Custom error type');
     const regularError = new Error('Regular error');
 
-    transport.log({ level: 'error', message: 'Test custom', [Symbol.for('splat')]: [customError] }, () => {});
-    transport.log({ level: 'error', message: 'Test regular', [Symbol.for('splat')]: [regularError] }, () => {});
+    transport.log?.({ level: 'error', message: 'Test custom', [Symbol.for('splat')]: [customError] }, () => {});
+    transport.log?.({ level: 'error', message: 'Test regular', [Symbol.for('splat')]: [regularError] }, () => {});
 
     // Should only extract the CustomError as an exception, not the regular Error
     expect(client.exceptions).toHaveLength(1);

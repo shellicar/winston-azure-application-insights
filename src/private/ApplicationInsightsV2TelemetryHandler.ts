@@ -5,7 +5,7 @@ import type { TelemetryData, TelemetryHandler } from '../public/types';
 
 // From application insights
 // Declare locally to avoid importing the library
-declare enum SeverityLevel {
+enum SeverityLevel {
   Verbose = 0,
   Information = 1,
   Warning = 2,

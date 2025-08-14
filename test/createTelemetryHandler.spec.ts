@@ -3,6 +3,7 @@ import { ApplicationInsightsV2TelemetryHandler } from '../src/private/Applicatio
 import { ApplicationInsightsV3TelemetryHandler } from '../src/private/ApplicationInsightsV3TelemetryHandler';
 import { createTelemetryHandler } from '../src/public/createTelemetryHandler';
 import { TelemetrySeverity } from '../src/public/enums';
+import type { TelemetryHandler } from '../src/public/types';
 import { SpyTelemetryClientV2 } from './spies/SpyTelemetryClientV2';
 import { SpyTelemetryClientV3 } from './spies/SpyTelemetryClientV3';
 
@@ -96,5 +97,15 @@ describe('createTelemetryHandler', () => {
     expect(client.exceptions).toHaveLength(1);
     expect(client.exceptions[0]?.exception).toBe(testError);
     expect(client.exceptions[0]?.properties).toEqual({ context: 'test' });
+  });
+
+  it('returns provided handler when handler is passed', () => {
+    const mockHandler: TelemetryHandler = {
+      handleTelemetry: () => {},
+    };
+
+    const result = createTelemetryHandler({ handler: mockHandler });
+
+    expect(result).toBe(mockHandler);
   });
 });

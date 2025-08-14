@@ -1,15 +1,15 @@
 import { env } from 'node:process';
 import { createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
-import { defaultClient, setup } from 'applicationinsights';
+import applicationinsights from 'applicationinsights';
 import winston from 'winston';
 
 const shouldPushToAppInsights = 'APPLICATIONINSIGHTS_CONNECTION_STRING' in env;
 
 if (shouldPushToAppInsights) {
-  setup().start();
+  applicationinsights.setup().start();
   const transport = createApplicationInsightsTransport({
     version: 3,
-    client: defaultClient,
+    client: applicationinsights.defaultClient,
   });
   winston.add(transport);
 } else {

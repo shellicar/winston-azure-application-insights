@@ -23,7 +23,7 @@ const transport1 = createApplicationInsightsTransport({
   client,
   version: 3,
 });
-transport1.log(
+transport1.log?.(
   {
     level: 'info',
     message: 'Hello transport1',
@@ -34,7 +34,7 @@ transport1.log(
 const transport2 = createApplicationInsightsTransport({
   handler,
 });
-transport2.log(
+transport2.log?.(
   {
     level: 'info',
     message: 'Hello transport2',
