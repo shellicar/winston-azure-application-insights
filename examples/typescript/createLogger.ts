@@ -4,7 +4,9 @@ import applicationinsights from 'applicationinsights';
 applicationinsights.setup().start();
 const logger = createWinstonLogger({
   winston: {
-    console: true,
+    console: {
+      enabled: true,
+    },
   },
   insights: {
     version: 3,

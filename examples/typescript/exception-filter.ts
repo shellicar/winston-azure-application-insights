@@ -1,7 +1,12 @@
-import { type IExceptionTelemetryFilter, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import { type IExceptionTelemetryFilter, type TelemetryData, type TelemetryHandler, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
 import winston from 'winston';
-import { CustomTelemetryHandler } from './CustomTelemetryHandler';
+
+class CustomTelemetryHandler implements TelemetryHandler {
+  handleTelemetry(telemetry: TelemetryData) {
+    console.log('Custom Telemetry Handler:', telemetry);
+  }
+}
 
 applicationinsights.setup().start();
 
@@ -22,11 +27,9 @@ const logger = createWinstonLogger({
     exceptionFilter,
   },
   winston: {
-    format: [
-      // winston.format.timestamp(),
-      winston.format.json(),
-      winston.format.errors({ stack: true }),
-    ],
+    console: {
+      format: [winston.format.timestamp(), winston.format.json(), winston.format.errors({ stack: true })],
+    },
   },
 });
 

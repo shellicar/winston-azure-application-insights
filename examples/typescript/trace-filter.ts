@@ -1,8 +1,13 @@
-import { type ITraceTelemetryFilter, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import { type ITraceTelemetryFilter, type TelemetryData, type TelemetryHandler, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
-import { CustomTelemetryHandler } from './CustomTelemetryHandler';
 
 applicationinsights.setup().start();
+
+class CustomTelemetryHandler implements TelemetryHandler {
+  handleTelemetry(telemetry: TelemetryData) {
+    console.log('Custom Telemetry Handler:', telemetry);
+  }
+}
 
 const handler = new CustomTelemetryHandler();
 

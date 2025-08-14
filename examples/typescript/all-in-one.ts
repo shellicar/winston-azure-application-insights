@@ -5,9 +5,13 @@ applicationinsights.setup().start();
 
 const logger = createWinstonLogger({
   winston: {
-    console: true, // Enable console logging
-    level: 'info',
-    defaultMeta: { service: 'my-app' },
+    console: {
+      enabled: true,
+    },
+    defaults: {
+      level: 'info',
+      defaultMeta: { service: 'my-app' },
+    },
   },
   insights: {
     version: 3,

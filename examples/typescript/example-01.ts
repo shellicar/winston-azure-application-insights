@@ -12,7 +12,9 @@ const logger: Logger = createWinstonLogger({
     client: applicationinsights.defaultClient,
   },
   winston: {
-    format: [format.simple()],
+    console: {
+      format: [format.simple()],
+    },
   },
 });
 

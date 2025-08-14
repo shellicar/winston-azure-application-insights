@@ -7,11 +7,11 @@
 
 ## Features
 
-• � **Dual SDK Support** - Works with both Application Insights v2 and v3 SDKs
-• � **Simple Factory Functions** - Easy setup with `createApplicationInsightsTransport()` and `createWinstonLogger()`  
+• 🔄 **Dual SDK Support** - Works with both Application Insights v2 and v3 SDKs
+• 🚀 **Simple Factory Functions** - Easy setup with `createApplicationInsightsTransport()` and `createWinstonLogger()`  
 • 🔍 **Automatic Error Detection** - Extracts Error objects from logs and sends them as Application Insights exceptions
 • 📊 **Trace + Exception Logging** - Sends logs as traces while also tracking errors as detailed exceptions
-• � **Flexible Filtering** - Optional trace and exception filters for fine-grained control
+• 🎯 **Flexible Filtering** - Optional trace and exception filters for fine-grained control
 • 🔧 **Custom Severity Mapping** - Map Winston levels to Application Insights severity levels
 • 🏠 **Local Development** - Log to console locally while sending to Application Insights in production
 
@@ -21,10 +21,6 @@
 pnpm add @shellicar/winston-azure-application-insights
 ```
 
-### All-in-One Logger Creation
-
-The simplest way to get started - creates a complete Winston logger with Application Insights transport:
-
 ```typescript
 import { createWinstonLogger } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
@@ -32,108 +28,15 @@ import applicationinsights from 'applicationinsights';
 applicationinsights.setup().start();
 
 const logger = createWinstonLogger({
-  winston: {
-    console: true, // Enable console logging
-    level: 'info',
-    defaultMeta: { service: 'my-app' }
-  },
   insights: {
     version: 3,
-    client: applicationinsights.defaultClient,
+    client: applicationinsights.defaultClient
   },
 });
-
-logger.info('Hello from Winston + Application Insights!');
-logger.error('Something went wrong', new Error('Oops!'));
+logger.info('Hello World');
 ```
 
-### Creating Transport Separately
-
-When you need more control over Winston configuration:
-
-```typescript
-import { createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
-import applicationinsights from 'applicationinsights';
-import { createLogger } from 'winston';
-
-applicationinsights.setup().start();
-
-// Create the Application Insights transport
-const transport = createApplicationInsightsTransport({
-  version: 3,
-  client: applicationinsights.defaultClient,
-});
-
-// Create Winston logger with your custom configuration
-const logger = createLogger({
-  transports: [transport],
-});
-```
-
-### Using Custom Telemetry Handler
-
-For maximum flexibility, create or provide your own telemetry handler:
-
-```typescript
-import { createWinstonLogger, TelemetryHandler } from '@shellicar/winston-azure-application-insights';
-import type { TelemetryData } from '@shellicar/winston-azure-application-insights';
-
-class CustomTelemetryHandler implements TelemetryHandler {
-  handleTelemetry(telemetry: TelemetryData) {
-    console.log('Custom Telemetry Handler:', telemetry);
-    
-    // Your custom logic here - send to multiple services, transform data, etc.
-    if (telemetry.trace) {
-      console.log('Trace:', telemetry.trace.message);
-    }
-    
-    for (const exception of telemetry.exceptions) {
-      console.log('Exception:', exception.exception.message);
-    }
-  }
-}
-
-const handler = new CustomTelemetryHandler();
-
-const logger = createWinstonLogger({
-  insights: {
-    handler,
-  },
-});
-
-logger.info('Hello world');
-logger.error('Something failed', new Error('Custom error'));
-```
-
-<!-- BEGIN_ECOSYSTEM -->
-
-## @shellicar TypeScript Ecosystem
-
-### Core Libraries
-
-- [`@shellicar/core-config`](https://github.com/shellicar/core-config) - A library for securely handling sensitive configuration values like connection strings, URLs, and secrets.
-- [`@shellicar/core-di`](https://github.com/shellicar/core-di) - A basic dependency injection library.
-
-### Reference Architectures
-
-- [`@shellicar/reference-foundation`](https://github.com/shellicar/reference-foundation) - A comprehensive starter repository. Illustrates individual concepts.
-- [`@shellicar/reference-enterprise`](https://github.com/shellicar/reference-enterprise) - A comprehensive starter repository. Can be used as the basis for creating a new Azure application workload.
-
-### Build Tools
-
-- [`@shellicar/build-version`](https://github.com/shellicar/build-version) - Build plugin that calculates and exposes version information through a virtual module import.
-- [`@shellicar/build-graphql`](https://github.com/shellicar/build-graphql) - Build plugin that loads GraphQL files and makes them available through a virtual module import.
-
-### Framework Adapters
-
-- [`@shellicar/svelte-adapter-azure-functions`](https://github.com/shellicar/svelte-adapter-azure-functions) - A [SvelteKit adapter](https://kit.svelte.dev/docs/adapters) that builds your app into an Azure Function.
-
-### Logging & Monitoring
-
-- [`@shellicar/winston-azure-application-insights`](https://github.com/shellicar/winston-azure-application-insights) - An [Azure Application Insights](https://azure.microsoft.com/en-us/services/application-insights/) transport for [Winston](https://github.com/winstonjs/winston) logging library.
-- [`@shellicar/pino-applicationinsights-transport`](https://github.com/shellicar/pino-applicationinsights-transport) - [Azure Application Insights](https://azure.microsoft.com/en-us/services/application-insights) transport for [pino](https://github.com/pinojs/pino)
-
-<!-- END_ECOSYSTEM -->
+For more advanced usage and configuration, see the [examples](./examples) directory.
 
 ## Motivation
 
@@ -142,8 +45,6 @@ When logging directly to Application Insights using the telemetry client, it mak
 I forked the original library to add support for Application Insights v3, which is relatively recent. I have also refactored it to handle certain error logging scenarios that weren't working as expected.
 
 ## Feature Examples
-
-See [examples](./examples) for example source code.
 
 - **Factory Functions** - Simple setup with clean API.
 
@@ -166,8 +67,18 @@ import { createWinstonLogger } from '@shellicar/winston-azure-application-insigh
 
 const logger = createWinstonLogger({
   winston: {
-    console: true,
-    level: 'info',
+    console: {
+      enabled: true,
+      format: {
+        output: 'json',
+        timestamp: true,
+        errors: true,
+        colorize: true,
+      },
+    },
+    defaults: {
+      level: 'info',
+    },
   },
   insights: {
     version: 3,
@@ -194,7 +105,7 @@ logger.error('Operation failed', new Error('Timeout'));
 logger.error('Multiple failures', new Error('DB error'), new Error('Cache error'));
 ```
 
-**Key Behavior:** When you log an Error as the first parameter (`logger.error(new Error())`), it sends **only the exception** to Application Insights, not a trace. This avoids duplicate telemetry.
+**Key Behaviour:** When you log an Error as the first parameter (`logger.error(new Error())`), it sends **only the exception** to Application Insights, not a trace. This avoids duplicate telemetry.
 
 - **Properties Extraction** - Winston splat parameters become telemetry properties.
 
@@ -203,20 +114,16 @@ logger.error('Multiple failures', new Error('DB error'), new Error('Cache error'
 logger.info('User logged in', { userId: 123, action: 'login' });
 
 // Mixed types - Error objects are extracted, others become properties
-logger.error('Complex operation failed', 
-  { userId: 123, operation: 'checkout' }, 
-  new Error('Payment failed'),
-  { retryCount: 3 }
-);
+logger.error('Complex operation failed', { userId: 123, operation: 'checkout' }, new Error('Payment failed'));
 ```
 
 - **Severity Mapping** - Winston levels map to Application Insights severity with priority fallback.
 
 ```typescript
-logger.error('Critical issue');   // → Error (3)
-logger.warn('Warning message');   // → Warning (2)  
-logger.info('Info message');      // → Information (1)
-logger.verbose('Debug info');     // → Verbose (0)
+logger.error('Critical issue');   // → Error
+logger.warn('Warning message');   // → Warning
+logger.info('Info message');      // → Information
+logger.verbose('Debug info');     // → Verbose
 
 // Custom levels fall back to next available mapping
 logger.log('audit', 'Audit event'); // → Falls back based on level priority
@@ -244,17 +151,17 @@ const transport = createApplicationInsightsTransport({
 
 ```typescript
 // Application Insights v2
-import { setup, defaultClient } from 'applicationinsights'; // v2
+import applicationinsights from 'applicationinsights'; // v2
 const transport = createApplicationInsightsTransport({
   version: 2,
-  client: defaultClient,
+  client: applicationinsights.defaultClient,
 });
 
 // Application Insights v3  
-import { setup, defaultClient } from 'applicationinsightsv3'; // v3
+import applicationinsights from 'applicationinsights'; // v3
 const transport = createApplicationInsightsTransport({
   version: 3,
-  client: defaultClient,
+  client: applicationinsights.defaultClient,
 });
 ```
 
@@ -264,14 +171,12 @@ const transport = createApplicationInsightsTransport({
 const transport = createApplicationInsightsTransport({
   version: 3,
   client: defaultClient,
-  // Filter out verbose traces
   traceFilter: (trace) => trace.severity !== KnownSeverityLevel.Verbose,
-  // Skip exceptions for specific errors
   exceptionFilter: (exception) => !exception.exception.message.includes('ignore'),
 });
 ```
 
-- **Disable Exception Tracking** - Customize error detection logic.
+- **Disable Exception Tracking** - Customise error detection logic.
 
 ```typescript
 const transport = createApplicationInsightsTransport({
@@ -285,49 +190,23 @@ const transport = createApplicationInsightsTransport({
 ## Usage
 
 ```typescript
-import { setup, defaultClient } from 'applicationinsights';
-import { createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
-import { createLogger } from 'winston';
+import { createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import applicationinsights from 'applicationinsights';
 
-// Setup Application Insights
-setup().start(); // Uses APPLICATIONINSIGHTS_CONNECTION_STRING environment variable
-
-// Create transport
-const transport = createApplicationInsightsTransport({
-  version: 3,
-  client: defaultClient,
+applicationinsights.setup().start();
+createWinstonLogger({
+  insights: { 
+    version: 3,
+    client: applicationinsights.defaultClient
+    },
 });
-
-// Create Winston logger
-const logger = createLogger({
-  transports: [transport],
-});
-
-// Log messages
-logger.info('Application started', { version: '1.0.0' });
-logger.error('Database connection failed', new Error('Connection timeout'), { 
-  host: 'db.example.com',
-  retryCount: 3 
-});
-```
-
-### Connection String Setup
-
-A connection string is required before any data can be sent. See [Connection Strings in Application Insights](https://learn.microsoft.com/en-us/azure/azure-monitor/app/sdk-connection-string?tabs=dotnet5#find-your-connection-string) for more information.
-
-```typescript
-// Option 1: Environment variable (recommended)
-process.env.APPLICATIONINSIGHTS_CONNECTION_STRING = 'InstrumentationKey=your-key-here';
-setup().start();
-
-// Option 2: Explicit connection string
-setup('InstrumentationKey=your-key-here').start();
 ```
 
 ### Configuration Options
 
 - **version**: `2` or `3` - Application Insights SDK version (required)
 - **client**: Application Insights client instance (required)
+- **handler**: Custom telemetry handler function (instead of version and client)
 - **isError**: Custom function to determine what counts as an error (default: detects Error instances)
 - **severityMapping**: Custom Winston level to Application Insights severity mapping
 - **traceFilter**: Optional function to filter traces before sending
@@ -349,13 +228,13 @@ Set the connection string via environment variable or setup parameter.
 Attempted duplicate registration of API: context
 ```
 
-Your environment already loaded Application Insights (common in Azure Functions). Use the existing client without calling setup():
+Your environment already loaded Application Insights. Use the existing client without calling setup():
 
 ```typescript
-import { defaultClient } from 'applicationinsights';
+import applicationinsights from 'applicationinsights';
 const transport = createApplicationInsightsTransport({
   version: 3,
-  client: defaultClient, // Use existing client
+  client: applicationinsights.defaultClient,
 });
 ```
 

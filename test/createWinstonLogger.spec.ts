@@ -37,7 +37,6 @@ describe('createWinstonLogger', () => {
   it('creates a Winston logger instance', () => {
     const client = new SpyTelemetryClientV3();
     const logger = createWinstonLogger({
-      winston: { console: { enabled: false }, options: {} },
       insights: { version: 3, client },
     });
 

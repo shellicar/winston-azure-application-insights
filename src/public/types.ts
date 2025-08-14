@@ -3,9 +3,7 @@ import type { TelemetryClient as TelemetryClientV3 } from 'applicationinsightsv3
 import type { ColorizeOptions, Format, TimestampOptions } from 'logform';
 import type { LoggerOptions } from 'winston';
 import type { TelemetrySeverity } from './enums';
-import { isRunningLocally } from './isRunningLocally';
 
-// public
 export type TelemetryDataProperties = Record<string, unknown>;
 
 export interface TelemetryDataTrace {
