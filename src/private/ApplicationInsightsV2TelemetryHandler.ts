@@ -1,7 +1,17 @@
 import type { TelemetryClient } from 'applicationinsightsv2';
-import { type ExceptionTelemetry, SeverityLevel, type TraceTelemetry } from 'applicationinsightsv2/out/Declarations/Contracts/index.js';
+import type { ExceptionTelemetry, TraceTelemetry } from 'applicationinsightsv2/out/Declarations/Contracts';
 import { TelemetrySeverity } from '../public/enums';
 import type { TelemetryData, TelemetryHandler } from '../public/types';
+
+// From application insights
+// Declare locally to avoid importing the library
+declare enum SeverityLevel {
+  Verbose = 0,
+  Information = 1,
+  Warning = 2,
+  Error = 3,
+  Critical = 4,
+}
 
 export interface ApplicationInsightsV2TelemetryHandlerOptions {
   client: TelemetryClient;

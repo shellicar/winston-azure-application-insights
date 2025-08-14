@@ -1,4 +1,4 @@
-import { SeverityLevel } from 'applicationinsightsv2/out/Declarations/Contracts/index.js';
+import { SeverityLevel } from 'applicationinsightsv2/out/Declarations/Contracts';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ApplicationInsightsV2TelemetryHandler } from '../src/private/ApplicationInsightsV2TelemetryHandler';
 import { TelemetrySeverity } from '../src/public/enums';
