@@ -14,5 +14,8 @@ export const createTelemetryHandler = (options: CreateTelemetryHandlerOptions): 
         client: options.client,
       });
     }
+    default: {
+      return options.handler;
+    }
   }
 };

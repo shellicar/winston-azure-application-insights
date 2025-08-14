@@ -1,5 +1,5 @@
 import { TelemetryClient } from 'applicationinsightsv2';
-import type { ExceptionTelemetry, TraceTelemetry } from 'applicationinsightsv2/out/Declarations/Contracts';
+import type { ExceptionTelemetry, TraceTelemetry } from 'applicationinsightsv2/out/Declarations/Contracts/index.js';
 
 export class SpyTelemetryClientV2 extends TelemetryClient {
   public constructor() {

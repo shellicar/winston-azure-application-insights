@@ -44,6 +44,10 @@ export type CreateTelemetryHandlerOptions =
   | {
       client: TelemetryClientV3;
       version: 3;
+    }
+  | {
+      handler: TelemetryHandler;
+      version?: never;
     };
 
 export type CreateApplicationInsightsTransportOptions = {

@@ -73,6 +73,42 @@ importers:
         specifier: npm:applicationinsights@^3
         version: applicationinsights@3.3.0
 
+  examples/cjs:
+    devDependencies:
+      '@shellicar/winston-azure-application-insights':
+        specifier: link:../..
+        version: link:../..
+      '@tsconfig/node20':
+        specifier: ^20.1.6
+        version: 20.1.6
+      '@types/node':
+        specifier: ^24.1.0
+        version: 24.1.0
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.0(postcss@8.5.6)(tsx@4.20.3)(typescript@5.9.2)
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
+
+  examples/esm:
+    devDependencies:
+      '@shellicar/winston-azure-application-insights':
+        specifier: link:../..
+        version: link:../..
+      '@tsconfig/node20':
+        specifier: ^20.1.6
+        version: 20.1.6
+      '@types/node':
+        specifier: ^24.1.0
+        version: 24.1.0
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.0(postcss@8.5.6)(tsx@4.20.3)(typescript@5.9.2)
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
+
   examples/typescript:
     dependencies:
       '@shellicar/winston-azure-application-insights':
@@ -834,6 +870,9 @@ packages:
 
   '@standard-schema/spec@1.0.0':
     resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
+
+  '@tsconfig/node20@20.1.6':
+    resolution: {integrity: sha512-sz+Hqx9zwZDpZIV871WSbUzSqNIsXzghZydypnfgzPKLltVJfkINfUeTct31n/tTSa9ZE1ZOfKdRre1uHHquYQ==}
 
   '@types/bunyan@1.8.9':
     resolution: {integrity: sha512-ZqS9JGpBxVOvsawzmVt30sP++gSQMTejCkIAQ3VdadOcRE8izTyW66hufvwLeH+YEGP6Js2AW7Gz+RMyvrEbmw==}
@@ -3041,6 +3080,8 @@ snapshots:
   '@sindresorhus/merge-streams@2.3.0': {}
 
   '@standard-schema/spec@1.0.0': {}
+
+  '@tsconfig/node20@20.1.6': {}
 
   '@types/bunyan@1.8.9':
     dependencies:

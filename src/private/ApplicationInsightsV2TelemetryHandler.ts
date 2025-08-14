@@ -1,5 +1,5 @@
 import type { TelemetryClient } from 'applicationinsightsv2';
-import { type ExceptionTelemetry, SeverityLevel, type TraceTelemetry } from 'applicationinsightsv2/out/Declarations/Contracts';
+import { type ExceptionTelemetry, SeverityLevel, type TraceTelemetry } from 'applicationinsightsv2/out/Declarations/Contracts/index.js';
 import { TelemetrySeverity } from '../public/enums';
 import type { TelemetryData, TelemetryHandler } from '../public/types';
 
