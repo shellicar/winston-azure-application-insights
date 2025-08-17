@@ -260,3 +260,10 @@ Application Insights auto-collects from console and Winston. Disable auto-collec
 ```typescript
 setup().setAutoCollectConsole(false).start();
 ```
+
+## Credits & Inspiration
+
+- [willmorgan/winston-azure-application-insights](https://github.com/willmorgan/winston-azure-application-insights) - Forked from willmorgan's version
+- [bragma/winston-azure-application-insights](https://github.com/bragma/winston-azure-application-insights) - Original library by bragma
+- [Winston](https://github.com/winstonjs/winston) - Universal logging library for Node.js
+- [Azure Application Insights](https://azure.microsoft.com/en-us/services/application-insights/) - Application Performance Management service
