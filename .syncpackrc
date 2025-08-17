@@ -2,6 +2,18 @@
   "dependencyTypes": ["dev", "prod"],
   "versionGroups": [
     {
+      "label": "Use v5 for migration/v5",
+      "dependencies": ["@shellicar/winston-azure-application-insights"],
+      "pinVersion": "^5.1.0",
+      "packages": ["migration-v5"]
+    },
+        {
+      "label": "Use v6 for migration/v6",
+      "dependencies": ["@shellicar/winston-azure-application-insights"],
+      "pinVersion": "workspace:^",
+      "packages": ["migration-v6"]
+    },
+    {
       "label": "Use workspace protocol when developing local packages",
       "dependencies": ["$LOCAL"],
       "dependencyTypes": ["dev", "prod", "peer"],
@@ -12,6 +24,11 @@
       "dependencyTypes": ["!dev"],
       "isBanned": true,
       "label": "@types packages should only be under devDependencies"
+    },
+    {
+      "label": "Allow different Application Insights versions for examples",
+      "dependencies": ["applicationinsights"],
+      "isIgnored": true
     }
   ]
 }

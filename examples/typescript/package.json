@@ -1,5 +1,5 @@
 {
-  "name": "typescript",
+  "name": "typescript-examples",
   "version": "1.0.0",
   "description": "",
   "main": "main.ts",
@@ -12,13 +12,13 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "tsx": "^4.19.1",
-    "typescript": "^5.6.2"
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2"
   },
   "dependencies": {
     "@opentelemetry/instrumentation-winston": "^0.48.1",
     "@shellicar/winston-azure-application-insights": "workspace:^",
     "applicationinsights": "^3.9.0",
-    "winston": "^3.14.2"
+    "winston": "^3.17.0"
   }
 }
