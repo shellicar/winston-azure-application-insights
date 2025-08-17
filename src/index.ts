@@ -1,7 +1,7 @@
 import { createApplicationInsightsTransport } from './public/createApplicationInsightsTransport';
 import { createTelemetryHandler } from './public/createTelemetryHandler';
 import { createWinstonLogger } from './public/createWinstonLogger';
-import { TelemetrySeverity } from './public/enums';
+import { ApplicationInsightsVersion, TelemetrySeverity } from './public/enums';
 import { isRunningInAzure } from './public/isRunningInAzure';
 import { isRunningLocally } from './public/isRunningLocally';
 import type {
@@ -18,10 +18,9 @@ import type {
   TelemetryHandler,
   WinstonColors,
   WinstonLevels,
-  WinstonTransportOptions,
 } from './public/types';
 
-export { createApplicationInsightsTransport, createTelemetryHandler, createWinstonLogger, TelemetrySeverity, isRunningInAzure, isRunningLocally };
+export { createApplicationInsightsTransport, createTelemetryHandler, createWinstonLogger, ApplicationInsightsVersion, TelemetrySeverity, isRunningInAzure, isRunningLocally };
 export type {
   ITraceTelemetryFilter,
   IExceptionTelemetryFilter,
@@ -36,5 +35,4 @@ export type {
   SeverityMapping,
   WinstonLevels,
   WinstonColors,
-  WinstonTransportOptions,
 };

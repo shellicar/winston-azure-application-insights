@@ -2,6 +2,7 @@ import { MESSAGE } from 'triple-beam';
 import { describe, expect, it, vi } from 'vitest';
 import winston, { Logger } from 'winston';
 import { createWinstonLogger } from '../src/public/createWinstonLogger';
+import { ApplicationInsightsVersion } from '../src/public/enums';
 import { useEnvironmentVariable } from './helpers/useEnvironmentVariable';
 import { SpyTelemetryClientV3 } from './spies/SpyTelemetryClientV3';
 
@@ -37,7 +38,7 @@ describe('createWinstonLogger', () => {
   it('creates a Winston logger instance', () => {
     const client = new SpyTelemetryClientV3();
     const logger = createWinstonLogger({
-      insights: { version: 3, client },
+      insights: { version: ApplicationInsightsVersion.V3, client },
     });
 
     expect(logger).toBeInstanceOf(Logger);
@@ -47,7 +48,7 @@ describe('createWinstonLogger', () => {
     const client = new SpyTelemetryClientV3();
     const logger = createWinstonLogger({
       winston: { console: { enabled: false }, options: {} },
-      insights: { version: 3, client },
+      insights: { version: ApplicationInsightsVersion.V3, client },
     });
 
     logger.info('Test message');
@@ -60,7 +61,7 @@ describe('createWinstonLogger', () => {
     const client = new SpyTelemetryClientV3();
     const logger = createWinstonLogger({
       winston: { console: { enabled: true }, options: {} },
-      insights: { version: 3, client },
+      insights: { version: ApplicationInsightsVersion.V3, client },
     });
 
     expect(logger.transports).toHaveLength(2);
@@ -73,7 +74,7 @@ describe('createWinstonLogger', () => {
         console: { enabled: false },
         options: {},
       },
-      insights: { version: 3, client },
+      insights: { version: ApplicationInsightsVersion.V3, client },
     });
 
     expect(logger.transports).toHaveLength(1);
@@ -90,7 +91,7 @@ describe('createWinstonLogger', () => {
         },
         options: {},
       },
-      insights: { version: 3, client },
+      insights: { version: ApplicationInsightsVersion.V3, client },
     });
 
     expect(logger.level).toBe('warn');
@@ -109,7 +110,7 @@ describe('createWinstonLogger', () => {
         winston: {
           options: {},
         },
-        insights: { version: 3, client },
+        insights: { version: ApplicationInsightsVersion.V3, client },
       });
 
       expect(logger.transports).toHaveLength(2);
@@ -124,7 +125,7 @@ describe('createWinstonLogger', () => {
         winston: {
           options: {},
         },
-        insights: { version: 3, client },
+        insights: { version: ApplicationInsightsVersion.V3, client },
       });
 
       expect(logger.transports).toHaveLength(1);
@@ -139,7 +140,7 @@ describe('createWinstonLogger', () => {
           winston: {
             console: {},
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(2);
@@ -151,7 +152,7 @@ describe('createWinstonLogger', () => {
           winston: {
             console: { enabled: false },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(1);
@@ -167,7 +168,7 @@ describe('createWinstonLogger', () => {
           winston: {
             console: {}, // enabled is undefined
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(2);
@@ -184,7 +185,7 @@ describe('createWinstonLogger', () => {
               format: customFormat,
             },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         // Test that custom format was applied (implementation dependent)
@@ -201,7 +202,7 @@ describe('createWinstonLogger', () => {
               format: { output: 'json' },
             },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(2);
@@ -217,7 +218,7 @@ describe('createWinstonLogger', () => {
               format: { output: 'simple' },
             },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(2);
@@ -233,7 +234,7 @@ describe('createWinstonLogger', () => {
               format: { errors: true },
             },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(2);
@@ -249,7 +250,7 @@ describe('createWinstonLogger', () => {
               format: { errors: false },
             },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(2);
@@ -272,7 +273,7 @@ describe('createWinstonLogger', () => {
             },
             insights: { enabled: false },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         vi.useFakeTimers();
@@ -301,7 +302,7 @@ describe('createWinstonLogger', () => {
               format: { timestamp: false },
             },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(2);
@@ -316,7 +317,7 @@ describe('createWinstonLogger', () => {
             console: { enabled: false },
             insights: { enabled: true },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(1);
@@ -329,7 +330,7 @@ describe('createWinstonLogger', () => {
             console: { enabled: false },
             insights: { enabled: false },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(0);
@@ -342,7 +343,7 @@ describe('createWinstonLogger', () => {
             console: { enabled: false },
             insights: {}, // enabled is undefined
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(1);
@@ -357,7 +358,7 @@ describe('createWinstonLogger', () => {
             defaults: { level: 'warn' },
             console: { enabled: false },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.level).toBe('warn');
@@ -372,7 +373,7 @@ describe('createWinstonLogger', () => {
             defaults: { defaultMeta },
             console: { enabled: false },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.defaultMeta).toEqual(defaultMeta);
@@ -386,7 +387,7 @@ describe('createWinstonLogger', () => {
             defaults: {},
             console: { enabled: false, format: { output: 'json' } },
           },
-          insights: { version: 3, client },
+          insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
         expect(logger.transports).toHaveLength(1);
@@ -405,7 +406,7 @@ describe('createWinstonLogger', () => {
           },
           insights: { level: 'info' },
         },
-        insights: { version: 3, client },
+        insights: { version: ApplicationInsightsVersion.V3, client },
       });
 
       logger.info('Test info message');
@@ -424,7 +425,7 @@ describe('createWinstonLogger', () => {
           },
           insights: { level: 'info' },
         },
-        insights: { version: 3, client },
+        insights: { version: ApplicationInsightsVersion.V3, client },
       });
 
       logger.verbose('Test verbose message');
@@ -441,7 +442,7 @@ describe('createWinstonLogger', () => {
             level: 'verbose',
           },
         },
-        insights: { version: 3, client },
+        insights: { version: ApplicationInsightsVersion.V3, client },
       });
 
       logger.verbose('Test verbose message');
@@ -460,7 +461,7 @@ describe('createWinstonLogger', () => {
           },
           insights: { level: 'verbose' },
         },
-        insights: { version: 3, client },
+        insights: { version: ApplicationInsightsVersion.V3, client },
       });
 
       logger.info('Test info message');
@@ -479,7 +480,7 @@ describe('createWinstonLogger', () => {
           },
           insights: { level: 'verbose' },
         },
-        insights: { version: 3, client },
+        insights: { version: ApplicationInsightsVersion.V3, client },
       });
 
       logger.verbose('Test verbose message');

@@ -2,16 +2,18 @@ import { ApplicationInsightsVersion, createWinstonLogger } from '@shellicar/wins
 import applicationinsights from 'applicationinsights';
 
 applicationinsights.setup().start();
+
 const logger = createWinstonLogger({
-  winston: {
-    console: {
-      enabled: true,
-    },
-  },
   insights: {
-    version: ApplicationInsightsVersion.V3,
+    version: ApplicationInsightsVersion.V2,
     client: applicationinsights.defaultClient,
   },
+  winston: {
+    defaults: {
+      defaultMeta: {
+        applicationinsights: '2.9.6',
+      },
+    },
+  },
 });
-
-logger.info('Hello World');
+logger.info('Hello from V2 example!');

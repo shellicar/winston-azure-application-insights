@@ -4,20 +4,16 @@ import applicationinsights from 'applicationinsights';
 applicationinsights.setup().start();
 
 const logger = createWinstonLogger({
-  winston: {
-    console: {
-      enabled: true,
-    },
-    defaults: {
-      level: 'info',
-      defaultMeta: { service: 'my-app' },
-    },
-  },
   insights: {
     version: ApplicationInsightsVersion.V3,
     client: applicationinsights.defaultClient,
   },
+  winston: {
+    defaults: {
+      defaultMeta: {
+        applicationinsights: '3.9.0',
+      },
+    },
+  },
 });
-
-logger.info('Hello from Winston + Application Insights!');
-logger.error('Something went wrong', new Error('Oops!'));
+logger.info('Hello from V3.4 example!');

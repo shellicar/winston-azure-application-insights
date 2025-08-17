@@ -1,4 +1,4 @@
-import { createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import { ApplicationInsightsVersion, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsightsv2';
 import { format } from 'logform';
 import type { Logger } from 'winston';
@@ -8,7 +8,7 @@ applicationinsights.setup().start();
 // All in one config
 const logger: Logger = createWinstonLogger({
   insights: {
-    version: 2,
+    version: ApplicationInsightsVersion.V2,
     client: applicationinsights.defaultClient,
   },
   winston: {

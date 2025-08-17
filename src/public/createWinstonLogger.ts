@@ -24,7 +24,7 @@ export const createWinstonLogger = (options: CreateWinstonLoggerOptions): winsto
       consoleFormatConfig = {
         output: userFormat.output ?? 'json',
         timestamp: userFormat.timestamp ?? true,
-        errors: userFormat.errors ?? true,
+        errors: userFormat.errors ?? { stack: true },
         colorize: userFormat.colorize ?? true,
       };
     }

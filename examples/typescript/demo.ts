@@ -1,25 +1,22 @@
 import { env } from 'node:process';
-import { createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
+import { ApplicationInsightsVersion, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
-import winston from 'winston';
 
 const shouldPushToAppInsights = 'APPLICATIONINSIGHTS_CONNECTION_STRING' in env;
 
-if (shouldPushToAppInsights) {
-  applicationinsights.setup().start();
-  const transport = createApplicationInsightsTransport({
-    version: 3,
-    client: applicationinsights.defaultClient,
-  });
-  winston.add(transport);
-} else {
-  winston.add(new winston.transports.Console());
-}
+applicationinsights.setup().start();
 
-winston.info("Let's log something new...");
-winston.error('This is an error log!');
-winston.warn('And this is a warning message.');
-winston.log('info', 'Log with some metadata', {
+const logger = createWinstonLogger({
+  insights: {
+    version: ApplicationInsightsVersion.V3,
+    client: applicationinsights.defaultClient,
+  },
+});
+
+logger.info("Let's log something new...");
+logger.error('This is an error log!');
+logger.warn('And this is a warning message.');
+logger.log('info', 'Log with some metadata', {
   question: 'Answer to the Ultimate Question of Life, the Universe, and Everything',
   answer: 42,
 });
@@ -37,7 +34,7 @@ class ErrorWithMeta extends Error {
   }
 }
 
-winston.error('Log extended errors with properties', new ErrorWithMeta('some error', 'answer', 42));
+logger.error('Log extended errors with properties', new ErrorWithMeta('some error', 'answer', 42));
 
 class MyError extends Error {
   public extensions: Record<string, any>;
@@ -53,8 +50,8 @@ class MyError extends Error {
 const err = new MyError('test', {
   extensions: Object.create(null),
 });
-winston.info('hello world', err);
-winston.info(err);
+logger.info('hello world', err);
+logger.info(err);
 
 const err2 = new MyError('test-with-extensions', {
   extensions: {
@@ -62,4 +59,4 @@ const err2 = new MyError('test-with-extensions', {
     code: 'APOLLO_ERROR',
   },
 });
-winston.error(err2);
+logger.error(err2);

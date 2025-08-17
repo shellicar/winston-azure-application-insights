@@ -1,5 +1,6 @@
 import type { TelemetryClient } from 'applicationinsightsv2';
 import type { ExceptionTelemetry, TraceTelemetry } from 'applicationinsightsv2/out/Declarations/Contracts';
+import type { ITelemetryClientV2 } from '../public/ITelemetryClientV2';
 import { TelemetrySeverity } from '../public/enums';
 import type { TelemetryData, TelemetryHandler } from '../public/types';
 
@@ -14,11 +15,11 @@ enum SeverityLevel {
 }
 
 export interface ApplicationInsightsV2TelemetryHandlerOptions {
-  client: TelemetryClient;
+  client: ITelemetryClientV2;
 }
 
 export class ApplicationInsightsV2TelemetryHandler implements TelemetryHandler {
-  private readonly client: TelemetryClient;
+  private readonly client: ITelemetryClientV2;
   private readonly severityMapping: Record<TelemetrySeverity, SeverityLevel> = {
     [TelemetrySeverity.Verbose]: SeverityLevel.Verbose,
     [TelemetrySeverity.Information]: SeverityLevel.Information,

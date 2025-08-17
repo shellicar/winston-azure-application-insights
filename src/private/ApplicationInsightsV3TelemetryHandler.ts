@@ -1,14 +1,15 @@
-import type { ExceptionTelemetry, TelemetryClient, TraceTelemetry } from 'applicationinsightsv3';
+import type { ExceptionTelemetry, TraceTelemetry } from 'applicationinsightsv3';
 import { KnownSeverityLevel } from 'applicationinsightsv3';
+import type { ITelemetryClientV3 } from '../public/ITelemetryClientV3';
 import { TelemetrySeverity } from '../public/enums';
 import type { TelemetryData, TelemetryHandler } from '../public/types';
 
 export interface ApplicationInsightsV3TelemetryHandlerOptions {
-  client: TelemetryClient;
+  client: ITelemetryClientV3;
 }
 
 export class ApplicationInsightsV3TelemetryHandler implements TelemetryHandler {
-  private readonly client: TelemetryClient;
+  private readonly client: ITelemetryClientV3;
   private readonly severityMapping: Record<TelemetrySeverity, KnownSeverityLevel> = {
     [TelemetrySeverity.Verbose]: KnownSeverityLevel.Verbose,
     [TelemetrySeverity.Information]: KnownSeverityLevel.Information,

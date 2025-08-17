@@ -4,6 +4,7 @@ import { ApplicationInsightsTransport } from '../src/private/ApplicationInsights
 import { ApplicationInsightsV2TelemetryHandler } from '../src/private/ApplicationInsightsV2TelemetryHandler';
 import { ApplicationInsightsV3TelemetryHandler } from '../src/private/ApplicationInsightsV3TelemetryHandler';
 import { createTelemetryHandler } from '../src/public/createTelemetryHandler';
+import { ApplicationInsightsVersion } from '../src/public/enums';
 import type { IExceptionTelemetryFilter, ITraceTelemetryFilter, TelemetryDataException, TelemetryDataTrace } from '../src/public/types';
 import { SpyTelemetryClientV2 } from './spies/SpyTelemetryClientV2';
 import { SpyTelemetryClientV3 } from './spies/SpyTelemetryClientV3';
@@ -112,7 +113,7 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
   describe('Factory Function Integration', () => {
     it('should call trackTrace on V2 client when logging through factory-created handler', () => {
       const client = new SpyTelemetryClientV2();
-      const handler = createTelemetryHandler({ version: 2, client });
+      const handler = createTelemetryHandler({ version: ApplicationInsightsVersion.V2, client });
       const transport = new ApplicationInsightsTransport({ telemetryHandler: handler });
       const logger = createLogger({ transports: [transport] });
 
@@ -124,7 +125,7 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
 
     it('should call trackTrace on V3 client when logging through factory-created handler', () => {
       const client = new SpyTelemetryClientV3();
-      const handler = createTelemetryHandler({ version: 3, client });
+      const handler = createTelemetryHandler({ version: ApplicationInsightsVersion.V3, client });
       const transport = new ApplicationInsightsTransport({ telemetryHandler: handler });
       const logger = createLogger({ transports: [transport] });
 
@@ -145,7 +146,7 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
         return true;
       };
 
-      const handler = createTelemetryHandler({ version: 2, client });
+      const handler = createTelemetryHandler({ version: ApplicationInsightsVersion.V2, client });
       const transport = new ApplicationInsightsTransport({ telemetryHandler: handler, traceFilter });
       const logger = createLogger({ transports: [transport] });
 
@@ -167,7 +168,7 @@ describe('Integration: Winston → Transport → TelemetryHandler → Azure SDK'
         return true;
       };
 
-      const handler = createTelemetryHandler({ version: 3, client });
+      const handler = createTelemetryHandler({ version: ApplicationInsightsVersion.V3, client });
       const transport = new ApplicationInsightsTransport({ telemetryHandler: handler, exceptionFilter });
       const logger = createLogger({ transports: [transport] });
 

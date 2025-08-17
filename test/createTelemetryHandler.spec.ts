@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ApplicationInsightsV2TelemetryHandler } from '../src/private/ApplicationInsightsV2TelemetryHandler';
 import { ApplicationInsightsV3TelemetryHandler } from '../src/private/ApplicationInsightsV3TelemetryHandler';
 import { createTelemetryHandler } from '../src/public/createTelemetryHandler';
-import { TelemetrySeverity } from '../src/public/enums';
+import { ApplicationInsightsVersion, TelemetrySeverity } from '../src/public/enums';
 import type { TelemetryHandler } from '../src/public/types';
 import { SpyTelemetryClientV2 } from './spies/SpyTelemetryClientV2';
 import { SpyTelemetryClientV3 } from './spies/SpyTelemetryClientV3';
@@ -10,21 +10,21 @@ import { SpyTelemetryClientV3 } from './spies/SpyTelemetryClientV3';
 describe('createTelemetryHandler', () => {
   it('should create V2 telemetry handler', () => {
     const client = new SpyTelemetryClientV2();
-    const handler = createTelemetryHandler({ version: 2, client });
+    const handler = createTelemetryHandler({ version: ApplicationInsightsVersion.V2, client });
 
     expect(handler).toBeInstanceOf(ApplicationInsightsV2TelemetryHandler);
   });
 
   it('should create V3 telemetry handler', () => {
     const client = new SpyTelemetryClientV3();
-    const handler = createTelemetryHandler({ version: 3, client });
+    const handler = createTelemetryHandler({ version: ApplicationInsightsVersion.V3, client });
 
     expect(handler).toBeInstanceOf(ApplicationInsightsV3TelemetryHandler);
   });
 
   it('should create V2 handler that can handle telemetry', () => {
     const client = new SpyTelemetryClientV2();
-    const handler = createTelemetryHandler({ version: 2, client });
+    const handler = createTelemetryHandler({ version: ApplicationInsightsVersion.V2, client });
 
     handler.handleTelemetry({
       trace: {
@@ -42,7 +42,7 @@ describe('createTelemetryHandler', () => {
 
   it('should create V3 handler that can handle telemetry', () => {
     const client = new SpyTelemetryClientV3();
-    const handler = createTelemetryHandler({ version: 3, client });
+    const handler = createTelemetryHandler({ version: ApplicationInsightsVersion.V3, client });
 
     handler.handleTelemetry({
       trace: {
@@ -61,7 +61,7 @@ describe('createTelemetryHandler', () => {
 
   it('should create V2 handler that can handle exceptions', () => {
     const client = new SpyTelemetryClientV2();
-    const handler = createTelemetryHandler({ version: 2, client });
+    const handler = createTelemetryHandler({ version: ApplicationInsightsVersion.V2, client });
     const testError = new Error('Test V2 exception');
 
     handler.handleTelemetry({
@@ -81,7 +81,7 @@ describe('createTelemetryHandler', () => {
 
   it('should create V3 handler that can handle exceptions', () => {
     const client = new SpyTelemetryClientV3();
-    const handler = createTelemetryHandler({ version: 3, client });
+    const handler = createTelemetryHandler({ version: ApplicationInsightsVersion.V3, client });
     const testError = new Error('Test V3 exception');
 
     handler.handleTelemetry({

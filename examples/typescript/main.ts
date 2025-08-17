@@ -1,4 +1,4 @@
-import { createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
+import { ApplicationInsightsVersion, createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
 import { createLogger, format, transports } from 'winston';
 
@@ -6,7 +6,7 @@ import { createLogger, format, transports } from 'winston';
 applicationinsights.setup().start();
 
 const transport = createApplicationInsightsTransport({
-  version: 3,
+  version: ApplicationInsightsVersion.V3,
   client: applicationinsights.defaultClient,
 });
 
