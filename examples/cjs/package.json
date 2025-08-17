@@ -9,7 +9,7 @@
     "type-check": "tsc -p tsconfig.check.json"
   },
   "devDependencies": {
-    "@shellicar/winston-azure-application-insights": "link:../..",
+    "@shellicar/winston-azure-application-insights": "workspace:^",
     "@tsconfig/node20": "^20.1.6",
     "@types/node": "^24.1.0",
     "tsup": "^8.5.0",

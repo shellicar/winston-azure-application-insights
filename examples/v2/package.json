@@ -13,7 +13,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.14.0",
   "dependencies": {
-    "@shellicar/winston-azure-application-insights": "link:../..",
+    "@shellicar/winston-azure-application-insights": "workspace:^",
     "applicationinsights": "^2.9.6"
   },
   "devDependencies": {

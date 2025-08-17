@@ -29,7 +29,7 @@
     "type-check": "tsc -p tsconfig.check.json",
     "ci": "run-s ci:biome ci:type-check",
     "ci:biome": "biome ci --diagnostic-level=error",
-    "ci:type-check": "./scripts/type-check-all.sh",
+    "ci:type-check": "turbo run type-check",
     "ci:fix": "biome check --diagnostic-level=error --fix",
     "test": "vitest run",
     "coverage": "vitest run --coverage",

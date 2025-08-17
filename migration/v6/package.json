@@ -17,7 +17,7 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "@shellicar/winston-azure-application-insights": "link:../..",
+    "@shellicar/winston-azure-application-insights": "workspace:^",
     "applicationinsights": "^3.9.0"
   }
 }
