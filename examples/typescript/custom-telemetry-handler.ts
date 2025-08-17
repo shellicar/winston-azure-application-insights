@@ -6,11 +6,11 @@ class CustomTelemetryHandler implements TelemetryHandler {
   }
 }
 
-const handler = new CustomTelemetryHandler();
+const telemetryHandler = new CustomTelemetryHandler();
 
 const logger = createWinstonLogger({
   insights: {
-    handler,
+    telemetryHandler,
   },
 });
 

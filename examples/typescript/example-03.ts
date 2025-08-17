@@ -6,13 +6,13 @@ import type TransportStream from 'winston-transport';
 applicationinsights.setup().start();
 
 // Create handler and transport separately
-const handler: TelemetryHandler = createTelemetryHandler({
+const telemetryHandler: TelemetryHandler = createTelemetryHandler({
   version: ApplicationInsightsVersion.V2,
   client: applicationinsights.defaultClient,
 });
 
 const transport: TransportStream = createApplicationInsightsTransport({
-  handler,
+  telemetryHandler,
 });
 
 const logger: Logger = createLogger({

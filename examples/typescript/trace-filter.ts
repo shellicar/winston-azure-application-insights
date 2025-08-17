@@ -9,7 +9,7 @@ class CustomTelemetryHandler implements TelemetryHandler {
   }
 }
 
-const handler = new CustomTelemetryHandler();
+const telemetryHandler = new CustomTelemetryHandler();
 
 const traceFilter: ITraceTelemetryFilter = (telemetry) => {
   if (telemetry.message.includes('Ignore')) {
@@ -20,7 +20,7 @@ const traceFilter: ITraceTelemetryFilter = (telemetry) => {
 
 const logger = createWinstonLogger({
   insights: {
-    handler,
+    telemetryHandler,
     traceFilter,
   },
 });

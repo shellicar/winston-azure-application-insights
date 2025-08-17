@@ -222,9 +222,9 @@ const transport = createApplicationInsightsTransport({
 
 ## Configuration Options
 
-- **version**: `V2` or `V3` - Application Insights SDK version (required)
+- **version**: `ApplicationInsightsVersion.V2` or `ApplicationInsightsVersion.V3` - Application Insights SDK version (required)
 - **client**: Application Insights client instance (required)
-- **handler**: Custom telemetry handler function (instead of version and client)
+- **telemetryHandler**: Custom telemetry handler function (instead of version and client)
 - **isError**: Custom function to determine what counts as an error (default: detects Error instances)
 - **severityMapping**: Custom Winston level to Application Insights severity mapping
 - **traceFilter**: Optional function to filter traces before sending

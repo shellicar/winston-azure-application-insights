@@ -280,7 +280,8 @@ logger.error('This is an error message', new Error('Test error'));
 - [ ] Update package version to v6.x
 - [ ] Update imports (add enums, remove old interfaces)
 - [ ] Change `version: 3` to `ApplicationInsightsVersion.V3`
-- [ ] Remove `sendErrorsAsExceptions`, `silent`, `defaultLevel` options
+- [ ] Remove `sendErrorsAsExceptions` option (now automatic)
+- [ ] Move `defaultLevel` to `winston.defaults.level`, move `silent` to `winston.insights.enabled` (inverted)
 - [ ] Rename `levels` to `severityMapping` with enum values
 - [ ] Split `filters` into `traceFilter` and `exceptionFilter`
 - [ ] Update Winston configuration structure

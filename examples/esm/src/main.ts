@@ -1,4 +1,4 @@
-import { TelemetrySeverity, createApplicationInsightsTransport, createTelemetryHandler, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import { ApplicationInsightsVersion, TelemetrySeverity, createApplicationInsightsTransport, createTelemetryHandler, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
 import applicaioninsights from 'applicationinsightsv3';
 
 applicaioninsights.setup().start();
@@ -6,11 +6,11 @@ applicaioninsights.setup().start();
 const client = applicaioninsights.defaultClient;
 client.commonProperties.module = 'esm';
 
-const handler = createTelemetryHandler({
+const telemetryHandler = createTelemetryHandler({
   client,
-  version: 3,
+  version: ApplicationInsightsVersion.V3,
 });
-handler.handleTelemetry({
+telemetryHandler.handleTelemetry({
   exceptions: [],
   trace: {
     message: 'Hello handler',
@@ -21,7 +21,7 @@ handler.handleTelemetry({
 
 const transport1 = createApplicationInsightsTransport({
   client,
-  version: 3,
+  version: ApplicationInsightsVersion.V3,
 });
 transport1.log?.(
   {
@@ -32,7 +32,7 @@ transport1.log?.(
 );
 
 const transport2 = createApplicationInsightsTransport({
-  handler,
+  telemetryHandler,
 });
 transport2.log?.(
   {
@@ -45,7 +45,7 @@ transport2.log?.(
 const logger = createWinstonLogger({
   winston: {},
   insights: {
-    version: 3,
+    version: ApplicationInsightsVersion.V3,
     client,
   },
 });

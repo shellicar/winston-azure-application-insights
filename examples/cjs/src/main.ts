@@ -6,11 +6,11 @@ applicaioninsights.setup().start();
 const client = applicaioninsights.defaultClient;
 client.commonProperties.module = 'cjs';
 
-const handler = createTelemetryHandler({
+const telemetryHandler = createTelemetryHandler({
   client,
   version: ApplicationInsightsVersion.V3,
 });
-handler.handleTelemetry({
+telemetryHandler.handleTelemetry({
   exceptions: [],
   trace: {
     message: 'Hello handler',
@@ -32,7 +32,7 @@ transport1.log?.(
 );
 
 const transport2 = createApplicationInsightsTransport({
-  handler,
+  telemetryHandler,
 });
 transport2.log?.(
   {

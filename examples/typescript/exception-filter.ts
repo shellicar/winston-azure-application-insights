@@ -10,7 +10,7 @@ class CustomTelemetryHandler implements TelemetryHandler {
 
 applicationinsights.setup().start();
 
-const handler = new CustomTelemetryHandler();
+const telemetryHandler = new CustomTelemetryHandler();
 
 class MyCustomError extends Error {}
 
@@ -23,7 +23,7 @@ const exceptionFilter: IExceptionTelemetryFilter = (telemetry) => {
 
 const logger = createWinstonLogger({
   insights: {
-    handler,
+    telemetryHandler,
     exceptionFilter,
   },
   winston: {
