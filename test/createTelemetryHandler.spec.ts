@@ -104,7 +104,7 @@ describe('createTelemetryHandler', () => {
       handleTelemetry: () => {},
     };
 
-    const result = createTelemetryHandler({ handler: mockHandler });
+    const result = createTelemetryHandler({ telemetryHandler: mockHandler });
 
     expect(result).toBe(mockHandler);
   });

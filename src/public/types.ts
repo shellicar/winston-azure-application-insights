@@ -54,7 +54,7 @@ export type CreateTelemetryHandlerOptions =
       version: ApplicationInsightsVersion.V3;
     }
   | {
-      handler: TelemetryHandler;
+      telemetryHandler: TelemetryHandler;
       version?: never;
     };
 
@@ -88,6 +88,7 @@ export type CreateApplicationInsightsTransportOptions = {
    * only an exception is sent (no trace) to avoid duplicate telemetry.
    */
   isError?: IsError;
+  level?: string;
 } & CreateTelemetryHandlerOptions;
 
 export interface WinstonLevels {
@@ -161,14 +162,14 @@ export interface WinstonBaseTransportOptions extends WinstonLoggerDefaults {
 export interface WinstonConsoleTransportOptions extends WinstonBaseTransportOptions {
   /**
    * Format configuration for this transport.
-   * If provided as Format[], it is used as-is without any additional processing.
+   * If provided as Format[] ({@link https://github.com/winstonjs/logform#formats}), it is used as-is without any additional processing.
    * Use WinstonTransportOptionsFormat for simplified configuration with automatic format handling.
    */
   format?: Format[] | WinstonTransportOptionsFormat;
 }
 
 export interface WinstonInsightsTransportOptions extends WinstonBaseTransportOptions {
-  // Inherits enabled, level, and defaultMeta from WinstonBaseTransportOptions
+  // Inherits enabled, level, format, and defaultMeta from WinstonBaseTransportOptions
 }
 
 export interface WinstonLoggerOptions {

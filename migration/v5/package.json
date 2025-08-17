@@ -1,0 +1,23 @@
+{
+  "name": "migration-v5",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.ts",
+  "type": "module",
+  "scripts": {
+    "start": "tsx .",
+    "type-check": "tsc -p tsconfig.check.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.14.0",
+  "devDependencies": {
+    "tsx": "^4.20.4",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@shellicar/winston-azure-application-insights": "^5.1.0",
+    "applicationinsights": "^3.9.0"
+  }
+}

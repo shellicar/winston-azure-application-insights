@@ -12,6 +12,7 @@ export const createApplicationInsightsTransport = (options: CreateApplicationIns
     exceptionFilter: options.exceptionFilter,
     traceFilter: options.traceFilter,
     isError: options.isError,
+    level: options.level,
   });
 
   return transport;

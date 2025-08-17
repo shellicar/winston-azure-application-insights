@@ -2,6 +2,7 @@ import winston from 'winston';
 import type TransportStream from 'winston-transport';
 import { ApplicationInsightsTransport } from '../private/ApplicationInsightsTransport';
 import { type CreateWinstonFormatOptions, createWinstonFormat } from '../private/createWinstonFormat';
+import { createApplicationInsightsTransport } from './createApplicationInsightsTransport';
 import { createTelemetryHandler } from './createTelemetryHandler';
 import { isRunningLocally } from './isRunningLocally';
 import type { CreateWinstonLoggerOptions } from './types';
@@ -44,7 +45,7 @@ export const createWinstonLogger = (options: CreateWinstonLoggerOptions): winsto
   // Insights transport
   const insightsEnabled = options.winston?.insights?.enabled ?? true;
   if (insightsEnabled) {
-    const transport = new ApplicationInsightsTransport({
+    const transport = createApplicationInsightsTransport({
       telemetryHandler,
       severityMapping,
       exceptionFilter,

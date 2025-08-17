@@ -5,15 +5,17 @@
 [![npm package](https://img.shields.io/npm/v/@shellicar/winston-azure-application-insights.svg)](https://npmjs.com/package/@shellicar/winston-azure-application-insights)
 [![build status](https://github.com/shellicar/winston-azure-application-insights/actions/workflows/node.js.yml/badge.svg)](https://github.com/shellicar/winston-azure-application-insights/actions/workflows/node.js.yml)
 
+> **Upgrading from v5.x?** See the [Migration Guide](#migration) for step-by-step upgrade instructions.
+
 ## Features
 
-• 🔄 **Dual SDK Support** - Works with both Application Insights v2 and v3 SDKs
-• 🚀 **Simple Factory Functions** - Easy setup with `createApplicationInsightsTransport()` and `createWinstonLogger()`  
-• 🔍 **Automatic Error Detection** - Extracts Error objects from logs and sends them as Application Insights exceptions
-• 📊 **Trace + Exception Logging** - Sends logs as traces while also tracking errors as detailed exceptions
-• 🎯 **Flexible Filtering** - Optional trace and exception filters for fine-grained control
-• 🔧 **Custom Severity Mapping** - Map Winston levels to Application Insights severity levels
-• 🏠 **Local Development** - Log to console locally while sending to Application Insights in production
+- 🔄 **Dual SDK Support** - Works with both Application Insights v2 and v3 SDKs
+- 🚀 **Simple Factory Functions** - Easy setup with `createApplicationInsightsTransport()` and `createWinstonLogger()`  
+- 🔍 **Automatic Error Detection** - Extracts Error objects from logs and sends them as Application Insights exceptions
+- 📊 **Trace + Exception Logging** - Sends logs as traces while also tracking errors as detailed exceptions
+- 🎯 **Flexible Filtering** - Optional trace and exception filters for fine-grained control
+- 🔧 **Custom Severity Mapping** - Map Winston levels to Application Insights severity levels
+- 🏠 **Local Development** - Log to console locally while sending to Application Insights in production
 
 ## Installation & Quick Start
 
@@ -22,14 +24,14 @@ pnpm add @shellicar/winston-azure-application-insights
 ```
 
 ```typescript
-import { createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import { createWinstonLogger, ApplicationInsightsVersion } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
 
 applicationinsights.setup().start();
 
 const logger = createWinstonLogger({
   insights: {
-    version: 3,
+    version: ApplicationInsightsVersion.V3,
     client: applicationinsights.defaultClient
   },
 });
@@ -49,21 +51,22 @@ I forked the original library to add support for Application Insights v3, which 
 - **Factory Functions** - Simple setup with clean API.
 
 ```typescript
-import { setup, defaultClient } from 'applicationinsights';
-import { createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
+import applicationinsights from 'applicationinsights';
+import { createApplicationInsightsTransport, ApplicationInsightsVersion } from '@shellicar/winston-azure-application-insights';
 
-setup().start();
+applicationinsights.setup().start();
 
 const transport = createApplicationInsightsTransport({
-  version: 3,
-  client: defaultClient,
+  version: ApplicationInsightsVersion.V3,
+  client: applicationinsights.defaultClient,
 });
 ```
 
 - **Complete Logger Setup** - Create a Winston logger with both console and Application Insights.
 
 ```typescript
-import { createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import { createWinstonLogger, ApplicationInsightsVersion } from '@shellicar/winston-azure-application-insights';
+import applicationinsights from 'applicationinsights';
 
 const logger = createWinstonLogger({
   winston: {
@@ -81,8 +84,8 @@ const logger = createWinstonLogger({
     },
   },
   insights: {
-    version: 3,
-    client: defaultClient,
+    version: ApplicationInsightsVersion.V3,
+    client: applicationinsights.defaultClient,
   },
 });
 
@@ -133,7 +136,7 @@ logger.log('audit', 'Audit event'); // → Falls back based on level priority
 
 ```typescript
 const transport = createApplicationInsightsTransport({
-  version: 3,
+  version: ApplicationInsightsVersion.V3,
   client: defaultClient,
   severityMapping: {
     error: TelemetrySeverity.Error,
@@ -153,14 +156,14 @@ const transport = createApplicationInsightsTransport({
 // Application Insights v2
 import applicationinsights from 'applicationinsights'; // v2
 const transport = createApplicationInsightsTransport({
-  version: 2,
+  version: ApplicationInsightsVersion.V2,
   client: applicationinsights.defaultClient,
 });
 
-// Application Insights v3  
+// Application Insights v3
 import applicationinsights from 'applicationinsights'; // v3
 const transport = createApplicationInsightsTransport({
-  version: 3,
+  version: ApplicationInsightsVersion.V3,
   client: applicationinsights.defaultClient,
 });
 ```
@@ -169,7 +172,7 @@ const transport = createApplicationInsightsTransport({
 
 ```typescript
 const transport = createApplicationInsightsTransport({
-  version: 3,
+  version: ApplicationInsightsVersion.V3,
   client: defaultClient,
   traceFilter: (trace) => trace.severity !== KnownSeverityLevel.Verbose,
   exceptionFilter: (exception) => !exception.exception.message.includes('ignore'),
@@ -219,7 +222,7 @@ const transport = createApplicationInsightsTransport({
 
 ## Configuration Options
 
-- **version**: `2` or `3` - Application Insights SDK version (required)
+- **version**: `V2` or `V3` - Application Insights SDK version (required)
 - **client**: Application Insights client instance (required)
 - **handler**: Custom telemetry handler function (instead of version and client)
 - **isError**: Custom function to determine what counts as an error (default: detects Error instances)
@@ -235,7 +238,7 @@ const transport = createApplicationInsightsTransport({
 No instrumentation key or connection string was provided
 ```
 
-Set the connection string via environment variable or setup parameter.
+Set the connection string via environment variable or setup parameter. See the [Application Insights setup guide](https://github.com/microsoft/ApplicationInsights-node.js?tab=readme-ov-file#get-started) for detailed instructions.
 
 #### Duplicate API Registration
 
@@ -248,7 +251,7 @@ Your environment already loaded Application Insights. Use the existing client wi
 ```typescript
 import applicationinsights from 'applicationinsights';
 const transport = createApplicationInsightsTransport({
-  version: 3,
+  version: ApplicationInsightsVersion.V3,
   client: applicationinsights.defaultClient,
 });
 ```
@@ -260,6 +263,12 @@ Application Insights auto-collects from console and Winston. Disable auto-collec
 ```typescript
 setup().setAutoCollectConsole(false).start();
 ```
+
+## Migration
+
+### Upgrading from v5.x to v6.x
+
+v6.x includes significant improvements to error handling, type safety, and configuration structure. See the complete [Migration Guide](./MIGRATION.md) for detailed upgrade instructions.
 
 ## Credits & Inspiration
 
