@@ -50,6 +50,7 @@ export const createWinstonLogger = (options: CreateWinstonLoggerOptions): winsto
       exceptionFilter,
       traceFilter,
       isError,
+      level: options.winston?.insights?.level,
     });
     transports.push(transport);
   }

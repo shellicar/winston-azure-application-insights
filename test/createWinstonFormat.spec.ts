@@ -7,6 +7,8 @@ import { type CreateWinstonFormatOptions, createWinstonFormat } from '../src/pri
 import type { WinstonInfo } from '../src/private/types';
 import { createWinstonInfoFromErrorOnly } from './createWinstonInfoFromErrorOnly';
 
+const ansiColor = (code: number, text: string) => `\u001b[${code}m${text}\u001b[39m`;
+
 const transformInfo = (format: Format, info: WinstonInfo) => {
   console.log('Format', format, format.options);
   const result = format.transform(info as TransformableInfo) as TransformableInfo;
@@ -181,10 +183,7 @@ describe('createWinstonFormat', () => {
 
     logger.info('Test');
     const actual = capturedInfo?.[MESSAGE];
-    const expected = JSON.stringify({
-      level: '\u001b[32minfo\u001b[39m',
-      message: 'Test',
-    });
+    const expected = `{"level":"${ansiColor(32, 'info')}","message":"${ansiColor(32, 'Test')}"}`;
 
     expect(actual).toBe(expected);
   });
@@ -296,11 +295,63 @@ describe('createWinstonFormat', () => {
 
     logger.info('Test');
     const actual = capturedInfo?.[MESSAGE];
-    const expected = JSON.stringify({
-      level: '\u001b[32minfo\u001b[39m',
-      message: '\u001b[32mTest\u001b[39m',
+    const expected = `{"level":"${ansiColor(32, 'info')}","message":"${ansiColor(32, 'Test')}"}`;
+
+    expect(actual).toBe(expected);
+  });
+
+  it('colorize comes after json format', () => {
+    let capturedInfo: TransformableInfo | undefined;
+
+    class TestTransport extends TransportStream {
+      log(info: TransformableInfo, callback: any) {
+        capturedInfo = info;
+        callback();
+      }
+    }
+
+    const logger = winston.createLogger({
+      format: createWinstonFormat({
+        output: 'json',
+        errors: true,
+        timestamp: false,
+        colorize: { all: true },
+      }),
+      transports: [new TestTransport()],
+      level: 'info',
     });
 
+    logger.info('Test message');
+    const actual = capturedInfo?.[MESSAGE];
+    const expected = `{"level":"${ansiColor(32, 'info')}","message":"${ansiColor(32, 'Test message')}"}`;
+
+    expect(actual).toEqual(expected);
+  });
+
+  it('colorize come before simple format', () => {
+    let capturedInfo: TransformableInfo | undefined;
+
+    class TestTransport extends TransportStream {
+      log(info: TransformableInfo, callback: any) {
+        capturedInfo = info;
+        callback();
+      }
+    }
+
+    const logger = winston.createLogger({
+      format: createWinstonFormat({
+        output: 'simple',
+        errors: true,
+        timestamp: false,
+        colorize: true,
+      }),
+      transports: [new TestTransport()],
+      level: 'info',
+    });
+
+    logger.info('Test message');
+    const actual = capturedInfo?.[MESSAGE];
+    const expected = '\u001b[32minfo\u001b[39m: \u001b[32mTest message\u001b[39m';
     expect(actual).toBe(expected);
   });
 });

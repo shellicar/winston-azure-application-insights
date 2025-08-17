@@ -393,4 +393,99 @@ describe('createWinstonLogger', () => {
       });
     });
   });
+
+  describe('Insights level filtering', () => {
+    it('II: insights level info receives info logs', () => {
+      const client = new SpyTelemetryClientV3();
+
+      const logger = createWinstonLogger({
+        winston: {
+          defaults: {
+            level: 'verbose',
+          },
+          insights: { level: 'info' },
+        },
+        insights: { version: 3, client },
+      });
+
+      logger.info('Test info message');
+
+      expect(client.traces).toHaveLength(1);
+      expect(client.traces[0]?.message).toBe('Test info message');
+    });
+
+    it('IV: insights level info blocks verbose logs', () => {
+      const client = new SpyTelemetryClientV3();
+
+      const logger = createWinstonLogger({
+        winston: {
+          defaults: {
+            level: 'verbose',
+          },
+          insights: { level: 'info' },
+        },
+        insights: { version: 3, client },
+      });
+
+      logger.verbose('Test verbose message');
+
+      expect(client.traces).toHaveLength(0);
+    });
+
+    it('top-level verbose, insights undefined should receive verbose logs', () => {
+      const client = new SpyTelemetryClientV3();
+
+      const logger = createWinstonLogger({
+        winston: {
+          defaults: {
+            level: 'verbose',
+          },
+        },
+        insights: { version: 3, client },
+      });
+
+      logger.verbose('Test verbose message');
+
+      expect(client.traces).toHaveLength(1);
+      expect(client.traces[0]?.message).toBe('Test verbose message');
+    });
+
+    it('VI: insights level verbose receives info logs', () => {
+      const client = new SpyTelemetryClientV3();
+
+      const logger = createWinstonLogger({
+        winston: {
+          defaults: {
+            level: 'verbose',
+          },
+          insights: { level: 'verbose' },
+        },
+        insights: { version: 3, client },
+      });
+
+      logger.info('Test info message');
+
+      expect(client.traces).toHaveLength(1);
+      expect(client.traces[0]?.message).toBe('Test info message');
+    });
+
+    it('VV: insights level verbose receives verbose logs', () => {
+      const client = new SpyTelemetryClientV3();
+
+      const logger = createWinstonLogger({
+        winston: {
+          defaults: {
+            level: 'verbose',
+          },
+          insights: { level: 'verbose' },
+        },
+        insights: { version: 3, client },
+      });
+
+      logger.verbose('Test verbose message');
+
+      expect(client.traces).toHaveLength(1);
+      expect(client.traces[0]?.message).toBe('Test verbose message');
+    });
+  });
 });

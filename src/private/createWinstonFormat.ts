@@ -1,5 +1,13 @@
-import type { ColorizeOptions, Format, TimestampOptions } from 'logform';
+import type { ColorizeOptions, Format, TimestampOptions, TransformableInfo } from 'logform';
+import { MESSAGE } from 'triple-beam';
 import winston from 'winston';
+
+const unescapeColorCodes = (info: TransformableInfo) => {
+  const message = info[MESSAGE] as string;
+  return message.replaceAll(/\\u001b/g, '\u001b');
+};
+
+const unescapeColorCodesFormat = () => winston.format.printf(unescapeColorCodes);
 
 export type CreateWinstonFormatOptions =
   | Format[]
@@ -30,13 +38,21 @@ export const createWinstonFormat = (config: CreateWinstonFormatOptions): Format 
   }
 
   if (config.colorize === true) {
-    formats.push(winston.format.colorize());
+    formats.push(winston.format.colorize({ all: true }));
   } else if (typeof config.colorize === 'object') {
     formats.push(winston.format.colorize(config.colorize));
   }
 
-  const formatter = config.output === 'simple' ? winston.format.simple() : winston.format.json();
-  formats.push(formatter);
+  if (config.output === 'simple') {
+    formats.push(winston.format.simple());
+  }
+  if (config.output === 'json') {
+    formats.push(winston.format.json());
+
+    if (config.colorize === true || typeof config.colorize === 'object') {
+      formats.push(unescapeColorCodesFormat());
+    }
+  }
 
   return winston.format.combine(...formats);
 };

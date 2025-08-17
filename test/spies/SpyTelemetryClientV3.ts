@@ -18,6 +18,7 @@ export class SpyTelemetryClientV3 extends TelemetryClient {
   }
 
   override trackTrace(telemetry: TraceTelemetry): void {
+    console.log('SpyTelemetryClientV3.trackTrace', telemetry);
     this.traces.push(telemetry);
   }
 

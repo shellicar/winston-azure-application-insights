@@ -64,16 +64,16 @@ export interface WinstonColors {
   [colorName: string]: string;
 }
 
+export type WinstonTransportOptionsFormat = {
+  output?: 'json' | 'simple';
+  errors?: boolean | { stack?: boolean };
+  timestamp?: boolean | TimestampOptions;
+  colorize?: boolean | ColorizeOptions;
+};
+
 export interface WinstonTransportOptions {
   enabled?: boolean;
-  format?:
-    | Format[]
-    | {
-        output?: 'json' | 'simple';
-        errors?: boolean | { stack?: boolean };
-        timestamp?: boolean | TimestampOptions;
-        colorize?: boolean | ColorizeOptions;
-      };
+  format?: Format[] | WinstonTransportOptionsFormat;
   level?: string;
   defaultMeta?: Record<string, unknown>;
 }

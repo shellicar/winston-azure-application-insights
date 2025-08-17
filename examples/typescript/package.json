@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@shellicar/winston-azure-application-insights": "link:../..",
-    "applicationinsights": "^3.3.0",
+    "applicationinsights": "^3.9.0",
     "winston": "^3.14.2"
   }
 }

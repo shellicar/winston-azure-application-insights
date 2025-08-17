@@ -15,7 +15,9 @@ export class ApplicationInsightsTransport extends TransportStream {
   public levels?: WinstonLevels;
 
   constructor(options: ApplicationInsightsTransportOptions) {
-    super();
+    super({
+      level: options.level,
+    });
     this.options = {
       telemetryHandler: options.telemetryHandler,
       severityMapping: options.severityMapping ?? defaultSeverityMapping,

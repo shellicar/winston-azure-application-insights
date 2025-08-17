@@ -35,4 +35,5 @@ export interface ApplicationInsightsTransportOptions {
   traceFilter?: ITraceTelemetryFilter;
   exceptionFilter?: IExceptionTelemetryFilter;
   isError?: IsError;
+  level?: string;
 }
