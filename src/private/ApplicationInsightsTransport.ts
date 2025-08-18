@@ -29,8 +29,8 @@ export class ApplicationInsightsTransport extends TransportStream {
   }
 
   public override log(info: WinstonInfo, next: () => void) {
-    const exceptions = extractErrorsStep(info, this.options.isError).filter((x) => this.options.exceptionFilter(x));
-    const trace = [this.getTrace(info, exceptions)].filter((x) => x != null).filter((x) => this.options.traceFilter(x))[0] ?? null;
+    const exceptions = this.getExceptions(info);
+    const trace = this.getTrace(info, exceptions);
 
     this.telemetryHandler.handleTelemetry({
       trace,
@@ -40,7 +40,21 @@ export class ApplicationInsightsTransport extends TransportStream {
     next();
   }
 
-  private getTrace(info: WinstonInfo, errors: TelemetryDataException[]) {
+  private getTrace(info: WinstonInfo, filteredExceptions: TelemetryDataException[]) {
+    const trace = this.extractTrace(info, filteredExceptions);
+    if (trace != null && this.options.traceFilter(trace)) {
+      return trace;
+    }
+    return null;
+  }
+
+  private getExceptions(info: WinstonInfo) {
+    const exceptions = extractErrorsStep(info, this.options.isError);
+    const filtered = exceptions.filter(this.options.exceptionFilter);
+    return filtered;
+  }
+
+  private extractTrace(info: WinstonInfo, errors: TelemetryDataException[]) {
     const shouldSendOnlyException = errors.length > 0 && this.options.isError(info);
 
     if (shouldSendOnlyException) {
