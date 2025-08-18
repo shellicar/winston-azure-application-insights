@@ -173,8 +173,8 @@ tsc --noEmit --composite false --skipLibCheck
 ### Before (v5.x)
 
 ```typescript
-import applicationinsights, { KnownSeverityLevel } from 'applicationinsights';
-import { createWinstonLogger, ITelemetryFilterV3 } from '@shellicar/winston-azure-application-insights';
+import { createWinstonLogger, type ITelemetryFilterV3 } from '@shellicar/winston-azure-application-insights';
+import applicationinsights from 'applicationinsights';
 import winston from 'winston';
 
 applicationinsights.setup().start();
@@ -197,7 +197,9 @@ const logger = createWinstonLogger({
     defaultLevel: 'info',
     filters: [filter],
     levels: {
+      // info -> error
       info: 3,
+      // error -> critical
       error: 4,
     },
     sendErrorsAsExceptions: true,
@@ -208,10 +210,10 @@ const logger = createWinstonLogger({
     defaultMeta: {
       myDefault: 'meta',
     },
-    format: [winston.format.timestamp(),  winston.format.errors(), winston.format.json()],
+    format: [winston.format.timestamp(), winston.format.errors(), winston.format.json()],
     level: 'verbose',
     levels: winston.config.npm.levels,
-  }
+  },
 });
 
 logger.info('This is an info message');
@@ -221,8 +223,8 @@ logger.error('This is an error message', new Error('Test error'));
 ### After (v6.x)
 
 ```typescript
+import { ApplicationInsightsVersion, createWinstonLogger, type IExceptionTelemetryFilter, type ITraceTelemetryFilter, TelemetrySeverity } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
-import { createWinstonLogger, ITraceTelemetryFilter, IExceptionTelemetryFilter, ApplicationInsightsVersion, TelemetrySeverity } from '@shellicar/winston-azure-application-insights';
 import winston from 'winston';
 
 applicationinsights.setup().start();
@@ -268,7 +270,7 @@ const logger = createWinstonLogger({
       level: 'info',
     },
     levels: winston.config.npm.levels,
-  }
+  },
 });
 
 logger.info('This is an info message');
@@ -294,8 +296,8 @@ If you're only using the transport directly (not the full logger factory), the m
 ### Before (v5.x)
 
 ```typescript
+import { AzureApplicationInsightsLogger, type ITelemetryFilterV3 } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
-import { AzureApplicationInsightsLogger, ITelemetryFilterV3 } from '@shellicar/winston-azure-application-insights';
 
 applicationinsights.setup().start();
 
@@ -316,7 +318,9 @@ const transport = new AzureApplicationInsightsLogger({
   defaultLevel: 'info',
   filters: [filter],
   levels: {
+    // info -> error
     info: 3,
+    // error -> critical
     error: 4,
   },
   sendErrorsAsExceptions: true,
@@ -327,8 +331,8 @@ const transport = new AzureApplicationInsightsLogger({
 ### After (v6.x)
 
 ```typescript
+import { ApplicationInsightsVersion, createApplicationInsightsTransport, type IExceptionTelemetryFilter, type ITraceTelemetryFilter, TelemetrySeverity } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
-import { createApplicationInsightsTransport, ITraceTelemetryFilter, IExceptionTelemetryFilter, ApplicationInsightsVersion, TelemetrySeverity } from '@shellicar/winston-azure-application-insights';
 
 applicationinsights.setup().start();
 
