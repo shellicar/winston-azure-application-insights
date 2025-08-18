@@ -6,7 +6,6 @@ name: Node.js Package
 on:
   release:
     types: [created]
-  workflow_dispatch:
 
 jobs:
   build:
@@ -18,7 +17,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org/
           cache: 'pnpm'
       - run: pnpm i --frozen-lockfile
@@ -30,12 +29,14 @@ jobs:
           . ./scripts/get-npm-tag.sh
 
           VERSION=$(node -p "require('./package.json').version")
+          echo "Package version: $VERSION"
           TAG=$(get_npm_tag "$VERSION")
           if [ $? -ne 0 ]; then
             echo "Failed to get valid npm tag: $TAG"
             exit 1
           fi
+          echo "Publishing with tag: $TAG"
           
-          pnpm publish --ignore-scripts --no-git-checks --tag "$TAG" --dry-run
+          pnpm publish --ignore-scripts --no-git-checks --tag "$TAG"
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
