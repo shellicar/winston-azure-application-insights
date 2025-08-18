@@ -26,6 +26,15 @@ jobs:
       - run: pnpm run ci
       - run: |
           # cd "packages/$(cat .packagename)"
-          pnpm publish --ignore-scripts --no-git-checks
+          . ./scripts/get-npm-tag.sh
+
+          VERSION=$(node -p "require('./package.json').version")
+          TAG=$(get_npm_tag "$VERSION")
+          if [ $? -ne 0 ]; then
+            echo "Failed to get valid npm tag: $TAG"
+            exit 1
+          fi
+          
+          pnpm publish --ignore-scripts --no-git-checks --tag "$TAG" --dry-run
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
