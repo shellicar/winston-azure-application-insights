@@ -2,8 +2,6 @@ import { env } from 'node:process';
 import { ApplicationInsightsVersion, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
 
-const shouldPushToAppInsights = 'APPLICATIONINSIGHTS_CONNECTION_STRING' in env;
-
 applicationinsights.setup().start();
 
 const logger = createWinstonLogger({
