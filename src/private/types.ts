@@ -1,5 +1,5 @@
 import { SPLAT } from 'triple-beam';
-import type { IExceptionTelemetryFilter, ITraceTelemetryFilter, IsError, SeverityMapping, TelemetryHandler } from '../public/types';
+import type { IExceptionTelemetryFilter, IsError, ITraceTelemetryFilter, SeverityMapping, TelemetryHandler } from '../public/types';
 
 // Utility type to make all properties of T optional and never
 type MakeNever<T> = {

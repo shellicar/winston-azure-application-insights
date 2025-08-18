@@ -1,5 +1,5 @@
 import { SPLAT } from 'triple-beam';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { createLogger } from 'winston';
 import { extractErrorsStep } from '../src/private/extractErrorsStep';
 import { isError } from '../src/private/isError';
@@ -7,7 +7,6 @@ import type { WinstonInfo } from '../src/private/types';
 import type { TelemetryDataException } from '../src/public/types';
 import { createWinstonInfoFromErrorOnly } from './createWinstonInfoFromErrorOnly';
 import { SpyErrorTransport } from './spies/SpyErrorTransport';
-import { SpyTelemetryHandler } from './spies/SpyTelemetryHandler';
 
 describe('extractErrorsStep', () => {
   const transport = new SpyErrorTransport();

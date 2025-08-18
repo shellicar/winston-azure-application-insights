@@ -1,4 +1,4 @@
-import { ApplicationInsightsVersion, type IExceptionTelemetryFilter, type ITraceTelemetryFilter, TelemetrySeverity, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import { ApplicationInsightsVersion, createWinstonLogger, type IExceptionTelemetryFilter, type ITraceTelemetryFilter, TelemetrySeverity } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
 import winston from 'winston';
 

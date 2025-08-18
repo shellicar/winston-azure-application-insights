@@ -1,5 +1,5 @@
-import { type ITelemetryFilterV3, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
-import applicationinsights, { KnownSeverityLevel } from 'applicationinsights';
+import { createWinstonLogger, type ITelemetryFilterV3 } from '@shellicar/winston-azure-application-insights';
+import applicationinsights from 'applicationinsights';
 import winston from 'winston';
 
 applicationinsights.setup().start();

@@ -1,4 +1,4 @@
-import { type ITraceTelemetryFilter, type TelemetryData, type TelemetryHandler, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import { createWinstonLogger, type ITraceTelemetryFilter, type TelemetryData, type TelemetryHandler } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
 
 applicationinsights.setup().start();

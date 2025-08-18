@@ -1,4 +1,4 @@
-import { ApplicationInsightsVersion, TelemetrySeverity, createApplicationInsightsTransport, createTelemetryHandler, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import { ApplicationInsightsVersion, createApplicationInsightsTransport, createTelemetryHandler, createWinstonLogger, TelemetrySeverity } from '@shellicar/winston-azure-application-insights';
 import applicaioninsights from 'applicationinsightsv3';
 
 applicaioninsights.setup().start();

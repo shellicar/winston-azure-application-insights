@@ -2,8 +2,8 @@ import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { extractPropertiesStep } from '../src/private/extractPropertiesStep';
 import type { WinstonInfo } from '../src/private/types';
-import { GraphQLError } from './GraphQLError';
 import { createWinstonInfoFromErrorOnly } from './createWinstonInfoFromErrorOnly';
+import { GraphQLError } from './GraphQLError';
 
 describe('Refactored AzureApplicationInsightsLogger', () => {
   describe('extractPropertiesStep', () => {

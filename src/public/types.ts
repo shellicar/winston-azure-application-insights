@@ -1,7 +1,7 @@
 import type { ColorizeOptions, Format, TimestampOptions } from 'logform';
+import type { ApplicationInsightsVersion, TelemetrySeverity } from './enums';
 import type { ITelemetryClientV2 } from './ITelemetryClientV2';
 import type { ITelemetryClientV3 } from './ITelemetryClientV3';
-import type { ApplicationInsightsVersion, TelemetrySeverity } from './enums';
 
 export type TelemetryDataProperties = Record<string, unknown>;
 

@@ -1,6 +1,6 @@
 import { ApplicationInsightsVersion, createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsightsv2';
-import { type Logger, createLogger } from 'winston';
+import { createLogger, type Logger } from 'winston';
 import type TransportStream from 'winston-transport';
 
 applicationinsights.setup().start();

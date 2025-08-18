@@ -1,4 +1,4 @@
-import { type TelemetryData, type TelemetryHandler, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import { createWinstonLogger, type TelemetryData, type TelemetryHandler } from '@shellicar/winston-azure-application-insights';
 
 class CustomTelemetryHandler implements TelemetryHandler {
   handleTelemetry(telemetry: TelemetryData) {

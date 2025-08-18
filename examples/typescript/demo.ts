@@ -1,4 +1,3 @@
-import { env } from 'node:process';
 import { ApplicationInsightsVersion, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
 

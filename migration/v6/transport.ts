@@ -1,4 +1,4 @@
-import { ApplicationInsightsVersion, type IExceptionTelemetryFilter, type ITraceTelemetryFilter, TelemetrySeverity, createApplicationInsightsTransport } from '@shellicar/winston-azure-application-insights';
+import { ApplicationInsightsVersion, createApplicationInsightsTransport, type IExceptionTelemetryFilter, type ITraceTelemetryFilter, TelemetrySeverity } from '@shellicar/winston-azure-application-insights';
 import applicationinsights from 'applicationinsights';
 
 applicationinsights.setup().start();

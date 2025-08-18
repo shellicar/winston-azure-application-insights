@@ -1,7 +1,6 @@
-import type { TelemetryClient } from 'applicationinsightsv2';
 import type { ExceptionTelemetry, TraceTelemetry } from 'applicationinsightsv2/out/Declarations/Contracts';
-import type { ITelemetryClientV2 } from '../public/ITelemetryClientV2';
 import { TelemetrySeverity } from '../public/enums';
+import type { ITelemetryClientV2 } from '../public/ITelemetryClientV2';
 import type { TelemetryData, TelemetryHandler } from '../public/types';
 
 // From application insights

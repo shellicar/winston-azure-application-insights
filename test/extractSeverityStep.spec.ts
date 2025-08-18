@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { config, createLogger } from 'winston';
 import { ApplicationInsightsTransport } from '../src/private/ApplicationInsightsTransport';
 import { defaultSeverityMapping } from '../src/private/consts';

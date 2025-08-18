@@ -1,7 +1,7 @@
 import type { ExceptionTelemetry, TraceTelemetry } from 'applicationinsightsv3';
 import { KnownSeverityLevel } from 'applicationinsightsv3';
-import type { ITelemetryClientV3 } from '../public/ITelemetryClientV3';
 import { TelemetrySeverity } from '../public/enums';
+import type { ITelemetryClientV3 } from '../public/ITelemetryClientV3';
 import type { TelemetryData, TelemetryHandler } from '../public/types';
 
 export interface ApplicationInsightsV3TelemetryHandlerOptions {

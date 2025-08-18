@@ -1,4 +1,3 @@
-import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { createLogger } from 'winston';
 import { ApplicationInsightsTransport } from '../src/private/ApplicationInsightsTransport';

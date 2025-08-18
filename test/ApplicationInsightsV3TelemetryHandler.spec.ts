@@ -1,4 +1,4 @@
-import { type ExceptionTelemetry, KnownSeverityLevel, type TraceTelemetry } from 'applicationinsightsv3';
+import { KnownSeverityLevel } from 'applicationinsightsv3';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ApplicationInsightsV3TelemetryHandler } from '../src/private/ApplicationInsightsV3TelemetryHandler';
 import { TelemetrySeverity } from '../src/public/enums';

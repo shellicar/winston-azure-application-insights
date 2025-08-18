@@ -1,6 +1,5 @@
 import winston from 'winston';
 import type TransportStream from 'winston-transport';
-import { ApplicationInsightsTransport } from '../private/ApplicationInsightsTransport';
 import { type CreateWinstonFormatOptions, createWinstonFormat } from '../private/createWinstonFormat';
 import { createApplicationInsightsTransport } from './createApplicationInsightsTransport';
 import { createTelemetryHandler } from './createTelemetryHandler';

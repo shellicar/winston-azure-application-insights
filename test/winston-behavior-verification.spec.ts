@@ -2,10 +2,10 @@ import { SPLAT } from 'triple-beam';
 import { describe, expect, it } from 'vitest';
 import { createLogger, format } from 'winston';
 import type { WinstonInfo } from '../src/private/types';
-import { GraphQLError } from './GraphQLError';
 import { createWinstonInfoFromErrorOnly } from './createWinstonInfoFromErrorOnly';
 import { createWinstonInfo } from './createWinstonInfoWithErrorInSplat';
 import { expectInfo } from './expectInfoEntries';
+import { GraphQLError } from './GraphQLError';
 import { SpyConsoleTransport } from './spies/SpyConsoleTransport';
 import { SpyWinstonTransport } from './spies/SpyWinstonTransport';
 
