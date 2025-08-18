@@ -2,6 +2,11 @@ import type { ColorizeOptions, Format, TimestampOptions, TransformableInfo } fro
 import { MESSAGE } from 'triple-beam';
 import winston from 'winston';
 
+/**
+ * Converts escaped ANSI color codes back to actual ANSI escape sequences.
+ * Specifically converts `\\u001b` (escaped) to `\u001b` (ESC character, ^[ or 0x1B).
+ * @see https://github.com/winstonjs/logform#colorize
+ */
 const unescapeColorCodes = (info: TransformableInfo) => {
   const message = info[MESSAGE] as string;
   return message.replaceAll(/\\u001b/g, '\u001b');
