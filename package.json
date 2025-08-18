@@ -38,7 +38,7 @@
     "test:coverage": "vitest run --coverage",
     "list-mismatches": "syncpack list-mismatches",
     "fix-mismatches": "syncpack fix-mismatches",
-    "updates": "npm-check-updates",
+    "updates": "npm-check-updates --workspaces",
     "postinstall": "lefthook install",
     "verify-version": "./scripts/verify-version.sh"
   },

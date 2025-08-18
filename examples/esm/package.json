@@ -11,7 +11,7 @@
   "devDependencies": {
     "@shellicar/winston-azure-application-insights": "workspace:^",
     "@tsconfig/node20": "^20.1.6",
-    "@types/node": "^24.1.0",
+    "@types/node": "^24.3.0",
     "tsup": "^8.5.0",
     "typescript": "^5.9.2"
   }
