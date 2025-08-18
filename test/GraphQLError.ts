@@ -1,3 +1,12 @@
+/**
+ * Test implementation of GraphQLError without referencing the GraphQL dependency.
+ *
+ * Allows testing how error extraction handles enumerable vs non-enumerable
+ * properties. GraphQLError uses Object.defineProperties to control property
+ * enumeration.
+ *
+ * @see https://github.com/graphql/graphql-js/blob/main/src/error/GraphQLError.ts
+ */
 export class GraphQLError extends Error {
   public readonly locations?: ReadonlyArray<{ line: number; column: number }>;
   public readonly path?: ReadonlyArray<string | number>;
