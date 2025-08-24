@@ -5,10 +5,11 @@
   "main": "dist/main.js",
   "scripts": {
     "build": "tsup-node",
-    "start": "node .",
+    "start": "dotenvx run -f ../../.env -- node .",
     "type-check": "tsc -p tsconfig.check.json"
   },
   "devDependencies": {
+    "@dotenvx/dotenvx": "^1.49.0",
     "@shellicar/winston-azure-application-insights": "workspace:^",
     "@tsconfig/node20": "^20.1.6",
     "@types/node": "^24.3.0",

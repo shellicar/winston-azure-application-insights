@@ -25,8 +25,8 @@ jobs:
       - run: pnpm run --if-present test
       - run: pnpm run ci
       - run: |
-          # cd "packages/$(cat .packagename)"
           . ./scripts/get-npm-tag.sh
+          cd "packages/$(cat .packagename)"
 
           VERSION=$(node -p "require('./package.json').version")
           echo "Package version: $VERSION"

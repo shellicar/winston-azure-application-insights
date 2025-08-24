@@ -5,14 +5,15 @@
   "main": "main.ts",
   "type": "module",
   "scripts": {
-    "start": "tsx .",
+    "start": "dotenvx run -f ../../.env -- tsx .",
     "type-check": "tsc -p tsconfig.check.json"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "tsx": "^4.20.4",
+    "@dotenvx/dotenvx": "^1.49.0",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   },
   "dependencies": {
