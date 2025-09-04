@@ -379,18 +379,27 @@ describe('createWinstonLogger', () => {
         expect(logger.defaultMeta).toEqual(defaultMeta);
       });
 
-      it('defaults.format sets base logger format', () => {
+      it('global formats are applied to logger when specified', () => {
+        const expected = 'global-format-applied';
+
         const client = new SpyTelemetryClientV3();
+        const addTestProperty = winston.format((info) => {
+          info.testProperty = expected;
+          return info;
+        })();
 
         const logger = createWinstonLogger({
           winston: {
-            defaults: {},
-            console: { enabled: false, format: { output: 'json' } },
+            defaults: { format: [addTestProperty] },
+            console: { enabled: false },
           },
           insights: { version: ApplicationInsightsVersion.V3, client },
         });
 
-        expect(logger.transports).toHaveLength(1);
+        logger.info('Test message');
+
+        const actual = client.traces[0]?.properties?.testProperty;
+        expect(actual).toBe(expected);
       });
     });
   });

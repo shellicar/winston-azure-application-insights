@@ -149,6 +149,12 @@ export interface WinstonLoggerDefaults {
    * Default metadata to include with all log entries.
    */
   defaultMeta?: Record<string, unknown>;
+
+  /**
+   * Global formats applied to all transports.
+   * These are applied first, before any transport-specific formats.
+   */
+  format?: Format[];
 }
 
 export interface WinstonBaseTransportOptions extends WinstonLoggerDefaults {
@@ -159,7 +165,7 @@ export interface WinstonBaseTransportOptions extends WinstonLoggerDefaults {
   enabled?: boolean;
 }
 
-export interface WinstonConsoleTransportOptions extends WinstonBaseTransportOptions {
+export interface WinstonConsoleTransportOptions extends Omit<WinstonBaseTransportOptions, 'format'> {
   /**
    * Format configuration for this transport.
    * If provided as Format[] ({@link https://github.com/winstonjs/logform#formats}), it is used as-is without any additional processing.

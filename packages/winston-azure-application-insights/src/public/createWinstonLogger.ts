@@ -58,12 +58,15 @@ export const createWinstonLogger = (options: CreateWinstonLoggerOptions): winsto
   // Merge defaults with logger-level options
   const level = options.winston?.defaults?.level ?? 'info';
   const levels = options.winston?.levels ?? winston.config.npm.levels;
+  const globalFormats = options.winston?.defaults?.format ?? [];
 
-  // Default format for main logger (applied to all transports)
+  const format = winston.format.combine(...globalFormats);
+
   return winston.createLogger({
     ...options.winston?.options,
     level,
     levels,
+    format,
     transports,
     defaultMeta: options.winston?.defaults?.defaultMeta,
   });
