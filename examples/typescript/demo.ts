@@ -1,25 +1,19 @@
-import { defaultClient, setup } from 'applicationinsights';
-import winston from 'winston';
-import { AzureApplicationInsightsLogger } from '../../src/winston-azure-application-insights';
+import { ApplicationInsightsVersion, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import applicationinsights from 'applicationinsights';
 
-const shouldPushToAppInsights = 'APPLICATIONINSIGHTS_CONNECTION_STRING' in process.env;
+applicationinsights.setup().start();
 
-if (shouldPushToAppInsights) {
-  setup().start();
-  winston.add(
-    new AzureApplicationInsightsLogger({
-      client: defaultClient,
-      version: 3,
-    }),
-  );
-} else {
-  winston.add(new winston.transports.Console());
-}
+const logger = createWinstonLogger({
+  insights: {
+    version: ApplicationInsightsVersion.V3,
+    client: applicationinsights.defaultClient,
+  },
+});
 
-winston.info("Let's log something new...");
-winston.error('This is an error log!');
-winston.warn('And this is a warning message.');
-winston.log('info', 'Log with some metadata', {
+logger.info("Let's log something new...");
+logger.error('This is an error log!');
+logger.warn('And this is a warning message.');
+logger.log('info', 'Log with some metadata', {
   question: 'Answer to the Ultimate Question of Life, the Universe, and Everything',
   answer: 42,
 });
@@ -37,13 +31,13 @@ class ErrorWithMeta extends Error {
   }
 }
 
-winston.error('Log extended errors with properties', new ErrorWithMeta('some error', 'answer', 42));
+logger.error('Log extended errors with properties', new ErrorWithMeta('some error', 'answer', 42));
 
 class MyError extends Error {
-  public extensions: any;
+  public extensions: Record<string, any>;
   constructor(
     message: string,
-    public readonly options: any,
+    public readonly options: Record<string, any>,
   ) {
     super(message);
     this.extensions = options.extensions;
@@ -53,5 +47,13 @@ class MyError extends Error {
 const err = new MyError('test', {
   extensions: Object.create(null),
 });
-winston.info('hello world', err);
-winston.info(err);
+logger.info('hello world', err);
+logger.info(err);
+
+const err2 = new MyError('test-with-extensions', {
+  extensions: {
+    ext: Object.create(null),
+    code: 'APOLLO_ERROR',
+  },
+});
+logger.error(err2);

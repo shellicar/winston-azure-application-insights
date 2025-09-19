@@ -1,12 +1,16 @@
-import { createWinstonLogger } from '@shellicar/winston-azure-application-insights';
-import { defaultClient, setup } from 'applicationinsights';
+import { ApplicationInsightsVersion, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+import applicationinsights from 'applicationinsights';
 
-setup().start();
+applicationinsights.setup().start();
 const logger = createWinstonLogger({
-  console: true,
+  winston: {
+    console: {
+      enabled: true,
+    },
+  },
   insights: {
-    version: 3,
-    client: defaultClient,
+    version: ApplicationInsightsVersion.V3,
+    client: applicationinsights.defaultClient,
   },
 });
 

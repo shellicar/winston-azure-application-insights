@@ -1,5 +1,102 @@
 # Changelog
 
+## [6.0.0] - 2025-09-19
+
+### Breaking Changes
+
+Complete ground-up rewrite of the library with new architecture, API, and approach to logging.
+
+#### New Factory-Based API
+
+**Before (v5.x):**
+
+```typescript
+import { AzureApplicationInsightsLogger } from '@shellicar/winston-azure-application-insights';
+
+const logger = winston.createLogger({
+  transports: [
+    new AzureApplicationInsightsLogger({
+      version: 3,
+      client: defaultClient,
+      sendErrorsAsExceptions: true,
+    })
+  ]
+});
+```
+
+**After (v6.x):**
+
+```typescript
+import { createApplicationInsightsTransport, createWinstonLogger } from '@shellicar/winston-azure-application-insights';
+
+// Option 1: Transport factory
+const transport = createApplicationInsightsTransport({
+  version: 3,
+  client: defaultClient,
+});
+
+// Option 2: Complete logger factory
+const logger = createWinstonLogger({
+  winston: { console: true },
+  insights: { version: 3, client: defaultClient },
+});
+
+// Option 3: Telemetry handler
+const handler = createTelemetryHandler({
+  version: 3,
+  client: defaultClient,
+});
+const transport
+```
+
+#### Architecture Changes
+
+- Replaced monolithic class with modular step-based processing pipeline
+- Separate SDK-specific telemetry handlers for v2/v3 Application Insights
+- Clean separation between Winston transport and Application Insights logic
+
+#### API Changes
+
+- **Removed**: `AzureApplicationInsightsLogger` class
+- **Removed**: `sendErrorsAsExceptions` option (now automatic and smarter)
+- **Removed**: `defaultLevel` option (use Winston's native configuration)
+- **Removed**: `filters` array (replaced with separate filter functions)
+- **Removed**: `silent` option (use Winston's native transport configuration)
+- **Added**: `createApplicationInsightsTransport()` factory function
+- **Added**: `createWinstonLogger()` factory function
+- **Changed**: `levels` option renamed to `severityMapping`
+- **Changed**: Filter functions now use separate `traceFilter`/`exceptionFilter` options
+
+#### Extensibility Features
+
+- **Custom Error Detection**: Implement your own `isError` function to define what counts as an error
+- **Severity Mapping**: Override default Winston level to Application Insights severity mappings
+- **Telemetry Filtering**: Apply custom filters to traces and exceptions before sending
+- **Custom Telemetry Handlers**: Implement your own telemetry processing logic
+
+### Added
+
+- Factory functions for simpler setup
+- Automatic Error object detection and extraction
+- Smart error handling (Error as first parameter sends only exception)
+- Multiple Error object support in single log call
+- Object.create(null) support for GraphQL/Apollo compatibility
+- Enhanced property extraction from splat parameters and defaultMeta
+- Comprehensive test suite
+- Extensible error detection with custom `isError` functions
+- Customizable severity mapping for Winston levels
+- Flexible trace and exception filtering
+- Support for custom telemetry handlers
+
+### Changed
+
+- Complete rewrite
+- Improved Winston behaviour compatibility
+- Better error message handling
+- Enhanced property extraction logic
+
+---
+
 ## [5.1.0] - 2025-08-03
 
 ### Changes
@@ -90,6 +187,7 @@
 - Replace `treatErrorsAsExceptions` with `sendErrorsAsExceptions` following feedback from AI core team w/r best practice error tracking
 - Package install size drastically reduced
 
+[6.0.0]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.0
 [5.1.0]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.1.0
 [5.0.7]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.7
 [5.0.6]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/5.0.6

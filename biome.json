@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.2/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.0.6/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": []
+    "includes": ["**"]
   },
   "formatter": {
     "enabled": true,
@@ -17,9 +17,7 @@
     "lineEnding": "lf",
     "attributePosition": "auto"
   },
-  "organizeImports": {
-    "enabled": true
-  },
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -29,10 +27,23 @@
       },
       "style": {
         "useBlockStatements": "error",
-        "noNonNullAssertion": "info"
+        "noNonNullAssertion": "info",
+        "noParameterAssign": "error",
+        "useAsConstAssertion": "error",
+        "useDefaultParameterLast": "error",
+        "useEnumInitializers": "error",
+        "useSelfClosingElements": "error",
+        "useSingleVarDeclarator": "error",
+        "noUnusedTemplateLiteral": "error",
+        "useNumberNamespace": "error",
+        "noInferrableTypes": "error",
+        "noUselessElse": "error"
       },
       "performance": {
         "noBarrelFile": "error"
+      },
+      "correctness": {
+        "noUnusedImports": "error"
       }
     }
   },
@@ -65,27 +76,5 @@
       "lineWidth": 300,
       "attributePosition": "auto"
     }
-  },
-  "overrides": [
-    {
-      "include": ["*.svelte"],
-      "linter": {
-        "rules": {
-          "style": {
-            "useConst": "off",
-            "useImportType": "off"
-          },
-          "suspicious": {
-            "noImplicitAnyLet": "off",
-            "noConsole": {
-              "level": "warn",
-              "options": {
-                "allow": ["error"]
-              }
-            }
-          }
-        }
-      }
-    }
-  ]
+  }
 }

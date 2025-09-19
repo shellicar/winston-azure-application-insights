@@ -1,0 +1,23 @@
+{
+  "name": "migration-v5",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.ts",
+  "type": "module",
+  "scripts": {
+    "start": "dotenvx run -f ../../.env -- tsx .",
+    "type-check": "tsc -p tsconfig.check.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@dotenvx/dotenvx": "^1.49.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@shellicar/winston-azure-application-insights": "^5.1.0",
+    "applicationinsights": "^3.9.0"
+  }
+}

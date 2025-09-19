@@ -1,21 +1,25 @@
 {
-  "name": "typescript",
+  "name": "typescript-examples",
   "version": "1.0.0",
   "description": "",
   "main": "main.ts",
+  "type": "module",
   "scripts": {
-    "start": "tsx ."
+    "start": "dotenvx run -f ../../.env -- tsx .",
+    "type-check": "tsc -p tsconfig.check.json"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "tsx": "^4.19.1",
-    "typescript": "^5.6.2"
+    "@dotenvx/dotenvx": "^1.49.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
   },
   "dependencies": {
-    "@shellicar/winston-azure-application-insights": "link:../..",
-    "applicationinsights": "^3.3.0",
-    "winston": "^3.14.2"
+    "@opentelemetry/instrumentation-winston": "^0.48.1",
+    "@shellicar/winston-azure-application-insights": "workspace:^",
+    "applicationinsights": "^3.9.0",
+    "winston": "^3.17.0"
   }
 }
