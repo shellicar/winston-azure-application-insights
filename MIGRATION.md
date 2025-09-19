@@ -64,7 +64,7 @@ pnpm add @shellicar/winston-azure-application-insights@^6
 import { ITelemetryFilterV3 } from '@shellicar/winston-azure-application-insights';
 
 // Add  
-import { ApplicationInsightsVersion, TelemetrySeverity } from '@shellicar/winston-azure-application-insights';
+import { ApplicationInsightsVersion, TelemetrySeverity, ITraceTelemetryFilter, IExceptionTelemetryFilter } from '@shellicar/winston-azure-application-insights';
 ```
 
 ### Step 3: Update Version Parameter
@@ -106,15 +106,15 @@ severityMapping: {
 
 ```typescript
 // Change
-const filter = {
+const filter: ITelemetryFilterV3 = {
   filterTrace: (trace) => true,
   filterException: (exception) => true,
 };
 filters: [filter],
 
 // To
-traceFilter: (trace) => true,
-exceptionFilter: (exception) => true,
+const traceFilter: ITraceTelemetryFilter = (trace) => true;
+const exceptionFilter: IExceptionTelemetryFilter = (exception) => true;
 ```
 
 ### Step 7: Update Winston Configuration
