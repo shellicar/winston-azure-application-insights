@@ -52,6 +52,48 @@ describe('extractMessageStep', () => {
     expect(actual).toBe(expected);
   });
 
+  it('should merge strings in splat', () => {
+    const expected = 'Hello world';
+
+    const info: WinstonInfo = {
+      level: 'info',
+      message: 'Hello',
+      [SPLAT]: ['world'],
+    };
+
+    const actual = extractMessageStep(info);
+
+    expect(actual).toBe(expected);
+  });
+
+  it('should merge multiple strings in splat', () => {
+    const expected = 'Hello world two';
+
+    const info: WinstonInfo = {
+      level: 'info',
+      message: 'Hello',
+      [SPLAT]: ['world', 'two'],
+    };
+
+    const actual = extractMessageStep(info);
+
+    expect(actual).toBe(expected);
+  });
+
+  it('should merge and unmerge', () => {
+    const expected = 'Hello world two';
+
+    const info: WinstonInfo = {
+      level: 'info',
+      message: 'Hello',
+      [SPLAT]: ['world', 'two'],
+    };
+
+    const actual = extractMessageStep(info);
+
+    expect(actual).toBe(expected);
+  });
+
   it('should extract number message property', () => {
     const expected = 'hello';
 
@@ -168,7 +210,8 @@ describe('extractMessageStep', () => {
   });
 
   it('should extract original message when Error is in first splat position with extra data (from winston behaviour)', () => {
-    const expected = 'Connection failed';
+    // NOTE: Change in behaviour, will concatenate all strings as of 6.0.2
+    const expected = 'Connection failed extra data';
 
     const testError = new Error('Database error');
     const info = createWinstonInfo({ message: 'Connection failed', level: 'error', [SPLAT]: ['extra data'] }, testError);
