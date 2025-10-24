@@ -12,14 +12,14 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@dotenvx/dotenvx": "^1.49.0",
-    "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "@dotenvx/dotenvx": "^1.51.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@opentelemetry/instrumentation-winston": "^0.48.1",
+    "@opentelemetry/instrumentation-winston": "^0.52.0",
     "@shellicar/winston-azure-application-insights": "workspace:^",
     "applicationinsights": "^3.9.0",
-    "winston": "^3.17.0"
+    "winston": "^3.18.3"
   }
 }
