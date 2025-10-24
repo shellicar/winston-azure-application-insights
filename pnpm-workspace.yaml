@@ -1,4 +1,8 @@
 packages:
-- examples/*
-- migration/*
-- packages/*
+  - examples/*
+  - migration/*
+  - packages/*
+
+overrides:
+  vite@>=7.0.0 <=7.0.6: '>=7.0.7'
+  vite@>=7.0.0 <=7.0.7: '>=7.0.8'
