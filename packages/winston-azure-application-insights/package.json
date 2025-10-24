@@ -65,8 +65,7 @@
   },
   "optionalDependencies": {
     "applicationinsightsv2": "npm:applicationinsights@^2",
-    "applicationinsightsv3": "npm:applicationinsights@^3",
-    "applicationinsightsv34": "npm:applicationinsights@^3.4"
+    "applicationinsightsv3": "npm:applicationinsights@^3"
   },
   "bugs": {
     "url": "https://github.com/shellicar/winston-azure-application-insights/issues"
