@@ -232,8 +232,8 @@ importers:
         specifier: ^5.1.0
         version: 5.1.0(winston-transport@4.9.0)(winston@3.18.3)
       applicationinsights:
-        specifier: ^3.9.0
-        version: 3.9.0
+        specifier: ^3.12.0
+        version: 3.12.0
     devDependencies:
       '@dotenvx/dotenvx':
         specifier: ^1.51.0
