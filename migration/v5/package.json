@@ -12,9 +12,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@dotenvx/dotenvx": "^1.49.0",
-    "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "@dotenvx/dotenvx": "^1.51.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@shellicar/winston-azure-application-insights": "^5.1.0",

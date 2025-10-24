@@ -11,9 +11,9 @@ const logger = createWinstonLogger({
   winston: {
     defaults: {
       defaultMeta: {
-        applicationinsights: '3.9.0',
+        applicationinsights: '3.3.0',
       },
     },
   },
 });
-logger.info('Hello from V3.4 example!');
+logger.info('Hello from V3.3 example!');

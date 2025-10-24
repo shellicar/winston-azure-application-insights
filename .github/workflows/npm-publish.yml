@@ -20,9 +20,11 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org/
           cache: 'pnpm'
+      - run: pnpm audit
       - run: pnpm i --frozen-lockfile
-      - run: pnpm run --if-present build
-      - run: pnpm run --if-present test
+      - run: pnpm run --if-present build --only
+      - run: pnpm run --if-present type-check --only
+      - run: pnpm run --if-present test --only
       - run: pnpm run ci
       - run: |
           . ./scripts/get-npm-tag.sh
