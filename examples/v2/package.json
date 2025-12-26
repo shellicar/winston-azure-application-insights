@@ -16,8 +16,8 @@
     "applicationinsights": "^2.9.6"
   },
   "devDependencies": {
-    "@dotenvx/dotenvx": "^1.51.0",
-    "tsx": "^4.20.6",
+    "@dotenvx/dotenvx": "^1.51.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }
