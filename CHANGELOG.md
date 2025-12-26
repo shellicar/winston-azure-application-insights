@@ -1,5 +1,11 @@
 # Changelog
 
+## [6.0.3] - 2025-12-26
+
+### Changes
+
+- Updated all dependencies to latest versions
+
 ## [6.0.2] - 2025-10-24
 
 ### Changes
@@ -204,6 +210,7 @@ const transport
 - Replace `treatErrorsAsExceptions` with `sendErrorsAsExceptions` following feedback from AI core team w/r best practice error tracking
 - Package install size drastically reduced
 
+[6.0.3]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.3
 [6.0.2]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.2
 [6.0.1]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.1
 [6.0.0]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.0
