@@ -1,5 +1,13 @@
 # Changelog
 
+## [6.1.0] - 2026-02-03
+
+### Changes
+
+- Merge all plain objects from SPLAT for property extraction (last wins on collision)
+- String arguments no longer block property extraction
+- Added `mergeSplat` format option (enabled by default)
+
 ## [6.0.3] - 2025-12-26
 
 ### Changes
@@ -210,6 +218,7 @@ const transport
 - Replace `treatErrorsAsExceptions` with `sendErrorsAsExceptions` following feedback from AI core team w/r best practice error tracking
 - Package install size drastically reduced
 
+[6.1.0]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.1.0
 [6.0.3]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.3
 [6.0.2]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.2
 [6.0.1]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.1

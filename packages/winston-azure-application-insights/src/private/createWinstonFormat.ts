@@ -1,6 +1,7 @@
 import type { ColorizeOptions, Format, TimestampOptions, TransformableInfo } from 'logform';
 import { MESSAGE } from 'triple-beam';
 import winston from 'winston';
+import { mergeSplatFormat } from './mergeSplatFormat';
 
 /**
  * Converts escaped ANSI color codes back to actual ANSI escape sequences.
@@ -21,6 +22,7 @@ export type CreateWinstonFormatOptions =
       errors: boolean | { stack?: boolean };
       timestamp: boolean | TimestampOptions;
       colorize: boolean | ColorizeOptions;
+      mergeSplat?: boolean;
     };
 
 export const createWinstonFormat = (config: CreateWinstonFormatOptions): Format => {
@@ -29,6 +31,10 @@ export const createWinstonFormat = (config: CreateWinstonFormatOptions): Format 
   }
 
   const formats: Format[] = [];
+
+  if (config.mergeSplat !== false) {
+    formats.push(mergeSplatFormat());
+  }
 
   if (config.timestamp === true) {
     formats.push(winston.format.timestamp());

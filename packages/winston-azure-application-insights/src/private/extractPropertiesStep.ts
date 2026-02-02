@@ -35,9 +35,11 @@ export const extractPropertiesStep = (info: WinstonInfo, isError: IsError = (x) 
   }
 
   const nonErrorItems = splat.filter((item) => !isError(item));
-  const firstObject = nonErrorItems[0];
-  if (firstObject != null && isPlainObject(firstObject)) {
-    return { ...defaultMeta, ...firstObject };
+  const plainObjects = nonErrorItems.filter((item) => isPlainObject(item));
+
+  if (plainObjects.length === 0) {
+    return defaultMeta ?? {};
   }
-  return defaultMeta ?? {};
+
+  return { ...defaultMeta, ...Object.assign({}, ...plainObjects) };
 };

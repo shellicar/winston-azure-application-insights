@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "language": "en-AU",
+  "dictionaries": ["typescript", "node", "npm", "software-terms"],
+  "words": ["shellicar", "syncpack", "logform", "emerg", "applicationinsights", "applicationinsightsv"],
+  "ignorePaths": ["**/*.json"],
+  "ignoreRegExpList": ["applicationinsightsv\\d+", "libary"]
+}

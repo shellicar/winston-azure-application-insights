@@ -58,9 +58,63 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         [SPLAT]: ['string', 42, properties1, error, null, properties2, true],
       };
 
-      it('should return empty object when first splat item is primitive, ignoring later objects', () => {
+      it('should merge all plain objects when preceded by primitives', () => {
         const result = extractPropertiesStep(info);
-        const expected = {};
+        const expected = { userId: 123, sessionId: 'abc' };
+        expect(result).toEqual(expected);
+      });
+
+      it('should extract properties when string arguments precede object', () => {
+        const info: WinstonInfo = {
+          level: 'info',
+          message: 'Hello',
+          [SPLAT]: ['World', { teapot: 'short and stout' }],
+        };
+
+        const result = extractPropertiesStep(info);
+        const expected = { teapot: 'short and stout' };
+        expect(result).toEqual(expected);
+      });
+
+      it('should merge all plain objects when multiple objects present', () => {
+        const info: WinstonInfo = {
+          level: 'info',
+          message: 'Hello',
+          [SPLAT]: [{ obj1: 'value' }, { obj2: 'value' }],
+        };
+
+        const result = extractPropertiesStep(info);
+        const expected = { obj1: 'value', obj2: 'value' };
+        expect(result).toEqual(expected);
+      });
+
+      it('should use last value when same key appears in multiple splat objects', () => {
+        const info: WinstonInfo = {
+          level: 'info',
+          message: 'Hello',
+          [SPLAT]: [{ field: '1' }, { field: '2' }, { field: '3' }],
+        };
+
+        const result = extractPropertiesStep(info);
+        const expected = { field: '3' };
+        expect(result).toEqual(expected);
+      });
+
+      it('should let splat object overwrite defaultMeta on property collision', () => {
+        const info: WinstonInfo = {
+          level: 'info',
+          message: 'Hello',
+          requestId: 'from-default-meta',
+          environment: 'production',
+          [SPLAT]: [{ requestId: 'from-splat', userId: 123 }],
+        };
+
+        const result = extractPropertiesStep(info);
+        const expected = {
+          requestId: 'from-splat',
+          environment: 'production',
+          userId: 123,
+        };
         expect(result).toEqual(expected);
       });
     });

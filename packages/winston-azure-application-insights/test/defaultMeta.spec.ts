@@ -75,7 +75,7 @@ describe('defaultMeta support', () => {
       expect(actual).toEqual(expected);
     });
 
-    it('should return defaultMeta when first splat is primitive (Winston behaviour)', () => {
+    it('should merge defaultMeta with object even when preceded by primitive', () => {
       const transport = new ApplicationInsightsTransport({ telemetryHandler });
       const logger = createLogger({
         defaultMeta: { userId: 123, appVersion: '1.0.0' },
@@ -85,12 +85,12 @@ describe('defaultMeta support', () => {
       logger.info('test message', 'string-data', { sessionId: 'abc' });
 
       const actual = telemetryHandler.telemetry?.trace?.properties;
-      const expected = { userId: 123, appVersion: '1.0.0' };
+      const expected = { userId: 123, appVersion: '1.0.0', sessionId: 'abc' };
 
       expect(actual).toEqual(expected);
     });
 
-    it('should merge defaultMeta with first object when multiple splat items', () => {
+    it('should merge defaultMeta with all objects when multiple splat items', () => {
       const transport = new ApplicationInsightsTransport({ telemetryHandler });
       const logger = createLogger({
         defaultMeta: { userId: 123, appVersion: '1.0.0' },
@@ -104,6 +104,7 @@ describe('defaultMeta support', () => {
         userId: 123,
         appVersion: '1.0.0',
         sessionId: 'abc',
+        requestId: 'req-123',
       };
 
       expect(actual).toEqual(expected);

@@ -1,4 +1,5 @@
 import type { ColorizeOptions, Format, TimestampOptions } from 'logform';
+import type { SPLAT } from 'triple-beam';
 import type { ApplicationInsightsVersion, TelemetrySeverity } from './enums';
 import type { ITelemetryClientV2 } from './ITelemetryClientV2';
 import type { ITelemetryClientV3 } from './ITelemetryClientV3';
@@ -136,6 +137,11 @@ export type WinstonTransportOptionsFormat = {
    * @default true
    */
   colorize?: boolean | ColorizeOptions;
+
+  /**
+   * Whether to merge all {@link SPLAT} objects
+   */
+  mergeSplat?: boolean;
 };
 
 export interface WinstonLoggerDefaults {

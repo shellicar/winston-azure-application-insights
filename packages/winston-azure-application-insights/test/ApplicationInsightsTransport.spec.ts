@@ -378,10 +378,10 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     describe('Message + Multiple Objects', () => {
-      it('should merge defaultMeta with first object only (Winston behaviour)', () => {
+      it('should merge all objects', () => {
         const meta1 = { userId: 123 };
         const meta2 = { sessionId: 'abc' };
-        const expected = meta1;
+        const expected = { userId: 123, sessionId: 'abc' };
 
         logger.info('Complex action', meta1, meta2);
         const actual = propertiesTransport.properties;
@@ -402,8 +402,8 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
     });
 
     describe('Message + Mixed Types (Objects + Primitives)', () => {
-      it('should return first object only (Winston behaviour)', () => {
-        const expected = { userId: 123 };
+      it('should merge all objects, ignoring primitives', () => {
+        const expected = { userId: 123, contextId: 'ctx-123' };
         logger.info('Mixed types', { userId: 123 }, 'session-abc', 42, { contextId: 'ctx-123' });
 
         const actual = propertiesTransport.properties;
@@ -422,11 +422,11 @@ describe('Refactored AzureApplicationInsightsLogger', () => {
         expect(actual).toEqual(expected);
       });
 
-      it('should extract objects and primitives while ignoring errors (multiple items)', () => {
+      it('should merge all objects while ignoring errors and primitives', () => {
         const meta1 = { userId: 123 };
         const meta2 = { sessionId: 'abc' };
         const meta3 = 42;
-        const expected = meta1;
+        const expected = { userId: 123, sessionId: 'abc' };
         logger.error('Complex error', new Error('error1'), meta1, meta2, new Error('error2'), meta3);
         const actual = propertiesTransport.properties;
 

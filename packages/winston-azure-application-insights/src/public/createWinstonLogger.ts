@@ -26,6 +26,7 @@ export const createWinstonLogger = (options: CreateWinstonLoggerOptions): winsto
         timestamp: userFormat.timestamp ?? true,
         errors: userFormat.errors ?? { stack: true },
         colorize: userFormat.colorize ?? true,
+        mergeSplat: userFormat.mergeSplat ?? true,
       };
     }
 
