@@ -3,7 +3,7 @@
 get_npm_tag() {
   VERSION="$1"
   TAG=$(echo "$VERSION" | sed -n 's/^[0-9]\+\.[0-9]\+\.[0-9]\+-\(.*\)\.[0-9]\+$/\1/p')
-  
+
   if [ -z "$TAG" ]; then
     TAG="latest"
     # If tag is latest, version should be x.y.z format only
@@ -18,7 +18,7 @@ get_npm_tag() {
     echo "Error: Tag looks like a semver range (rejected by npm): $TAG"
     return 1
   fi
-  
+
   echo "$TAG"
   return 0
 }

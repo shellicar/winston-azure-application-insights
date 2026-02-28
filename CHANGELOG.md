@@ -1,5 +1,21 @@
 # Changelog
 
+## [6.0.4] - 2026-02-28
+
+### Security
+
+- Fix [GHSA-7h2j-956f-4vf2](https://github.com/advisories/GHSA-7h2j-956f-4vf2) in brace-expansion
+- Fix [GHSA-3ppc-4f35-3m26](https://github.com/advisories/GHSA-3ppc-4f35-3m26) in minimatch
+- Fix [GHSA-7r86-cg39-jmmj](https://github.com/advisories/GHSA-7r86-cg39-jmmj) in minimatch
+- Fix [GHSA-23c5-xmqv-rm74](https://github.com/advisories/GHSA-23c5-xmqv-rm74) in minimatch
+- Fix [GHSA-mw96-cpmx-2vgc](https://github.com/advisories/GHSA-mw96-cpmx-2vgc) in rollup
+- Fix [GHSA-xxjr-mmjv-4gpg](https://github.com/advisories/GHSA-xxjr-mmjv-4gpg) in lodash
+
+### Changed
+
+- Removed unused `applicationinsightsv34` alias
+- Updated development dependencies
+
 ## [6.0.3] - 2025-12-26
 
 ### Changes
@@ -210,6 +226,7 @@ const transport
 - Replace `treatErrorsAsExceptions` with `sendErrorsAsExceptions` following feedback from AI core team w/r best practice error tracking
 - Package install size drastically reduced
 
+[6.0.4]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.4
 [6.0.3]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.3
 [6.0.2]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.2
 [6.0.1]: https://github.com/shellicar/winston-azure-application-insights/releases/tag/6.0.1
