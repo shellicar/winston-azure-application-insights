@@ -1,44 +1,9 @@
 {
   "name": "@shellicar/winston-azure-application-insights",
-  "version": "6.0.4",
   "private": false,
-  "description": "Azure Application Insights transport for Winston",
+  "version": "6.0.4",
   "type": "module",
-  "files": [
-    "dist"
-  ],
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    "require": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.cjs"
-    },
-    "import": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
-  },
-  "scripts": {
-    "demo": "tsx demo.ts",
-    "build": "tsup-node",
-    "watch": "tsup-node --watch",
-    "type-check": "tsc -p tsconfig.check.json",
-    "test": "vitest run",
-    "coverage": "vitest run --coverage",
-    "test:coverage": "vitest run --coverage"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/shellicar/winston-azure-application-insights.git"
-  },
-  "keywords": [
-    "winston",
-    "azure",
-    "insights",
-    "logging"
-  ],
+  "license": "MIT",
   "author": "Stephen Hellicar",
   "contributors": [
     {
@@ -47,7 +12,57 @@
       "url": "https://stephen-hellicar.com.au/"
     }
   ],
-  "license": "MIT",
+  "description": "Azure Application Insights transport for Winston",
+  "keywords": [
+    "winston",
+    "azure",
+    "insights",
+    "logging"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shellicar/winston-azure-application-insights.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shellicar/winston-azure-application-insights/issues"
+  },
+  "homepage": "https://github.com/shellicar/winston-azure-application-insights#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "*.md"
+  ],
+  "scripts": {
+    "demo": "tsx demo.ts",
+    "build": "tsup-node",
+    "dev": "tsup-node --watch",
+    "type-check": "tsc -p tsconfig.check.json",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage",
+    "test:coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "triple-beam": "^1.4.1",
+    "winston": "^3.0.0",
+    "winston-transport": "^4.0.0"
+  },
   "devDependencies": {
     "@types/node": "^25.3.2",
     "@types/triple-beam": "^1.3.5",
@@ -66,14 +81,5 @@
   "optionalDependencies": {
     "applicationinsightsv2": "npm:applicationinsights@^2",
     "applicationinsightsv3": "npm:applicationinsights@^3"
-  },
-  "bugs": {
-    "url": "https://github.com/shellicar/winston-azure-application-insights/issues"
-  },
-  "homepage": "https://github.com/shellicar/winston-azure-application-insights#readme",
-  "peerDependencies": {
-    "triple-beam": "^1.4.1",
-    "winston": "^3.0.0",
-    "winston-transport": "^4.0.0"
   }
 }
